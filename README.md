@@ -49,15 +49,15 @@ be improved in many ways and I invite anyone to participate.
 - Easily expandable to support additional features
 
 ## Hardware
-1. Raspberry Pi Pico 2 (Qty 1) [Buy](https://www.amazon.com/Raspberry-Pi-SC1631-Pico-2/dp/B0DCKH85WR) - or similar MicroPython-compatible microcontroller with at least two cores
-2. PCA9685 16-channel 12-bit PWM (Qty 1) [Buy](https://www.amazon.com/HiLetgo-PCA9685-Channel-12-Bit-Arduino/dp/B01D1D0CX2)
-3. SD card reader (Qty 1) [Buy](https://www.amazon.com/dp/B0089SYU9C)
+1. Raspberry Pi Pico 2 (Qty 1) [Buy](https://amzn.to/4hhQxz3) - or similar MicroPython-compatible microcontroller with at least two cores
+2. PCA9685 16-channel 12-bit PWM (Qty 1) [Buy](https://amzn.to/4jf2E1J)
+3. SD card reader (Qty 1) [Buy](https://amzn.to/40gHUhw)
 4. Rotary encoder w/ switch (Qty 4) [Buy](https://www.amazon.com/dp/B0BGR4JPRK)
-5. RGB LED (Qty 4) [Buy](https://www.amazon.com/gp/product/B077XGF3YR)
-6. 2.4" SSD1309 OLED display (Qty 1) [Buy](https://www.amazon.com/gp/product/B0B2R6892R) - or similar I2C-driven display with MicroPython frame buffer driver
-7. 5-Pin DIN socket (Qty 1) [Buy](https://www.amazon.com/Yootop-DIN-Monting-Female-Sockets/dp/B07NY6Z2N7)
-8. 2N4401 NPN transistors (Qty 4) [Buy](https://www.amazon.com/Chanzon-N-Channel-Bipolar-Junction-Transistor/dp/B083TRT8JH)
-9. 6N138 high-speed optocoupler (Qty 1) [Buy](https://www.amazon.com/Bridgold-Optocoupler-Photodiode-Darlington-Output%EF%BC%8C8-Pin/dp/B09C8T7V6V)
+5. RGB LED (Qty 4) [Buy](https://amzn.to/4jlGqvc)
+6. 2.4" SSD1309 OLED display (Qty 1) [Buy](https://amzn.to/40wQWbs) - or similar I2C-driven display with MicroPython frame buffer driver
+7. 5-Pin DIN socket (Qty 1) [Buy](https://amzn.to/40hERpg)
+8. 2N4401 NPN transistors (Qty 4) [Buy](https://amzn.to/4aikSeu)
+9. 6N138 high-speed optocoupler (Qty 1) [Buy](https://amzn.to/3BXwgA4)
 10. Fiber optic transmitters or connectors of your choice for outputs (Qty 4)
 11. Various 1/8-watt resistors
 12. 1N4148 diode (Qty 1)
