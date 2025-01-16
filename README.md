@@ -39,8 +39,9 @@ be improved in many ways and I invite anyone to participate.
 - Class-based, modular screen management system
 - Interrupt-driven inputs
 - Utilizes threads for driving outputs
-- Standard interrupter (square wave pulse generator) with variable frequency and on time with configurable limits (currently drives all four outpus equally)
+- Standard interrupter (square wave pulse generator) with variable frequency and on time with configurable limits (currently drives all four outputs equally)
 - MIDI file playback from SD card with interface for mapping tracks to outputs - rotary encoders allow level control for each output
+- Automatic scrolling of long file and track names
 - MIDI input (currently drives all four outputs from a single input/channel)
 - RGB LEDs display relative output levels as colors ranging from green, to yellow, to red
 - Battery status monitoring
@@ -61,7 +62,7 @@ be improved in many ways and I invite anyone to participate.
 10. Fiber optic transmitters or connectors of your choice for outputs (Qty 4)
 11. Various 1/8-watt resistors
 12. 1N4148 diode (Qty 1)
-11. 5VDC power source
+13. 5VDC power source
 
 ## Dependencies
 - Display driver ([MicroPython-SSD1306](https://github.com/TimHanewich/MicroPython-SSD1306))
@@ -99,7 +100,60 @@ Coming soon.
 
 ## Usage
 
-Upon powering up the device, navigate through the menu to configure settings, play MIDI files, or monitor battery status. Use the rotary encoders and buttons to interact with the menu.
+### General Operation
+
+Rotate encoder 1 to scroll through the main menu. Press encoder 1 pushbutton to navigate to a sub-menu item
+or select a screen. Pressing encoder 2 pushbutton is consistently used as the Back or Return button.
+
+### Interrupter
+
+On the interrupter screen, encoder 1 rotation sets output on time. Encoder 2 rotation sets
+output frequency. Press encoder 3 pushbutton to enable/disable outputs. Pressing encoder 4
+pushbutton triggers 10x mode where the frequency and on time increments by 10 rather than
+the default 1. To return to the main menu, press encoder 2 pushbutton.
+
+### MIDI Input
+
+When MIDI input is selected from the main menu, the controller immediately begins listening
+for MIDI events on the MIDI input. This screen only has one input and that is encoder 2 pushbutton
+to stop listening for MIDI events and return to the main menu.
+
+### MIDI File
+
+The initial MIDI file screen shows a listing of MIDI files available on the SD card. Use encoder 1
+rotation to scroll through the list of files. Press encoder 1 pushbutton to select a file. The
+display will then show a list of MIDI tracks within the selected file. As with files, user encoder 1
+to scroll through the list and press encoder 1 pushbutton to select a track. On the subsequent
+assignment screen, rotate encoder 1 to cycle between; None, 1, 2, 3 and 4. Pressing encoder 1 pushbutton
+saves the assignment. Pressing encoder 2 push button returns to the track listing without saving the assignment.
+
+The number of track assignments for a selected MIDI file is displayed in the header of the track listing screen,
+such as 2/4, indicating two of the maximum of four mappings have been made. Selecting an output for a track
+which has already been assigned to a different track will result in the original assignment being overwritten.
+Only a single track may be mapped to a single output.
+
+Once track assignments are complete, press encoder 2 pushbutton to return to the file listing. You may then
+press encoder 3 pushbutton to start playback. During playback, rotation of each encoder controls the level
+of its corresponding output. Pressing any encoder pushbutton during playback will result in the player stopping.
+
+### Battery Status
+
+This screen is much like the MIDI input screen in that only encoder 2 pushbutton is active to allow returning
+to the main menu. On this screen the current battery voltage is displayed. Depending on your set up and
+battery voltage, you may need to adjust the drop factor in init.py to obtain accurate values.
+
+### Interrupter Configuration
+
+This screen, and its two sub-screens, allow configuring upper and lower frequency and on time limits, as well
+as a max duty cycle percentage. These values are immediately saved to flash memory when adjustments are made.
+There is no "save" button in this case. Encoder 2 pushbutton should be used to exit the screen and encoder 3
+and 4 pushbuttons cycle through the screens.
+
+### Restore Defaults
+
+This screen allows you to erase user configuration and return to a set of defaults. This configuration is
+currently used only by the interrupter screen, but can be easily expanded to support additional screens
+and configuration variables.
 
 ## File Descriptions
 
