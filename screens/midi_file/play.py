@@ -7,7 +7,7 @@ Provides the MIDI playback functionality.
 """
 
 from mptcc.init import init
-import mptcc.utils as utils
+import mptcc.lib.utils as utils
 import _thread
 import gc
 import time
@@ -61,7 +61,6 @@ class MIDIFilePlay:
         # Parse the MIDI file and prepare the events array.
         midi = umidiparser.MidiFile(file_path, buffer_size=0, reuse_event_object=False)
         init.deinit_sd()
-        init.init_display()
 
         # Create a list of track indices from the outputs array and adjust by +1.
         # This skips the metadata track.

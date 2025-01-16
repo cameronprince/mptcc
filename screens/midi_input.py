@@ -8,9 +8,9 @@ Provides functionality for the MIDI input feature.
 """
 
 from mptcc.init import init
-from mptcc.menu import CustomItem
-import mptcc.config as config
-import mptcc.utils as utils
+from mptcc.lib.menu import CustomItem
+import mptcc.lib.config as config
+import mptcc.lib.utils as utils
 import _thread
 import SimpleMIDIDecoder
 
@@ -82,7 +82,6 @@ class MIDIInput(CustomItem):
         if self.listening:
             self.listening = False
             init.display.fill(0)
-            init.deinit_uart()
 
     def midi_input_thread(self):
         """

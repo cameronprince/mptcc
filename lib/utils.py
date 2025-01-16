@@ -8,10 +8,9 @@ Shared utility functions.
 """
 
 from mptcc.init import init
-import mptcc.config as config
+import mptcc.lib.config as config
 import _thread
 import time
-import ujson
 
 """
 OUTPUT UTILS
@@ -330,35 +329,3 @@ def wrap_text(text, max_width):
         lines.append(current_line)
 
     return lines
-
-
-"""
-CONFIG UTILS
-"""
-def read_config():
-    """
-    Reads configuration data from internal flash memory.
-
-    Returns:
-    -------
-    dict
-        The configuration data read from the flash memory. If the file does not exist or contains invalid data, an empty dictionary is returned.
-    """
-    try:
-        with open(init.CONFIG_PATH, "r") as f:
-            config_data = ujson.load(f)
-    except (OSError, ValueError):
-        config_data = {}
-    return config_data
-
-def write_config(config_data):
-    """
-    Writes configuration data to internal flash memory.
-
-    Parameters:
-    ----------
-    config_data : dict
-        The configuration data to be written to the flash memory.
-    """
-    with open(init.CONFIG_PATH, "w") as f:
-        ujson.dump(config_data, f)

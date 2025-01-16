@@ -8,7 +8,7 @@ Provides the track assignment screen.
 """
 
 from mptcc.init import init
-import mptcc.utils as utils
+import mptcc.lib.utils as utils
 
 class MIDIFileAssignment:
     def __init__(self, midi_file):

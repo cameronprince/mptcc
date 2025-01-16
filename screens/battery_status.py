@@ -8,8 +8,8 @@ Provides the battery status screen.
 """
 
 from mptcc.init import init
-from mptcc.menu import CustomItem
-import mptcc.utils as utils
+from mptcc.lib.menu import CustomItem
+import mptcc.lib.utils as utils
 from machine import ADC
 
 class BatteryStatus(CustomItem):

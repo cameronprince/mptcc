@@ -9,8 +9,8 @@ The modules in the midi_file subdirectory provide the primary functionality.
 """
 
 from mptcc.init import init
-from mptcc.menu import CustomItem
-import mptcc.utils as utils
+from mptcc.lib.menu import CustomItem
+import mptcc.lib.utils as utils
 import json
 import uos
 
@@ -105,7 +105,7 @@ class MIDIFile(CustomItem):
     def draw(self):
         self.handlers["files"].draw()
 
-    def load_map_file(self, file_path, init_sd=True):
+    def load_map_file(self, file_path):
         """
         Load the output assignments from the map file.
 
@@ -117,9 +117,6 @@ class MIDIFile(CustomItem):
             Flag to indicate whether to initialize the SD card.
         """
         map_path = file_path.replace('.mid', '.map').replace('.midi', '.map')
-
-        if init_sd:
-            init.init_sd()
 
         # Ensure the outputs array is always initialized with a fixed length of four
         self.outputs = [None] * 4
@@ -135,11 +132,6 @@ class MIDIFile(CustomItem):
             pass
         finally:
             init.deinit_sd()
-            init.init_display()
-
-        if init_sd:
-            init.deinit_sd()
-            init.init_display()
 
     def save_map_file(self):
         """
@@ -170,7 +162,6 @@ class MIDIFile(CustomItem):
             pass
         finally:
             init.deinit_sd()
-            init.init_display()
 
     def rotary_1(self, val):
         """

@@ -8,7 +8,7 @@ Provides the MIDI file listing screen.
 """
 
 from mptcc.init import init
-import mptcc.utils as utils
+import mptcc.lib.utils as utils
 import uos
 
 class MIDIFileFiles:
@@ -93,7 +93,6 @@ class MIDIFileFiles:
             ]
 
             init.deinit_sd()
-            init.init_display()
             return True
         except OSError as e:
             init.init_display()

@@ -12,9 +12,9 @@ two inputs at once.
 """
 
 from mptcc.init import init
-from mptcc.menu import CustomItem
-import mptcc.config as config
-import mptcc.utils as utils
+from mptcc.lib.menu import CustomItem
+import mptcc.lib.config as config
+import mptcc.lib.utils as utils
 import _thread
 import os
 import time

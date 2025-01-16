@@ -8,7 +8,7 @@ Provides the MIDI track listing screen.
 """
 
 from mptcc.init import init
-import mptcc.utils as utils
+import mptcc.lib.utils as utils
 import umidiparser
 
 class MIDIFileTracks:
@@ -85,7 +85,6 @@ class MIDIFileTracks:
                     self.midi_file.track_list.append(event.name)
 
         init.deinit_sd()
-        init.init_display()
 
     def rotary_1(self, val):
         """

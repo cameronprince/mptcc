@@ -8,9 +8,9 @@ Provides the screen for configuring interrupter settings.
 """
 
 from mptcc.init import init
-from mptcc.menu import CustomItem
-import mptcc.config as config
-import mptcc.utils as utils
+from mptcc.lib.menu import CustomItem
+from mptcc.lib.config import Config as config
+import mptcc.lib.utils as utils
 
 class InterrupterConfig(CustomItem):
     """
@@ -54,7 +54,7 @@ class InterrupterConfig(CustomItem):
         """
         super().__init__(name)
         self.display = init.display
-        self.config = utils.read_config()
+        self.config = config.read_config()
         self.min_on_time = self.config.get("interrupter_min_on_time", config.DEF_INTERRUPTER_MIN_ON_TIME)
         self.min_freq = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
         self.max_on_time = self.config.get("interrupter_max_on_time", config.DEF_INTERRUPTER_MAX_ON_TIME)
@@ -107,7 +107,7 @@ class InterrupterConfig(CustomItem):
         self.config["interrupter_max_on_time"] = self.max_on_time
         self.config["interrupter_max_freq"] = self.max_freq
         self.config["interrupter_max_duty"] = self.max_duty
-        utils.write_config(self.config)
+        config.write_config(self.config)
 
     def rotary_1(self, val):
         """

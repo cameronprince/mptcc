@@ -31,7 +31,6 @@ class MenuItem:
     def __init__(self, name: str, decorator=None, visible=None):
         self.parent = None
         self._visible = True if visible is None else visible
-        self._callback = None
         self.is_active = False
         self.name = name
         self.decorator = '' if decorator is None else decorator
@@ -48,17 +47,6 @@ class MenuItem:
     def get_decorator(self):
         """Returns the decorator string for the menu item."""
         return self.decorator if not callable(self.decorator) else self.decorator()
-
-    @property
-    def callback(self):
-        """Gets the callback function."""
-        return self._callback
-
-    @callback.setter
-    def callback(self, callback):
-        """Sets the callback function."""
-        self._check_callable(callback)
-        self._callback = callback
 
     @staticmethod
     def _check_callable(param, raise_error=True):
