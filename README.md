@@ -167,7 +167,7 @@ and configuration variables.
 - `mptcc/screens/interrupter.py`: Core functionalities for the interrupter feature.
 - `mptcc/screens/interrupter_config.py`: Provides the screen for configuring interrupter settings.
 - `mptcc/screens/restore_defaults.py`: Provides the screen for restoring default settings.
-- `mptcc/screens/__init__.py`: Imports each MIDI file screen.
+- `mptcc/screens/__init__.py`: Imports each screen.
 - `mptcc/screens/midi_input.py`: Provides the functionality for the MIDI input feature.
 - `mptcc/screens/midi_file/midi_file.py`: Sets up sub-screen handlers for MIDI file playback.
 - `mptcc/screens/midi_file/assignment.py`: Sub-screen for assigning tracks to outputs.
@@ -176,11 +176,6 @@ and configuration variables.
 - `mptcc/screens/midi_file/tracks.py`: Sub-screen providing MIDI track listing.
 - `mptcc/screens/midi_file/__init__.py`: Imports each MIDI file sub-screen.
 - `mptcc/test_scripts/*`: Various hardware test scripts.
-
-
-
-
-
 
 ## License
 

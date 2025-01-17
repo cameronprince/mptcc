@@ -76,16 +76,16 @@ init.switch_4.irq(switch_click, Pin.IRQ_FALLING)
 rotary_encoders = [
     RotaryIRQ(pin_num_clk=init.encoders[0]['clk'], pin_num_dt=init.encoders[0]['dt'],
               min_val=0, max_val=10, reverse=False, range_mode=RotaryIRQ.RANGE_UNBOUNDED,
-              pull_up=True, half_step=False),
+              pull_up=init.ROTARY_PULL_UP, half_step=False),
     RotaryIRQ(pin_num_clk=init.encoders[1]['clk'], pin_num_dt=init.encoders[1]['dt'],
               min_val=0, max_val=10, reverse=False, range_mode=RotaryIRQ.RANGE_UNBOUNDED,
-              pull_up=True, half_step=False),
+              pull_up=init.ROTARY_PULL_UP, half_step=False),
     RotaryIRQ(pin_num_clk=init.encoders[2]['clk'], pin_num_dt=init.encoders[2]['dt'],
               min_val=0, max_val=10, reverse=False, range_mode=RotaryIRQ.RANGE_UNBOUNDED,
-              pull_up=True, half_step=False),
+              pull_up=init.ROTARY_PULL_UP, half_step=False),
     RotaryIRQ(pin_num_clk=init.encoders[3]['clk'], pin_num_dt=init.encoders[3]['dt'],
               min_val=0, max_val=10, reverse=False, range_mode=RotaryIRQ.RANGE_UNBOUNDED,
-              pull_up=True, half_step=False),
+              pull_up=init.ROTARY_PULL_UP, half_step=False),
 ]
 
 last_rotations = [encoder.value() for encoder in rotary_encoders]

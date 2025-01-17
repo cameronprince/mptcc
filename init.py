@@ -57,6 +57,9 @@ class Init:
     PIN_ROTARY_4_DT = 20
     PIN_ROTARY_4_SW = 17
 
+    # Enable/disable encoder pin pull-up resistors.
+    ROTARY_PULL_UP = False
+
     # Battery status ADC pin assignment and settings.
     PIN_BATT_STATUS_ADC = 28
     # Adjust for specific supply voltage used.
