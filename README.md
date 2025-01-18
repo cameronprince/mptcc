@@ -109,7 +109,7 @@ You can download the Fritzing file for this project [here](images/mptcc_v1.0.fzz
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/yourusername/mptcc.git
+    git clone https://github.com/cameronprince/mptcc.git
     ```
 
 2. Copy the project files to your MicroPython-compatible device. Typically, you place the entire mptcc directory into the root directory of your device.
