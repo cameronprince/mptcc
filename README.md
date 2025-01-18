@@ -1,6 +1,8 @@
 # MicroPython Tesla Coil Controller (MPTCC)
 
-A MicroPython-based controller for Tesla coils, developed by Cameron Prince. 
+A MicroPython-based controller for Tesla coils, developed by Cameron Prince.
+
+![MicroPython Tesla coil controller build](images/mptcc_build_v1.0.jpg?raw=true "MicroPython Tesla coil controller build")
 
 This project is based on the MIDI Pro Tesla Coil Controller (also MPTCC) by Phillip Slawinski. A best
 effort was made to maintain control functionality matching Phillip's controller, along with feature
@@ -9,14 +11,14 @@ as well, and more are planned.
 
 The controller has four outputs which can drive fiber optic transmitters of your choice, or you may
 use other connectors, such as BNC, with shielded cables. The controller sends pulsed square waves of
-a frequency and duty cycle you control with the rotary encoders on the Interrupter screen. On the MIDI
+a frequency and duty cycle you control with the rotary encoders while on the Interrupter screen. On the MIDI
 input screen, the controller takes the notes it receives from a MIDI instrument and converts them into
 pulses matching the frequency and velocity of the received notes and sends them to all outputs.
 
 The MIDI File screen lists MIDI files found on the SD card and allows you map tracks within a selected
 file with each of the four outputs. During playback, the four rotary encoders control the levels of
 each output. The RGB LEDs are active any time the outputs are active and their colors match the relative
-level of each output with colors ranging from green to yellow and yellow to red.
+level of each output with colors ranging from green, to yellow, to red.
 
 This software provides a framework for any number of screens with each screen optionally having any number
 of sub-screens. The rotary encoder and push-button inputs cascade down to each screen, or sub-screen,
@@ -29,6 +31,10 @@ be improved in many ways and I invite anyone to participate.
 ## Table of Contents
 
 - [Features](#features)
+- [Hardware](#hardware)
+- [Dependencies](#dependencies)
+- [Diagram](#diagram)
+- [Connections](#connections)
 - [Installation](#installation)
 - [Usage](#usage)
 - [File Descriptions](#file-descriptions)
@@ -39,13 +45,13 @@ be improved in many ways and I invite anyone to participate.
 - Class-based, modular screen management system
 - Interrupt-driven inputs
 - Utilizes threads for driving outputs
-- Standard interrupter (square wave pulse generator) with variable frequency and on time with configurable limits (currently drives all four outputs equally)
-- MIDI file playback from SD card with interface for mapping tracks to outputs - rotary encoders allow level control for each output
+- Standard interrupter (square wave pulse generator) with variable frequency and on time with user configurable limits (currently drives all four outputs equally)
+- MIDI file playback from SD card with elapsed time display and interface for mapping tracks to outputs - rotary encoders allow level control for each output
 - Automatic scrolling of long file and track names
 - MIDI input (currently drives all four outputs from a single input/channel)
 - RGB LEDs display relative output levels as colors ranging from green, to yellow, to red
 - Battery status monitoring
-- Configuration stored in flash memory with restore defaults feature
+- User configuration stored in flash memory with restore defaults feature
 - Intuitive menu system
 - Easily expandable to support additional features
 
@@ -54,15 +60,18 @@ be improved in many ways and I invite anyone to participate.
 2. PCA9685 16-channel 12-bit PWM (Qty 1) [Buy](https://amzn.to/4jf2E1J)
 3. SD card reader (Qty 1) [Buy](https://amzn.to/40gHUhw)
 4. Rotary encoder w/ switch (Qty 4) [Buy](https://www.amazon.com/dp/B0BGR4JPRK)
-5. RGB LED (Qty 4) [Buy](https://amzn.to/4jlGqvc)
+5. RGB LED (Qty 4) [Buy](https://amzn.to/3PD5WhP)
 6. 2.4" SSD1309 OLED display (Qty 1) [Buy](https://amzn.to/40wQWbs) - or similar I2C-driven display with MicroPython frame buffer driver
 7. 5-Pin DIN socket (Qty 1) [Buy](https://amzn.to/40hERpg)
 8. 2N4401 NPN transistors (Qty 4) [Buy](https://amzn.to/4aikSeu)
 9. 6N138 high-speed optocoupler (Qty 1) [Buy](https://amzn.to/3BXwgA4)
 10. Fiber optic transmitters or connectors of your choice for outputs (Qty 4)
-11. Various 1/8-watt resistors
-12. 1N4148 diode (Qty 1)
-13. 5VDC power source
+11. Various 1/4-watt resistors [Buy](https://amzn.to/3DXIOYx)
+12. 1N4148 diode (Qty 1) [Buy](https://amzn.to/4hi579Q)
+13. 5VDC power source (Qty 1) [Buy](https://amzn.to/3Wre4pd)
+14. Optional breadboard (Qty 1) [Buy](https://amzn.to/4hkUC5s)
+
+Total estimated cost: $160 USD (not including output transmitters or connectors)
 
 ## Dependencies
 - Display driver ([MicroPython-SSD1306](https://github.com/TimHanewich/MicroPython-SSD1306))
@@ -72,13 +81,15 @@ be improved in many ways and I invite anyone to participate.
 - MIDI input decoder ([SimpleMIDIDecoder](https://github.com/diyelectromusic/sdemp/blob/main/src/SDEMP/Micropython/SimpleMIDIDecoder.py))
 - MIDI file parser ([umidiparser](https://github.com/bixb922/umidiparser))
 
-## Schematics
+## Schematic
 
-Coming soon.
+![MicroPython Tesla coil controller schematic](images/mptcc_schematic_v1.0.png?raw=true "MicroPython Tesla coil controller schematic")
 
-## Connections
+## Diagram
 
-Coming soon.
+![MicroPython Tesla coil controller connections](images/mptcc_connections_v1.0.png?raw=true "MicroPython Tesla coil controller connections")
+
+You can download the Fritzing file for this project [here](images/mptcc_v1.0.fzz).
 
 ## Installation
 
@@ -96,35 +107,35 @@ Coming soon.
 
 5. Run main.py
 
-6. Custom firmware instructions coming soon.
+Custom firmware build instructions coming soon.
 
 ## Usage
 
 ### General Operation
 
-Rotate encoder 1 to scroll through the main menu. Press encoder 1 pushbutton to navigate to a sub-menu item
-or select a screen. Pressing encoder 2 pushbutton is consistently used as the Back or Return button.
+Rotate encoder 1 to scroll through the main menu options. Press encoder 1 pushbutton to navigate to a sub-menu item
+or select a screen. Pressing encoder 2 pushbutton is consistently used as the "back" or "return" button.
 
 ### Interrupter
 
 On the interrupter screen, encoder 1 rotation sets output on time. Encoder 2 rotation sets
 output frequency. Press encoder 3 pushbutton to enable/disable outputs. Pressing encoder 4
 pushbutton triggers 10x mode where the frequency and on time increments by 10 rather than
-the default 1. To return to the main menu, press encoder 2 pushbutton.
+the default of 1. To return to the main menu, press encoder 2 pushbutton.
 
 ### MIDI Input
 
 When MIDI input is selected from the main menu, the controller immediately begins listening
-for MIDI events on the MIDI input. This screen only has one input and that is encoder 2 pushbutton
+for MIDI events on the MIDI port. This screen only has one input and that is encoder 2 pushbutton
 to stop listening for MIDI events and return to the main menu.
 
 ### MIDI File
 
 The initial MIDI file screen shows a listing of MIDI files available on the SD card. Use encoder 1
 rotation to scroll through the list of files. Press encoder 1 pushbutton to select a file. The
-display will then show a list of MIDI tracks within the selected file. As with files, user encoder 1
+display will then show a list of MIDI tracks within the selected file. As with files, use encoder 1
 to scroll through the list and press encoder 1 pushbutton to select a track. On the subsequent
-assignment screen, rotate encoder 1 to cycle between; None, 1, 2, 3 and 4. Pressing encoder 1 pushbutton
+assignment screen, rotate encoder 1 to cycle between None, 1, 2, 3 and 4. Pressing encoder 1 pushbutton
 saves the assignment. Pressing encoder 2 push button returns to the track listing without saving the assignment.
 
 The number of track assignments for a selected MIDI file is displayed in the header of the track listing screen,
@@ -140,14 +151,14 @@ of its corresponding output. Pressing any encoder pushbutton during playback wil
 
 This screen is much like the MIDI input screen in that only encoder 2 pushbutton is active to allow returning
 to the main menu. On this screen the current battery voltage is displayed. Depending on your set up and
-battery voltage, you may need to adjust the drop factor in init.py to obtain accurate values.
+battery voltage, you may need to adjust the drop factor in init.py and/or R13 and R14 values to obtain accurate values.
 
 ### Interrupter Configuration
 
 This screen, and its two sub-screens, allow configuring upper and lower frequency and on time limits, as well
 as a max duty cycle percentage. These values are immediately saved to flash memory when adjustments are made.
 There is no "save" button in this case. Encoder 2 pushbutton should be used to exit the screen and encoder 3
-and 4 pushbuttons cycle through the screens.
+and 4 pushbuttons cycle through the configuration sub-screens.
 
 ### Restore Defaults
 
@@ -157,18 +168,18 @@ and configuration variables.
 
 ## File Descriptions
 
-- `mptcc/init.py`: Constants, shared attributes, and initialization code.
+- `mptcc/init.py`: Constants, shared attributes, and hardware initialization code.
 - `mptcc/main.py`: Main program file. Creates the menu object and sets up input interrupts.
 - `mptcc/lib/config.py`: Provides default user configuration values for the project.
 - `mptcc/lib/menu.py`: Provides menu functionality.
 - `mptcc/lib/rgb.py`: Functions for controlling RGB LED colors.
 - `mptcc/lib/utils.py`: Shared utility functions.
 - `mptcc/screens/battery_status.py`: Displays the current battery status.
-- `mptcc/screens/interrupter.py`: Core functionalities for the interrupter feature.
+- `mptcc/screens/interrupter.py`: Provides the interrupter screen.
 - `mptcc/screens/interrupter_config.py`: Provides the screen for configuring interrupter settings.
 - `mptcc/screens/restore_defaults.py`: Provides the screen for restoring default settings.
 - `mptcc/screens/__init__.py`: Imports each screen.
-- `mptcc/screens/midi_input.py`: Provides the functionality for the MIDI input feature.
+- `mptcc/screens/midi_input.py`: Provides the the MIDI input screen.
 - `mptcc/screens/midi_file/midi_file.py`: Sets up sub-screen handlers for MIDI file playback.
 - `mptcc/screens/midi_file/assignment.py`: Sub-screen for assigning tracks to outputs.
 - `mptcc/screens/midi_file/files.py`: Sub-screen providing MIDI file listing from SD card.
