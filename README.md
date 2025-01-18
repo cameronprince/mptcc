@@ -15,14 +15,14 @@ a frequency and duty cycle you control with the rotary encoders while on the Int
 input screen, the controller takes the notes it receives from a MIDI instrument and converts them into
 pulses matching the frequency and velocity of the received notes and sends them to all outputs.
 
-The MIDI File screen lists MIDI files found on the SD card and allows you map tracks within a selected
+The MIDI File screen lists MIDI files found on the SD card and allows you to map tracks within a selected
 file with each of the four outputs. During playback, the four rotary encoders control the levels of
 each output. The RGB LEDs are active any time the outputs are active and their colors match the relative
 level of each output with colors ranging from green, to yellow, to red.
 
 This software provides a framework for any number of screens with each screen optionally having any number
-of sub-screens. The rotary encoder and push-button inputs cascade down to each screen, or sub-screen,
-so that all code for a particular screen is contained solely within its class. Adding your own screens
+of sub-screens. The rotary encoder and push-button inputs cascade down to each screen or sub-screen,
+ensuring that all code for a particular screen is contained within its class. Adding your own screens
 to customize the controller should be pretty straightforward.
 
 Please be aware that this is my first significant work with MicroPython. I am certain this software can
@@ -30,6 +30,7 @@ be improved in many ways and I invite anyone to participate.
 
 ## Table of Contents
 
+- [Warning](#warning)
 - [Features](#features)
 - [Hardware](#hardware)
 - [Dependencies](#dependencies)
@@ -39,6 +40,17 @@ be improved in many ways and I invite anyone to participate.
 - [Usage](#usage)
 - [File Descriptions](#file-descriptions)
 - [License](#license)
+
+## Warning
+
+Tesla coils are dangerous devices which can cause shocks, burns, fires and even death. The author assumes no
+responsibility for any devices operated by the controller project described herewithin, or for any damage or
+injury that may be caused by their operation.
+
+This controller is experimental. If not assembled and operated correctly, it can cause damage to driver and
+bridge components. It is solely up to the builder to verify the controller output prior to connecting it to
+a Tesla coil. Author assumes no responsibility for damage to equipment, components, tools, etc. which can be
+caused by the use of this controller. You have been warned.
 
 ## Features
 
@@ -126,7 +138,7 @@ the default of 1. To return to the main menu, press encoder 2 pushbutton.
 ### MIDI Input
 
 When MIDI input is selected from the main menu, the controller immediately begins listening
-for MIDI events on the MIDI port. This screen only has one input and that is encoder 2 pushbutton
+for MIDI events on the MIDI port. This screen only has one input which is encoder 2 pushbutton
 to stop listening for MIDI events and return to the main menu.
 
 ### MIDI File
@@ -150,7 +162,7 @@ of its corresponding output. Pressing any encoder pushbutton during playback wil
 ### Battery Status
 
 This screen is much like the MIDI input screen in that only encoder 2 pushbutton is active to allow returning
-to the main menu. On this screen the current battery voltage is displayed. Depending on your set up and
+to the main menu. On this screen the current battery voltage is displayed. Depending on your setup and
 battery voltage, you may need to adjust the drop factor in init.py and/or R13 and R14 values to obtain accurate values.
 
 ### Interrupter Configuration
