@@ -56,16 +56,16 @@ caused by the use of this controller. You have been warned.
 ## Features
 
 - Class-based, modular screen management system
-- Interrupt-driven inputs
+- Interrupt-driven inputs/non-polling design
 - Utilizes threads for driving outputs
-- Standard interrupter (square wave pulse generator) with variable frequency and on time with user configurable limits (currently drives all four outputs equally)
+- Standard interrupter (square wave pulse generator) with variable frequency and on time and user configurable limits (currently drives all four outputs equally)
 - MIDI file playback from SD card with elapsed time display and interface for mapping tracks to outputs - rotary encoders allow level control for each output
 - Automatic scrolling of long file and track names
 - MIDI input (currently drives all four outputs from a single input/channel)
 - RGB LEDs display relative output levels as colors ranging from green, to yellow, to red
 - Battery status monitoring
 - User configuration stored in flash memory with restore defaults feature
-- Intuitive menu system
+- Intuitive menu system and navigation
 - Easily expandable to support additional features
 
 ## Hardware
@@ -209,6 +209,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 This project would not have been possible without Steve Ward and Phillip Slawinski. I've learned
 a lot from these guys over the years and I appreciate the friendship I have with them.
+
+Thanks to Hermann Paul von Borries (bixb922) for the umidiparser library and Kevin (diyelectromusic)
+for the SimpleMIDIDecoder library.
 
 Special thanks to Donna Whisnant, Tom Camp, Timur Tabi and Edwin Burwell for their encouragement,
 guidance, support and code reviews.
