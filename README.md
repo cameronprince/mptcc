@@ -40,6 +40,7 @@ be improved in many ways and I invite anyone to participate.
 - [Usage](#usage)
 - [File Descriptions](#file-descriptions)
 - [License](#license)
+- [Credits](#credits)
 
 ## Warning
 
@@ -203,6 +204,14 @@ and configuration variables.
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+## Credits
+
+This project would not have been possible without Steve Ward and Phillip Slawinski. I've learned
+a lot from these guys over the years and I appreciate the friendship I have with them.
+
+Special thanks to Donna Whisnant, Tom Camp, Timur Tabi and Edwin Burwell for their encouragement,
+guidance, support and code reviews.
 
 ---
 
