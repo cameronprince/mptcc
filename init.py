@@ -41,20 +41,20 @@ class Init:
     PIN_XMTR_4 = 8
 
     # Rotary encoder pin assignments.
-    PIN_ROTARY_1_CLK = 10
-    PIN_ROTARY_1_DT = 11
+    PIN_ROTARY_1_CLK = 11
+    PIN_ROTARY_1_DT = 10
     PIN_ROTARY_1_SW = 12
 
-    PIN_ROTARY_2_CLK = 9
-    PIN_ROTARY_2_DT = 14
+    PIN_ROTARY_2_CLK = 14
+    PIN_ROTARY_2_DT = 9
     PIN_ROTARY_2_SW = 15
 
-    PIN_ROTARY_3_CLK = 27
-    PIN_ROTARY_3_DT = 26
+    PIN_ROTARY_3_CLK = 26
+    PIN_ROTARY_3_DT = 27
     PIN_ROTARY_3_SW = 0
 
-    PIN_ROTARY_4_CLK = 21
-    PIN_ROTARY_4_DT = 20
+    PIN_ROTARY_4_CLK = 20
+    PIN_ROTARY_4_DT = 21
     PIN_ROTARY_4_SW = 17
 
     # Enable/disable encoder pin pull-up resistors.

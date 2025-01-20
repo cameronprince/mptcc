@@ -48,6 +48,7 @@ def switch_click(pin):
     pin : machine.Pin
         The pin object that triggered the interrupt.
     """
+    time.sleep_ms(50)
     if pin.value() == 0:
         current_screen = init.menu.get_current_screen()
         if isinstance(current_screen, CustomItem):
@@ -106,6 +107,7 @@ def rotary_encoder_change():
             elif idx == 0:
                 init.menu.move(-1 if last_rotations[idx] > new_value else 1)
             last_rotations[idx] = new_value
+            time.sleep_ms(50)
 
 # Define the listeners which fire the callback.
 for encoder in rotary_encoders:

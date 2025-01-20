@@ -122,6 +122,7 @@ class MIDIFile(CustomItem):
         self.outputs = [None] * 4
 
         try:
+            init.init_sd()
             with open(map_path, 'r') as f:
                 map_data = json.load(f)
                 for i in range(min(len(self.outputs), len(map_data))):
