@@ -1,10 +1,11 @@
-from ..hardware import Hardware
+from ..input.input import Input
+from ... import init
 from machine import Pin
 from rotary_irq_rp2 import RotaryIRQ
 from mptcc.lib.menu import CustomItem
 import time
 
-class KY040:
+class KY040(Input):
 
     # Rotary encoder pin assignments.
     PIN_ROTARY_1_CLK = 11
@@ -27,7 +28,8 @@ class KY040:
     # Most of the PCB-mounted encoders have pull-ups on the boards.
     ROTARY_PULL_UP = False
 
-    def __init__(self, init):
+    def __init__(self):
+        super().__init__()
 
         # Define rotary interrupts.
         self.rotary_encoders = [
@@ -69,19 +71,19 @@ class KY040:
             current_screen = self.init.menu.get_current_screen()
             if isinstance(current_screen, CustomItem):
                 switch_dict = {
-                    self.init.switch_1: 'switch_1',
-                    self.init.switch_2: 'switch_2',
-                    self.init.switch_3: 'switch_3',
-                    self.init.switch_4: 'switch_4'
+                    self.switch_1: 'switch_1',
+                    self.switch_2: 'switch_2',
+                    self.switch_3: 'switch_3',
+                    self.switch_4: 'switch_4'
                 }
                 if pin in switch_dict:
                     method_name = switch_dict[pin]
                     if hasattr(current_screen, method_name):
                         getattr(current_screen, method_name)()
             else:
-                if pin == self.init.switch_1:
+                if pin == self.switch_1:
                     self.init.menu.click()
-                elif pin == self.init.switch_2:
+                elif pin == self.switch_2:
                     parent_screen = self.init.menu.current_screen.parent
                     if parent_screen:
                         self.init.menu.set_screen(parent_screen)
@@ -100,3 +102,4 @@ class KY040:
                     self.init.menu.move(-1 if self.last_rotations[idx] > new_value else 1)
                 self.last_rotations[idx] = new_value
                 time.sleep_ms(50)
+

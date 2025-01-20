@@ -29,9 +29,7 @@ from mptcc.hardware.input.ky_040 import KY040 as inputs # Default option.
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 # --------
 # from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs # Alternate option.
-
-init.inputs = inputs(init)
-
+init.inputs = inputs()
 
 """
 Display
@@ -44,7 +42,18 @@ Edit the class for the selected hardware to define configuration options.
 # Requires: https://github.com/rdagger/micropython-ssd1309/blob/master/ssd1309.py
 from mptcc.hardware.display.ssd1309 import SSD1309 as display
 
-init.display = display(init)
+init.display = display()
+
+"""
+Outputs
+"""
+from mptcc.hardware.outputs import Outputs as outputs
+init.outputs = outputs()
+
+"""
+SD Card Reader
+"""
+
 
 """
 Menu
@@ -69,3 +78,4 @@ init.menu.set_screen(MenuScreen('MicroPython TCC')
     )
 )
 init.menu.draw()
+

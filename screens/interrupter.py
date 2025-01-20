@@ -61,6 +61,9 @@ class Interrupter(CustomItem):
         super().__init__(name)
         self.display = init.display
 
+        print(dir(init.display))
+        # print(dir(self))
+
         self.config = config.read_config()
 
         self.frequency = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
@@ -70,7 +73,7 @@ class Interrupter(CustomItem):
         self.min_on_time = config.DEF_INTERRUPTER_MIN_ON_TIME
         self.max_on_time = self.config.get("interrupter_max_on_time", config.DEF_INTERRUPTER_MAX_ON_TIME)
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
-        self.font_width = init.display.DISPLAY_FONT_WIDTH
+        self.font_width = self.display.DISPLAY_FONT_WIDTH
         self.ten_x = False
         self.active = False
         self.val_old = [0, 0]
@@ -82,10 +85,10 @@ class Interrupter(CustomItem):
         Display the interrupter control settings on the screen.
         """
         # Clear the display.
-        self.display.fill(0)
+        self.display.clear()
 
         # Show the header.
-        utils.header("Interrupter")
+        self.display.header("Interrupter")
 
         # Display the labels.
         self.display.text("On Time:", 0, 20, 1)
@@ -152,10 +155,10 @@ class Interrupter(CustomItem):
         """
         Helper method to fire all outputs equally.
         """
-        utils.set_output(0, self.frequency, self.on_time, self.active, self.max_duty)
-        utils.set_output(1, self.frequency, self.on_time, self.active, self.max_duty)
-        utils.set_output(2, self.frequency, self.on_time, self.active, self.max_duty)
-        utils.set_output(3, self.frequency, self.on_time, self.active, self.max_duty)
+        init.outputs.enable_output(0, self.frequency, self.on_time, self.active, self.max_duty)
+        init.outputs.enable_output(1, self.frequency, self.on_time, self.active, self.max_duty)
+        init.outputs.enable_output(2, self.frequency, self.on_time, self.active, self.max_duty)
+        init.outputs.enable_output(3, self.frequency, self.on_time, self.active, self.max_duty)
 
     def output_control_thread(self):
         """
@@ -164,7 +167,7 @@ class Interrupter(CustomItem):
         while self.active:
             self.enable_outputs()
             time.sleep(0.1)
-        utils.disable_outputs()
+        init.outputs.disable_outputs()
 
     def calculate_max_on_time(self, frequency):
         """
@@ -260,3 +263,4 @@ class Interrupter(CustomItem):
         """
         self.ten_x = not self.ten_x
         self.update_display(update_on_time=False, update_frequency=False, update_ten_x=True)
+

@@ -12,7 +12,6 @@ from machine import Pin
 class Init:
 
     # I2C bus pin assignments and settings
-
     PIN_IC2_SCL = 19
     PIN_IC2_SDA = 18
     I2C_INTERFACE = 1
@@ -23,18 +22,17 @@ class Init:
     PIN_SPI_SCK = 2
     PIN_SPI_MOSI = 3
     PIN_SPI_MISO = 4
-    PIN_SPI_CS_DISPLAY = 5
-    PIN_SPI_CS_SD = 1
+    PIN_SPI_CS = 1
     PIN_SPI_DC = 4
     PIN_SPI_RST = 16
     SPI_INTERFACE = 0
     SPI_BAUD = 1000000
 
-    # Fiber optic transmitter pin assignments.
-    PIN_XMTR_1 = 22
-    PIN_XMTR_2 = 6
-    PIN_XMTR_3 = 7
-    PIN_XMTR_4 = 8
+    # Output pin assignments.
+    PIN_OUTPUT_1 = 22
+    PIN_OUTPUT_2 = 6
+    PIN_OUTPUT_3 = 7
+    PIN_OUTPUT_4 = 8
 
     # Battery status ADC pin assignment and settings.
     PIN_BATT_STATUS_ADC = 28
@@ -95,10 +93,11 @@ class Init:
         self.leds = None
         self.rotary_instances = None
         self.menu = None
+        self.test = "ABC"
 
-        # Initialize the hardware.
-        self.init_i2c()
-
+    """
+    Bus and port handling.
+    """
     def init_i2c(self):
         """Initializes the I2C bus for communication with the external PWM driver which drives the RGB LEDs."""
         from machine import I2C
@@ -154,18 +153,6 @@ class Init:
             rx=Pin(Init.PIN_MIDI_INPUT)
         )
 
-    def init_xmtrs(self):
-        """Initializes all the fiber optic transmitters."""
-        from machine import PWM
-        self.xmtrs = [
-            PWM(Pin(Init.PIN_XMTR_1)),
-            PWM(Pin(Init.PIN_XMTR_2)),
-            PWM(Pin(Init.PIN_XMTR_3)),
-            PWM(Pin(Init.PIN_XMTR_4))
-        ]
-
-
-
     def init_pca(self):
         """Initializes the external PWM driver."""
         self.init_i2c()
@@ -192,3 +179,4 @@ class Init:
         ]
 
 init = Init()
+

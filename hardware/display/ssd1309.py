@@ -1,6 +1,7 @@
 from ..hardware import Hardware
 from .display import Display
 from ssd1309 import Display as driver
+from ... import init
 
 class SSD1309(Display):
 
@@ -12,9 +13,12 @@ class SSD1309(Display):
     DISPLAY_HEADER_HEIGHT = 10
     DISPLAY_ITEMS_PER_PAGE = 4
 
-    def __init__(self, init):
+    def __init__(self):
         super().__init__()
-        self.driver = driver(i2c=init.i2c, width=self.DISPLAY_WIDTH, height=self.DISPLAY_HEIGHT, flip=True)
+
+        print(dir(init))
+
+        self.driver = driver(i2c=init.init.i2c, width=self.DISPLAY_WIDTH, height=self.DISPLAY_HEIGHT, flip=True)
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 
@@ -32,3 +36,4 @@ class SSD1309(Display):
 
     def show(self):
         self.driver.present()
+
