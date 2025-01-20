@@ -306,7 +306,7 @@ class Menu:
             self.current_screen.draw()
             return
 
-        self.display.fill(0)
+        self.display.clear()
 
         self._menu_header(self.current_screen.title)
 

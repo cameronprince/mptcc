@@ -53,7 +53,7 @@ class MIDIInput(CustomItem):
         self.md.cbNoteOff(self.note_off)
         self.listening = False
         self.midi_thread = None
-        self.header_height = init.DISPLAY_HEADER_HEIGHT
+        self.header_height = init.display.DISPLAY_HEADER_HEIGHT
         self.level = 50
 
     def draw(self):

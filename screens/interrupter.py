@@ -70,7 +70,7 @@ class Interrupter(CustomItem):
         self.min_on_time = config.DEF_INTERRUPTER_MIN_ON_TIME
         self.max_on_time = self.config.get("interrupter_max_on_time", config.DEF_INTERRUPTER_MAX_ON_TIME)
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
-        self.font_width = init.DISPLAY_FONT_WIDTH
+        self.font_width = init.display.DISPLAY_FONT_WIDTH
         self.ten_x = False
         self.active = False
         self.val_old = [0, 0]

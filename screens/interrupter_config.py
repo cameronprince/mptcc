@@ -62,7 +62,7 @@ class InterrupterConfig(CustomItem):
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
         self.page = 0
         self.val_old = [0, 0]
-        self.font_width = init.DISPLAY_FONT_WIDTH
+        self.font_width = init.display.DISPLAY_FONT_WIDTH
 
     def draw(self):
         """

@@ -11,5 +11,5 @@ oled = SSD1306_I2C(128, 64, i2c)
 # oled = SSD1306_SPI(128, 64, spi, Pin(4), Pin(16), Pin(5))
 
 oled.fill(0)
-oled.text("Python TCC", 0, 0)
+oled.text("MicroPython TCC", 0, 0)
 oled.show()
