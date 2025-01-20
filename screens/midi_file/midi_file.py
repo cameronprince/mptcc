@@ -80,12 +80,12 @@ class MIDIFile(CustomItem):
         self.selected_track = None
         self.outputs = [None] * 4
         self.last_rotary_1_value = 0
-        self.per_page = init.DISPLAY_ITEMS_PER_PAGE
+        self.per_page = init.display.DISPLAY_ITEMS_PER_PAGE
         self.output_y = None
-        self.line_height = init.DISPLAY_LINE_HEIGHT
-        self.font_width = init.DISPLAY_FONT_WIDTH
-        self.font_height = init.DISPLAY_FONT_HEIGHT
-        self.header_height = init.DISPLAY_HEADER_HEIGHT
+        self.line_height = init.display.DISPLAY_LINE_HEIGHT
+        self.font_width = init.display.DISPLAY_FONT_WIDTH
+        self.font_height = init.display.DISPLAY_FONT_HEIGHT
+        self.header_height = init.display.DISPLAY_HEADER_HEIGHT
 
         # Initialize handlers.
         from mptcc.screens.midi_file import (
