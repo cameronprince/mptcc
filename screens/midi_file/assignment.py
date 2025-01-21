@@ -118,3 +118,4 @@ class MIDIFileAssignment:
         Responds to presses of encoder 2 to go back.
         """
         self.midi_file.handlers["tracks"].draw()
+

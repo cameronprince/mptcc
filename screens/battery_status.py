@@ -56,3 +56,4 @@ class BatteryStatus(CustomItem):
         if parent_screen:
             init.menu.set_screen(parent_screen)
             init.menu.draw()
+

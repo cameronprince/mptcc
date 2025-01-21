@@ -172,3 +172,4 @@ class InterrupterConfig(CustomItem):
         """
         self.page = (self.page + 1) % 3
         self.draw()
+

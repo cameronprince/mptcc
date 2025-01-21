@@ -178,3 +178,4 @@ class MIDIFileFiles:
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
         file_path = init.SD_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
         self.midi_file.handlers["play"].draw(file_path)
+

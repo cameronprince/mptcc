@@ -237,3 +237,4 @@ class MIDIFilePlay:
 
     def switch_4(self):
         self.playback_active = False
+

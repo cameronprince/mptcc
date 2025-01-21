@@ -61,9 +61,6 @@ class Interrupter(CustomItem):
         super().__init__(name)
         self.display = init.display
 
-        print(dir(init.display))
-        # print(dir(self))
-
         self.config = config.read_config()
 
         self.frequency = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)

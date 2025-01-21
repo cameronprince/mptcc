@@ -3,26 +3,25 @@ from ..lib import utils
 from machine import Pin, PWM
 from .. import init
 
-class Outputs(Hardware):
+class Output(Hardware):
     def __init__(self):
         super().__init__()
+        self.init = init.init
 
-        print(dir(init))
-
-        self.outputs = [
-            PWM(Pin(init.init.PIN_OUTPUT_1)),
-            PWM(Pin(init.init.PIN_OUTPUT_2)),
-            PWM(Pin(init.init.PIN_OUTPUT_3)),
-            PWM(Pin(init.init.PIN_OUTPUT_4))
+        self.output = [
+            PWM(Pin(self.init.PIN_OUTPUT_1)),
+            PWM(Pin(self.init.PIN_OUTPUT_2)),
+            PWM(Pin(self.init.PIN_OUTPUT_3)),
+            PWM(Pin(self.init.PIN_OUTPUT_4))
         ]
 
     def disable_outputs(self):
         """
         Turns off all transmitters and LEDs.
         """
-        for output in self.outputs:
+        for output in self.output:
             output.duty_u16(0)
-        for led in init.leds:
+        for led in init.led:
             led.off()
 
     def enable_output(self, output, frequency, on_time, active, max_duty=None):
@@ -47,16 +46,16 @@ class Outputs(Hardware):
         on_time = int(on_time)
 
         if active:
-            self.outputs[output].freq(frequency)
+            self.output[output].freq(frequency)
             duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
-            self.outputs[output].duty_u16(duty_cycle)
+            self.output[output].duty_u16(duty_cycle)
             if max_duty is not None:
                 percent = calculate_percent(frequency, on_time, max_duty)
-                init.leds[output].status_color(max(1, min(100, percent)), mode="percentage")
+                self.init.led[output].status_color(max(1, min(100, percent)), mode="percentage")
             else:
                 velocity = int((on_time / 65535) * 127)
-                init.leds[output].status_color(velocity, mode="velocity")
+                self.init.led[output].status_color(velocity, mode="velocity")
         else:
-            init.outputs[output].duty_u16(0)
-            init.leds[output].off()
+            self.output[output].duty_u16(0)
+            self.led[output].off()
 

@@ -13,11 +13,10 @@ from machine import I2C
 class Display(Hardware):
     def __init__(self):
         super().__init__()
-        self.init = init
+        self.init = init.init
 
-        # Make sure the I2C bus is ready.
-        if not isinstance(self.init.init.i2c, I2C) or not self.init.init.i2c.is_ready():
-            self.init.init.init_i2c()
+        # Prepare the I2C bus.
+        self.init.init_i2c()
 
     """
     Display functions.

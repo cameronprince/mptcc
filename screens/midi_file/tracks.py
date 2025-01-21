@@ -139,3 +139,4 @@ class MIDIFileTracks:
         utils.stop_scroll_task()
         self.midi_file.track_list = []
         self.midi_file.handlers["files"].draw()
+

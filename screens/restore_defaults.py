@@ -118,3 +118,4 @@ class RestoreDefaults(CustomItem):
             init.menu.set_screen(parent_screen)
             init.menu.draw()
         self.stop_monitoring()
+

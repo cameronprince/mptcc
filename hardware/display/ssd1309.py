@@ -16,8 +16,6 @@ class SSD1309(Display):
     def __init__(self):
         super().__init__()
 
-        print(dir(init))
-
         self.driver = driver(i2c=init.init.i2c, width=self.DISPLAY_WIDTH, height=self.DISPLAY_HEIGHT, flip=True)
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT

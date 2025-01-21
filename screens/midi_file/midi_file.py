@@ -247,3 +247,4 @@ class MIDIFile(CustomItem):
         handler = self.handlers.get(self.current_page)
         if handler and hasattr(handler, "switch_4"):
             handler.switch_4()
+

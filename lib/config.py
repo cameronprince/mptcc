@@ -54,3 +54,4 @@ class Config:
         """
         with open(init.CONFIG_PATH, "w") as f:
             ujson.dump(config_data, f)
+

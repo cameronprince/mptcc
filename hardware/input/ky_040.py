@@ -31,6 +31,8 @@ class KY040(Input):
     def __init__(self):
         super().__init__()
 
+        self.init = init.init
+
         # Define rotary interrupts.
         self.rotary_encoders = [
             RotaryIRQ(pin_num_clk=self.PIN_ROTARY_1_CLK, pin_num_dt=self.PIN_ROTARY_1_DT,
