@@ -1,4 +1,11 @@
-from ..hardware import Hardware
+"""
+MicroPython Tesla Coil Controller (MPTCC)
+by Cameron Prince
+teslauniverse.com
+
+hardware/display/ssd1309.py
+Display sub-class for interfacing with SSD1309 library.
+"""
 from .display import Display
 from ssd1309 import Display as driver
 from ... import init
@@ -16,7 +23,7 @@ class SSD1309(Display):
     def __init__(self):
         super().__init__()
 
-        self.driver = driver(i2c=init.init.i2c, width=self.DISPLAY_WIDTH, height=self.DISPLAY_HEIGHT, flip=True)
+        self.driver = driver(i2c=init.init.i2c_1, width=self.DISPLAY_WIDTH, height=self.DISPLAY_HEIGHT, flip=True)
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 

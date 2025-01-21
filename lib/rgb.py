@@ -145,3 +145,4 @@ class RGB:
             green = self.map(127 - value, 0, 127, 0, 255)
             blue = 0
         self.setColor(red, green, blue)
+

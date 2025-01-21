@@ -59,8 +59,8 @@ class Interrupter(CustomItem):
             The name of the interrupter screen.
         """
         super().__init__(name)
-        self.display = init.display
-
+        self.init = init
+        self.display = self.init.display
         self.config = config.read_config()
 
         self.frequency = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
@@ -74,8 +74,9 @@ class Interrupter(CustomItem):
         self.ten_x = False
         self.active = False
         self.val_old = [0, 0]
-        self.banned_frequencies = init.BANNED_INTERRUPTER_FREQUENCIES
+        self.banned_frequencies = self.init.BANNED_INTERRUPTER_FREQUENCIES
         self.thread = None
+        self.settings_changed = True  # Initialize to True for first-time setup
 
     def draw(self):
         """
@@ -152,19 +153,20 @@ class Interrupter(CustomItem):
         """
         Helper method to fire all outputs equally.
         """
-        init.outputs.enable_output(0, self.frequency, self.on_time, self.active, self.max_duty)
-        init.outputs.enable_output(1, self.frequency, self.on_time, self.active, self.max_duty)
-        init.outputs.enable_output(2, self.frequency, self.on_time, self.active, self.max_duty)
-        init.outputs.enable_output(3, self.frequency, self.on_time, self.active, self.max_duty)
+        for i in range(4):
+            self.init.output.enable_output(i, self.frequency, self.on_time, self.active, self.max_duty)
 
     def output_control_thread(self):
         """
         Thread that controls the outputs based on the attributes.
         """
         while self.active:
-            self.enable_outputs()
+            if self.settings_changed:
+                self.enable_outputs()
+                self.settings_changed = False
             time.sleep(0.1)
-        init.outputs.disable_outputs()
+        init.output.disable_outputs()
+        self.settings_changed = True
 
     def calculate_max_on_time(self, frequency):
         """
@@ -198,6 +200,7 @@ class Interrupter(CustomItem):
         self.on_time = max(self.min_on_time, min(max_on_time, int(new_on_time)))
         self.val_old[0] = val
         self.update_display(update_on_time=True, update_frequency=False)
+        self.settings_changed = True  # Set the flag to reapply settings
 
     def rotary_2(self, val):
         """
@@ -227,17 +230,18 @@ class Interrupter(CustomItem):
             self.on_time = max_on_time
         self.val_old[1] = val
         self.update_display(update_on_time=False, update_frequency=True)
+        self.settings_changed = True
 
     def switch_2(self):
         """
         Respond to encoder 2 presses to return to the main menu.
         """
         self.active = False
-        utils.disable_outputs()
+        self.init.output.disable_outputs()
         parent_screen = self.parent
         if parent_screen:
-            init.menu.set_screen(parent_screen)
-            init.menu.draw()
+            self.init.menu.set_screen(parent_screen)
+            self.init.menu.draw()
 
     def switch_3(self):
         """

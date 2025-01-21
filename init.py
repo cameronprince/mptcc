@@ -11,12 +11,19 @@ from machine import Pin
 
 class Init:
 
-    # I2C bus pin assignments and settings.
-    # (used by the display and optionally, RGB LED and I2CEncoder)
-    PIN_IC2_SCL = 19
-    PIN_IC2_SDA = 18
-    I2C_INTERFACE = 1
-    I2C_FREQ = 400000
+    # I2C bus 1 pin assignments and settings.
+    # (used by the default PCA9685 RGB LED hardware)
+    PIN_I2C_1_SCL = 17
+    PIN_I2C_1_SDA = 16
+    I2C_1_INTERFACE = 0
+    I2C_1_FREQ = 1000000
+
+    # I2C bus 1 pin assignments and settings.
+    # (used by the default PCA9685 RGB LED hardware)
+    PIN_I2C_2_SCL = 19
+    PIN_I2C_2_SDA = 18
+    I2C_2_INTERFACE = 1
+    I2C_2_FREQ = 1000000
 
     # SPI bus pin assignments and settings.
     # (used by SD card reader).
@@ -63,22 +70,34 @@ class Init:
         # Attributes for sharing among screens.
         self.spi = None
         self.uart = None
-        self.i2c = None
+        self.i2c_1 = None
+        self.i2c_2 = None
         self.menu = None
         self.display = None
 
     """
     Bus and port handling.
     """
-    def init_i2c(self):
-        """Initializes the I2C bus."""
+    def init_i2c_1(self):
+        """Initializes the first I2C bus."""
         from machine import I2C
-        if not isinstance(self.i2c, I2C) or not self.i2c.is_ready():
-            self.i2c = I2C(
-                self.I2C_INTERFACE,
-                scl=Pin(self.PIN_IC2_SCL),
-                sda=Pin(self.PIN_IC2_SDA),
-                freq=self.I2C_FREQ
+        if not isinstance(self.i2c_1, I2C):
+            self.i2c_1 = I2C(
+                self.I2C_1_INTERFACE,
+                scl=Pin(self.PIN_I2C_1_SCL),
+                sda=Pin(self.PIN_I2C_1_SDA),
+                freq=self.I2C_1_FREQ
+            )
+
+    def init_i2c_2(self):
+        """Initializes the second I2C bus."""
+        from machine import I2C
+        if not isinstance(self.i2c_2, I2C):
+            self.i2c_2 = I2C(
+                self.I2C_2_INTERFACE,
+                scl=Pin(self.PIN_I2C_2_SCL),
+                sda=Pin(self.PIN_I2C_2_SDA),
+                freq=self.I2C_2_FREQ
             )
 
     def init_spi(self):

@@ -21,7 +21,7 @@ class Output(Hardware):
         """
         for output in self.output:
             output.duty_u16(0)
-        for led in init.led:
+        for led in self.init.rgb_led:
             led.off()
 
     def enable_output(self, output, frequency, on_time, active, max_duty=None):
@@ -49,13 +49,10 @@ class Output(Hardware):
             self.output[output].freq(frequency)
             duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
             self.output[output].duty_u16(duty_cycle)
-            if max_duty is not None:
-                percent = calculate_percent(frequency, on_time, max_duty)
-                self.init.led[output].status_color(max(1, min(100, percent)), mode="percentage")
-            else:
-                velocity = int((on_time / 65535) * 127)
-                self.init.led[output].status_color(velocity, mode="velocity")
+            percent = utils.calculate_percent(frequency, on_time, max_duty)
+            percent = max(1, min(100, percent))
+            self.init.rgb_led[output].status_color(percent, mode="percentage")
         else:
             self.output[output].duty_u16(0)
-            self.led[output].off()
+            self.init.rgb_led[output].off()
 

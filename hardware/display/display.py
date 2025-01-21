@@ -16,7 +16,7 @@ class Display(Hardware):
         self.init = init.init
 
         # Prepare the I2C bus.
-        self.init.init_i2c()
+        self.init.init_i2c_1()
 
     """
     Display functions.

@@ -40,10 +40,18 @@ and removing the comment for the desired alternate option.
 
 Edit the class for the selected hardware to define configuration.
 """
-# SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40DiImt)
-# Requires: https://github.com/rdagger/micropython-ssd1309/blob/master/ssd1309.py
+# SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
+# Requires: https://github.com/rdagger/micropython-ssd1309
+# Note: This library supports custom fonts, shapes, images and more, beyond
+# the standard frame buffer commands.
 # --------
 from mptcc.hardware.display.ssd1309 import SSD1309 as display # Default option.
+
+# SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
+# Requires: https://github.com/TimHanewich/MicroPython-SSD1306
+# Note: This library only supports standard frame buffer commands.
+# --------
+# from mptcc.hardware.display.ssd1306 import SSD1306 as display # Alternate option.
 
 init.display = display()
 
@@ -65,7 +73,7 @@ from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led # Default option.
 # --------
 # from mptcc.hardware.rgb_led.i2cencoder import I2CEncoderInput as rgb_leds # Alternate option.
 
-init.rgb_led = rgb_led()
+init.rgb_driver = rgb_led()
 
 """
 Outputs

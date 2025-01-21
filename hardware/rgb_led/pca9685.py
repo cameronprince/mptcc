@@ -1,4 +1,6 @@
+from pca9685 import PCA9685 as driver
 from ..rgb_led.rgb_led import RGBLED
+from ...lib.rgb import RGB
 from ... import init
 from machine import Pin
 import time
@@ -27,32 +29,19 @@ class PCA9685(RGBLED):
 
     def __init__(self):
         super().__init__()
-
         self.init = init.init
 
+        # Prepare the I2C bus.
+        self.init.init_i2c_2()
+        self.driver = driver(self.init.i2c_2)
+        self.driver.freq(self.PCA9685_FREQ)
 
-    def init_pca(self):
-        """Initializes the external PWM driver."""
-        self.init_i2c()
-        self.deinit_pca()
-        from pca9685 import PCA9685
-        self.pca = PCA9685(self.i2c)
-        self.pca.freq(Init.PCA9685_FREQ)
-
-    def deinit_pca(self):
-        """Shuts down the external PWM driver."""
-        from pca9685 import PCA9685
-        if isinstance(self.pca, PCA9685):
-            self.pca.reset()
-
-    def init_leds(self):
-        """Initializes all the RGB LEDs on the external PWM driver."""
-        self.init_pca()
-        from mptcc.lib.rgb import RGB
-        self.leds = [
-            RGB(self.pca, red_channel=Init.PCA_LED1_RED, green_channel=Init.PCA_LED1_GREEN, blue_channel=Init.PCA_LED1_BLUE),
-            RGB(self.pca, red_channel=Init.PCA_LED2_RED, green_channel=Init.PCA_LED2_GREEN, blue_channel=Init.PCA_LED2_BLUE),
-            RGB(self.pca, red_channel=Init.PCA_LED3_RED, green_channel=Init.PCA_LED3_GREEN, blue_channel=Init.PCA_LED3_BLUE),
-            RGB(self.pca, red_channel=Init.PCA_LED4_RED, green_channel=Init.PCA_LED4_GREEN, blue_channel=Init.PCA_LED4_BLUE)
+        self.init.rgb_led = [
+            RGB(self.driver, red_channel=self.PCA_LED1_RED, green_channel=self.PCA_LED1_GREEN, blue_channel=self.PCA_LED1_BLUE),
+            RGB(self.driver, red_channel=self.PCA_LED2_RED, green_channel=self.PCA_LED2_GREEN, blue_channel=self.PCA_LED2_BLUE),
+            RGB(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE),
+            RGB(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE),
         ]
+
+        # self.init.rgb_led[1].status_color(1)
 

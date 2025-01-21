@@ -1,18 +1,33 @@
-from ..hardware import Hardware
+"""
+MicroPython Tesla Coil Controller (MPTCC)
+by Cameron Prince
+teslauniverse.com
 
-class SSD1306Display(Hardware):
+hardware/display/ssd1306.py
+Display sub-class for interfacing with SSD1306 library.
+"""
+from .display import Display
+from ssd1306 import SSD1306_I2C as driver
+from ... import init
+
+class SSD1306(Display):
+
+    DISPLAY_WIDTH = 128
+    DISPLAY_HEIGHT = 64
+    DISPLAY_LINE_HEIGHT = 12
+    DISPLAY_FONT_WIDTH = 8
+    DISPLAY_FONT_HEIGHT = 8
+    DISPLAY_HEADER_HEIGHT = 10
+    DISPLAY_ITEMS_PER_PAGE = 4
+
     def __init__(self):
         super().__init__()
-        # For best results, use the SSD1306 driver from:
-        # https://github.com/TimHanewich/MicroPython-SSD1306
-        import ssd1306
-        self.display = ssd1306.SSD1306_I2C(
+
+        self.init = init.init
+        self.driver = driver(
             Init.DISPLAY_WIDTH,
             Init.DISPLAY_HEIGHT,
-            self.i2c,
+            self.init.i2c_1,
         )
 
-    def initialize_display(self):
-        # Implementation for initializing SSD1306 display
-        pass
 

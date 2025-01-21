@@ -22,7 +22,7 @@ class KY040(Input):
 
     PIN_ROTARY_4_CLK = 20
     PIN_ROTARY_4_DT = 21
-    PIN_ROTARY_4_SW = 17
+    PIN_ROTARY_4_SW = 5
 
     # Enable/disable encoder pin pull-up resistors.
     # Most of the PCB-mounted encoders have pull-ups on the boards.
