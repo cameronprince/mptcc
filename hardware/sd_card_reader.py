@@ -1,6 +1,6 @@
 from .. import init
 from .hardware import Hardware
-from machine import SPI
+from machine import Pin, SPI
 import sdcard
 import uos
 
@@ -15,9 +15,9 @@ class SDCardReader(Hardware):
 
     def init_sd(self):
         try:
-            sd = sdcard.SDCard(self.init.spi, Pin(init.PIN_SPI_CS_SD, Pin.OUT))
+            sd = sdcard.SDCard(self.init.spi, Pin(self.init.PIN_SPI_CS, Pin.OUT))
             # Mount the disk.
-            uos.mount(sd, init.SD_MOUNT_POINT)
+            uos.mount(sd, self.init.SD_MOUNT_POINT)
         except OSError as e:
             print(f"Error initializing SD card: {e}")
 
@@ -25,7 +25,7 @@ class SDCardReader(Hardware):
         """Dismounts the SD card."""
         import uos
         try:
-            uos.umount(init.SD_MOUNT_POINT)
+            uos.umount(self.init.SD_MOUNT_POINT)
         except Exception:
             # Ignore any errors that occur
             pass

@@ -9,12 +9,6 @@ Shared utility functions.
 
 from mptcc.init import init
 import mptcc.lib.config as config
-import _thread
-import time
-
-"""
-OUTPUT UTILS
-"""
 
 def calculate_percent(frequency, on_time, max_duty):
     """

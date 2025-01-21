@@ -9,6 +9,8 @@ Parent class for displays - provides shared display-related functions.
 from ..hardware import Hardware
 from ... import init
 from machine import I2C
+import _thread
+import time
 
 class Display(Hardware):
     def __init__(self):
@@ -17,6 +19,11 @@ class Display(Hardware):
 
         # Prepare the I2C bus.
         self.init.init_i2c_1()
+
+        self.scroll_thread = None
+        self.scroll_flag = False
+        self.scroll_text = None
+        self.scroll_y_position = None
 
     """
     Display functions.
@@ -30,10 +37,10 @@ class Display(Hardware):
         Helper to display a loading message.
         """
         # Clear the display.
-        init.display.fill(0)
+        self.clear()
         # Add the loading text.
-        center_text("Loading...", 20)
-        init.display.show()
+        self.center_text("Loading...", 20)
+        self.show()
 
     def alert_screen(self, text):
         """
@@ -163,12 +170,6 @@ class Display(Hardware):
     """
     Scrolling functions.
     """
-
-    scroll_thread = None
-    scroll_flag = False
-    scroll_text = None
-    scroll_y_position = None
-
     def start_scroll_task(self, text, y_position):
         """
         Helper to start scrolling text as a separate thread.
@@ -180,27 +181,25 @@ class Display(Hardware):
         y_position : int
             The y-coordinate position of the text on the display.
         """
-        global scroll_thread, scroll_flag, scroll_text, scroll_y_position
         time.sleep(0.2)
-        stop_scroll_task()
-        if scroll_text != text:
-            scroll_flag = True
-            scroll_text = text
-            scroll_y_position = y_position
-            scroll_thread = _thread.start_new_thread(scroll_task, (text, y_position))
+        self.stop_scroll_task()
+        if self.scroll_text != text:
+            self.scroll_flag = True
+            self.scroll_text = text
+            self.scroll_y_position = y_position
+            self.scroll_thread = _thread.start_new_thread(self.scroll_task, (text, y_position))
 
     def stop_scroll_task(self):
         """
         Helper to stop scrolling text and end the thread.
         """
-        global scroll_thread, scroll_flag, scroll_text, scroll_y_position
-        if scroll_thread:
-            scroll_flag = False
+        if self.scroll_thread:
+            self.scroll_flag = False
             # Small delay to ensure the thread has stopped.
             time.sleep(0.2)
-            scroll_thread = None
-            scroll_text = None
-            scroll_y_position = None
+            self.scroll_thread = None
+            self.scroll_text = None
+            self.scroll_y_position = None
 
     def scroll_task(self, text, y_position):
         """
@@ -213,23 +212,22 @@ class Display(Hardware):
         y_position : int
             The y-coordinate position of the text on the display.
         """
-        global scroll_flag
         delay_seconds = 1
         delay_interval = 0.1
         elapsed_time = 0
-        while scroll_flag and elapsed_time < delay_seconds:
+        while self.scroll_flag and elapsed_time < delay_seconds:
             time.sleep(delay_interval)
             elapsed_time += delay_interval
-        if not scroll_flag:
+        if not self.scroll_flag:
             return
-        v_padding = int((init.DISPLAY_LINE_HEIGHT - init.DISPLAY_FONT_HEIGHT) / 2)
-        while scroll_flag:
-            for i in range(len(text) + init.DISPLAY_ITEMS_PER_PAGE):
-                if not scroll_flag:
+        v_padding = int((self.DISPLAY_LINE_HEIGHT - self.DISPLAY_FONT_HEIGHT) / 2)
+        while self.scroll_flag:
+            for i in range(len(text) + self.DISPLAY_ITEMS_PER_PAGE):
+                if not self.scroll_flag:
                     return
                 scroll_text = (text + "    ")[i:] + (text + "    ")[:i]
-                init.display.fill_rect(0, y_position, init.display.width, init.DISPLAY_LINE_HEIGHT, 1)
-                init.display.text(scroll_text[:20], 0, y_position + v_padding, 0)
-                init.display.show()
+                self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, 1)
+                self.text(scroll_text[:20], 0, y_position + v_padding, 0)
+                self.show()
                 time.sleep(0.2)
 
