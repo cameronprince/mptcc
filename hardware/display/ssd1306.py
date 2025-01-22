@@ -22,12 +22,22 @@ class SSD1306(Display):
 
     def __init__(self):
         super().__init__()
+        self.driver = driver(self.DISPLAY_WIDTH, self.DISPLAY_HEIGHT, i2c=init.init.i2c_1)
+        self.width = self.DISPLAY_WIDTH
+        self.height = self.DISPLAY_HEIGHT
 
-        self.init = init.init
-        self.driver = driver(
-            Init.DISPLAY_WIDTH,
-            Init.DISPLAY_HEIGHT,
-            self.init.i2c_1,
-        )
+    def clear(self):
+        self.driver.fill(0)
 
+    def text(self, text, w, h, f):
+        self.driver.text(text, w, h, f)
+
+    def hline(self, x, y, w, c):
+        self.driver.hline(x, y, w, c)
+
+    def fill_rect(self, x, y, w, h, c):
+        self.driver.fill_rect(x, y, w, h, c)
+
+    def show(self):
+        self.driver.show()
 
