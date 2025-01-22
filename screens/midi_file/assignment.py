@@ -7,7 +7,7 @@ screens/midi_file/assignment.py
 Provides the track assignment screen.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 import mptcc.lib.utils as utils
 
 class MIDIFileAssignment:
@@ -24,6 +24,8 @@ class MIDIFileAssignment:
         """
         self.midi_file = midi_file
         self.output_selection = None
+        self.init = init
+        self.display = self.init.display
 
     def draw(self):
         """
@@ -38,7 +40,8 @@ class MIDIFileAssignment:
                 self.output_selection = i + 1
                 break
 
-        init.display.fill(0)
+        self.display.clear()
+        self.display.header("Track Assignment")
 
         available_height = init.display.height - self.midi_file.header_height
         total_text_height = self.midi_file.font_height * 2
@@ -47,19 +50,19 @@ class MIDIFileAssignment:
         self.midi_file.output_y = track_y + self.midi_file.font_height + total_spacing // 3
         full_track_name = self.midi_file.track_list[self.midi_file.selected_track]
 
-        utils.truncate_text(full_track_name, track_y, center=True)
+        self.display.truncate_text(full_track_name, track_y, center=True)
         self.update_output_value()
 
     def update_output_value(self):
         """
         Updates the assignment values on the display without clearing the entire screen.
         """
-        init.display.fill_rect(0, self.midi_file.output_y, init.display.width, self.midi_file.line_height, 0)
+        self.display.fill_rect(0, self.midi_file.output_y, self.display.width, self.midi_file.line_height, 0)
 
         output_value = self.output_selection
         output_text = "None" if output_value is None else str(output_value)
-        utils.center_text(f"Output: {output_text}", self.midi_file.output_y)
-        init.display.show()
+        self.display.center_text(f"Output: {output_text}", self.midi_file.output_y)
+        self.display.show()
 
     def rotary_1(self, val):
         """

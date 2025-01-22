@@ -8,11 +8,11 @@ Provides shared attributes/methods and routes inputs to sub-screens for the MIDI
 The modules in the midi_file subdirectory provide the primary functionality.
 """
 
-from mptcc.init import init
-from mptcc.lib.menu import CustomItem
-import mptcc.lib.utils as utils
 import json
 import uos
+from mptcc.hardware.init import init
+from mptcc.lib.menu import CustomItem
+import mptcc.lib.utils as utils
 
 class MIDIFile(CustomItem):
     """
@@ -69,6 +69,10 @@ class MIDIFile(CustomItem):
             The name of the MIDI file.
         """
         super().__init__(name)
+
+        self.init = init
+        self.display = self.init.display
+
         self.file_list = []
         self.track_list = []
         self.current_file_index = 0
@@ -80,12 +84,12 @@ class MIDIFile(CustomItem):
         self.selected_track = None
         self.outputs = [None] * 4
         self.last_rotary_1_value = 0
-        self.per_page = init.DISPLAY_ITEMS_PER_PAGE
+        self.per_page = self.display.DISPLAY_ITEMS_PER_PAGE
         self.output_y = None
-        self.line_height = init.DISPLAY_LINE_HEIGHT
-        self.font_width = init.DISPLAY_FONT_WIDTH
-        self.font_height = init.DISPLAY_FONT_HEIGHT
-        self.header_height = init.DISPLAY_HEADER_HEIGHT
+        self.line_height = self.display.DISPLAY_LINE_HEIGHT
+        self.font_width = self.display.DISPLAY_FONT_WIDTH
+        self.font_height = self.display.DISPLAY_FONT_HEIGHT
+        self.header_height = self.display.DISPLAY_HEADER_HEIGHT
 
         # Initialize handlers.
         from mptcc.screens.midi_file import (
@@ -113,16 +117,14 @@ class MIDIFile(CustomItem):
         ----------
         file_path : str
             Path to the MIDI file, which will be used to determine the map file path.
-        init_sd : bool
-            Flag to indicate whether to initialize the SD card.
         """
         map_path = file_path.replace('.mid', '.map').replace('.midi', '.map')
 
-        # Ensure the outputs array is always initialized with a fixed length of four
+        # Ensure the outputs array is always initialized with a fixed length of four.
         self.outputs = [None] * 4
 
         try:
-            init.init_sd()
+            self.init.sd_card_reader.init_sd()
             with open(map_path, 'r') as f:
                 map_data = json.load(f)
                 for i in range(min(len(self.outputs), len(map_data))):
@@ -132,7 +134,7 @@ class MIDIFile(CustomItem):
         except Exception as e:
             pass
         finally:
-            init.deinit_sd()
+            self.init.sd_card_reader.deinit_sd()
 
     def save_map_file(self):
         """
@@ -140,10 +142,10 @@ class MIDIFile(CustomItem):
         Assumes the SD card is already mounted.
         """
         map_filename = self.file_list[self.selected_file].replace('.mid', '.map').replace('.midi', '.map')
-        map_path = init.SD_MOUNT_POINT + "/" + map_filename
+        map_path = self.init.SD_MOUNT_POINT + "/" + map_filename
 
         try:
-            init.init_sd()
+            self.init.sd_card_reader.init_sd()
 
             if self.selected_track is None:
                 raise ValueError("No track selected.")
@@ -162,7 +164,7 @@ class MIDIFile(CustomItem):
         except Exception as e:
             pass
         finally:
-            init.deinit_sd()
+            self.init.sd_card_reader.deinit_sd()
 
     def rotary_1(self, val):
         """

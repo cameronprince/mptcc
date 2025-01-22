@@ -1,16 +1,17 @@
 """
 MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
+teslauniverse.com
 
 screens/midi_file/play.py
 Provides the MIDI playback functionality.
 """
 
-from mptcc.init import init
-import mptcc.lib.utils as utils
 import _thread
 import gc
 import time
+from mptcc.hardware.init import init
+import mptcc.lib.utils as utils
 import umidiparser
 
 class MIDIFilePlay:
@@ -28,6 +29,15 @@ class MIDIFilePlay:
         self.events = []
         self.val_old = [0, 0, 0, 0]
         self.playback_active = False
+        self.init = init
+        self.display = self.init.display
+
+        self.current_time = 0
+        self.elapsed_time = 0
+        self.minutes = 0
+        self.seconds = 0
+        self.start_time = 0
+        self.last_display_update = 0
 
     def draw(self, file_path):
         """
@@ -41,7 +51,7 @@ class MIDIFilePlay:
         self.midi_file.current_page = "play"
 
         # Show a loading message.
-        utils.loading_screen()
+        self.display.loading_screen()
 
         self.playback_active = True
 
@@ -51,34 +61,34 @@ class MIDIFilePlay:
         if not hasattr(self.midi_file, 'outputs') or all(output is None for output in self.midi_file.outputs):
             # Stop and return to file listing when the selected file has no corresponding map file.
             self.playback_active = False
-            utils.alert_screen("No tracks mapped")
+            self.display.alert_screen("No tracks mapped")
             self.midi_file.handlers["files"].draw()
             return
 
         # Initialize the SD card reader so we can read the MIDI file.
-        init.init_sd()
+        self.init.sd_card_reader.init_sd()
 
         # Parse the MIDI file and prepare the events array.
         midi = umidiparser.MidiFile(file_path, buffer_size=0, reuse_event_object=False)
-        init.deinit_sd()
+        self.init.sd_card_reader.deinit_sd()
 
         # Create a list of track indices from the outputs array and adjust by +1.
         # This skips the metadata track.
         track_indices = [track_index + 1 for track_index in self.midi_file.outputs if track_index is not None]
 
         for track_index in track_indices:
-            current_time = 0
+            self.current_time = 0
             for event in midi.tracks[track_index]:
                 if event.status in (umidiparser.NOTE_ON, umidiparser.NOTE_OFF):
-                    current_time += event.delta_us / 1e6
-                    self.events.append((current_time, track_index, event))
+                    self.current_time += event.delta_us / 1e6
+                    self.events.append((self.current_time, track_index, event))
 
         # Sort the events by time.
         self.events.sort(key=lambda x: x[0])
 
         if not self.events:
             self.playback_active = False
-            utils.alert_screen("No MIDI events found")
+            self.display.alert_screen("No MIDI events found")
             return
 
         # Start playback in a separate thread.
@@ -89,42 +99,40 @@ class MIDIFilePlay:
         Plays the MIDI events sequentially and updates the display with elapsed time.
         """
         try:
-            start_time = time.ticks_us()
-            display_update_interval = 1
-            last_display_update = time.ticks_ms()
+            self.start_time = time.ticks_us()
+            self.last_display_update = time.ticks_ms()
 
-            # Ensure the display is populated as soon as playback begins.
-            self.update_elapsed_time(start_time)
-            
+            # Show the initial screen values prior to playback start.
+            self.update_levels()
+            self.update_elapsed_time()
             while self.playback_active and self.events:
-                current_time = time.ticks_us()
-                elapsed_time = time.ticks_diff(current_time, start_time) / 1e6
+                self.current_time = time.ticks_us()
+                self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) / 1e6
 
-                if elapsed_time >= self.events[0][0]:
+                if self.elapsed_time >= self.events[0][0]:
                     event_time, track, event = self.events.pop(0)
 
                     if track - 1 in self.midi_file.outputs:
                         output = self.midi_file.outputs.index(track - 1)
-
                         if event.status == umidiparser.NOTE_ON:
                             note = event.note
                             velocity = event.velocity
                             if velocity == 0:
-                                utils.set_output(output, 0, 0, False)
+                                self.init.output.set_output(output, 0, 0, False)
                             else:
                                 frequency = utils.midi_to_frequency(note)
                                 on_time = utils.velocity_to_ontime(velocity)
                                 # Scale the on_time by the level control percentage.
                                 scaled_on_time = int(on_time * self.levels[output] / 100)
-                                utils.set_output(output, int(frequency), scaled_on_time, True)
+                                self.init.output.set_output(output, frequency, scaled_on_time, True)
                         elif event.status == umidiparser.NOTE_OFF:
-                            utils.set_output(output, 0, 0, False)
+                            self.init.output.set_output(output, 0, 0, False)
                     else:
                         print(f"Warning: No output mapped for track {track}")
 
-                if time.ticks_diff(time.ticks_ms(), last_display_update) >= display_update_interval * 1000:
-                    self.update_elapsed_time(start_time)
-                    last_display_update = time.ticks_ms()
+                if time.ticks_diff(time.ticks_ms(), self.last_display_update) >= 1 * 1000:
+                    self.update_elapsed_time()
+                    self.last_display_update = time.ticks_ms()
 
                 time.sleep(0.01)
 
@@ -132,34 +140,26 @@ class MIDIFilePlay:
         except Exception as e:
             print(f"Exception: {e}")
 
-    def update_elapsed_time(self, start_time):
+    def update_elapsed_time(self):
         """
-        Updates the elapsed time and output level values.
-
-        Parameters:
-        ----------
-        start_time : int
-            The start time in microseconds.
+        Updates the elapsed time display during MIDI playback.
         """
         # Check if playback is active before updating the display.
         if not self.playback_active:
             return
 
-        current_time = time.ticks_us()
-        elapsed_time = time.ticks_diff(current_time, start_time) // 1000000
-        minutes = elapsed_time // 60
-        seconds = elapsed_time % 60
+        self.current_time = time.ticks_us()
+        self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) // 1000000
+        self.minutes = self.elapsed_time // 60
+        self.seconds = self.elapsed_time % 60
 
-        # Clear only the areas that need to be updated.
-        init.display.fill_rect(0, 16, 128, 16, 0)
-        init.display.fill_rect(0, 32, 128, 32, 0)
+        # Clear only the area that needs to be updated.
+        self.display.fill_rect(0, 16, 128, 16, 0)
 
-        # Update the time and levels.
-        utils.header("PLAY MIDI FILE")
-        init.display.text(f"Time: {minutes:02}:{seconds:02}", 0, 16)
-        init.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32)
-        init.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48)
-        init.display.show()
+        # Update the time.
+        self.display.header("PLAY MIDI FILE")
+        self.display.text(f"Time: {self.minutes:02}:{self.seconds:02}", 0, 16, 1)
+        self.display.show()
 
     def stop_playback(self):
         """
@@ -167,7 +167,7 @@ class MIDIFilePlay:
         """
         self.playback_active = False
 
-        utils.disable_outputs()
+        self.init.output.disable_outputs()
 
         # Clear events.
         self.events = []
@@ -181,20 +181,20 @@ class MIDIFilePlay:
         self.midi_file.current_page = ""
         parent_screen = self.midi_file.parent
         if parent_screen:
-            init.menu.set_screen(parent_screen)
-            init.menu.draw()
+            self.init.menu.set_screen(parent_screen)
+            self.init.menu.draw()
 
     def update_levels(self):
         """
         Updates the display with the current levels of channels 1 to 4.
         """
         # Clear only the areas that need to be updated.
-        init.display.fill_rect(0, 32, 128, 32, 0)
+        self.display.fill_rect(0, 32, 128, 32, 0)
 
         # Update the levels.
-        init.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32)
-        init.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48)
-        init.display.show()
+        self.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32, 1)
+        self.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48, 1)
+        self.display.show()
 
     def rotary(self, index, val):
         """

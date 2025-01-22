@@ -7,7 +7,7 @@ screens/interrupter_config.py
 Provides the screen for configuring interrupter settings.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
@@ -53,7 +53,8 @@ class InterrupterConfig(CustomItem):
             The name of the interrupter configuration screen.
         """
         super().__init__(name)
-        self.display = init.display
+        self.init = init
+        self.display = self.init.display
         self.config = config.read_config()
         self.min_on_time = self.config.get("interrupter_min_on_time", config.DEF_INTERRUPTER_MIN_ON_TIME)
         self.min_freq = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
@@ -62,14 +63,14 @@ class InterrupterConfig(CustomItem):
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
         self.page = 0
         self.val_old = [0, 0]
-        self.font_width = init.DISPLAY_FONT_WIDTH
+        self.font_width = self.init.display.DISPLAY_FONT_WIDTH
 
     def draw(self):
         """
         Displays one of three pages which contain interrupter configuration inputs.
         """
-        self.display.fill(0)
-        utils.header('Interrupter Conf')
+        self.display.clear()
+        self.display.header('Interrupter Conf')
 
         # Display the first page with minimum on time and minimum frequency inputs.
         if self.page == 0:
@@ -118,18 +119,24 @@ class InterrupterConfig(CustomItem):
         val : int
             The new value from the rotary encoder.
         """
+        direction = val - self.val_old[0]
+        if direction == 0:
+            return  # No change in direction, so no update needed.
+
         if self.page == 0:
             increment = 1
-            self.min_on_time = max(1, min(100, self.min_on_time + increment * (val - self.val_old[0])))
+            self.min_on_time = max(1, min(100, self.min_on_time + increment * (1 if direction > 0 else -1)))
         elif self.page == 1:
             increment = 10
-            self.max_on_time = max(10, min(5000, self.max_on_time + increment * (val - self.val_old[0])))
+            self.max_on_time = max(10, min(5000, self.max_on_time + increment * (1 if direction > 0 else -1)))
         elif self.page == 2:
             increment = 0.1
-            self.max_duty = max(0.0, min(100.0, self.max_duty + increment * (val - self.val_old[0])))
+            self.max_duty = max(0.0, min(100.0, self.max_duty + increment * (1 if direction > 0 else -1)))
+
         self.val_old[0] = val
         self.save_config()
         self.draw()
+
 
     def rotary_2(self, val):
         """
@@ -140,12 +147,18 @@ class InterrupterConfig(CustomItem):
         val : int
             The new value from the rotary encoder.
         """
+        direction = val - self.val_old[1]
+
+        if direction == 0:
+            return  # No change in direction, so no update needed.
+
         if self.page == 0:
             increment = 10
-            self.min_freq = max(20, min(1000, self.min_freq + increment * (val - self.val_old[1])))
+            self.min_freq = max(20, min(1000, self.min_freq + increment * direction))
         elif self.page == 1:
             increment = 10
-            self.max_freq = max(1000, min(2550, self.max_freq + increment * (val - self.val_old[1])))
+            self.max_freq = max(1000, min(2550, self.max_freq + increment * direction))
+
         self.val_old[1] = val
         self.save_config()
         self.draw()
@@ -154,10 +167,11 @@ class InterrupterConfig(CustomItem):
         """
         Respond to encoder 2 presses to return to the configuration menu.
         """
+        self.page = 0
         parent_screen = self.parent
         if parent_screen:
-            init.menu.set_screen(parent_screen)
-            init.menu.draw()
+            self.init.menu.set_screen(parent_screen)
+            self.init.menu.draw()
 
     def switch_3(self):
         """

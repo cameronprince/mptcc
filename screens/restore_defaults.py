@@ -11,14 +11,14 @@ class-based methods. This is due to the requirement of responding to
 two inputs at once.
 """
 
-from mptcc.init import init
-from mptcc.lib.menu import CustomItem
-import mptcc.lib.config as config
-import mptcc.lib.utils as utils
 import _thread
 import os
 import time
 from machine import Pin
+from mptcc.hardware.init import init
+from mptcc.lib.menu import CustomItem
+import mptcc.lib.config as config
+import mptcc.lib.utils as utils
 
 class RestoreDefaults(CustomItem):
     """
@@ -50,14 +50,15 @@ class RestoreDefaults(CustomItem):
         self.start_time = 0
         self.running = False
         self.monitor_thread = None
+        self.init = init
 
     def draw(self):
         """
         Displays the initial restore defaults screen with instructions.
         """
-        init.display.fill(0)
-        utils.header("Restore Defaults")
-        utils.message_screen("Press and hold buttons 3 and 4 to restore.")
+        self.init.display.clear()
+        self.init.display.header("Restore Defaults")
+        self.init.display.message_screen("Press and hold buttons 3 and 4 to restore.")
         self.start_monitoring()
 
     def start_monitoring(self):
@@ -82,7 +83,7 @@ class RestoreDefaults(CustomItem):
         while self.running:
             # We can't use the normal switch_ methods here because we
             # need to work with two inputs at once.
-            if not init.switch_3.value() and not init.switch_4.value():
+            if not self.init.switch_3.value() and not self.init.switch_4.value():
                 if self.start_time == 0:
                     self.start_time = time.time()
                 elif time.time() - self.start_time > 2:
@@ -100,13 +101,13 @@ class RestoreDefaults(CustomItem):
             os.remove(init.CONFIG_PATH)
         except OSError:
             pass
-        init.display.fill(0)
+        self.init.display.clear()
         # Display the success message for two seconds and return to the main menu.
-        utils.alert_screen("Defaults restored")
+        self.init.display.alert_screen("Defaults restored")
 
         # Return to the main menu.
-        init.menu.reset()
-        init.menu.draw()
+        self.init.menu.reset()
+        self.init.menu.draw()
         self.stop_monitoring()
 
     def switch_2(self):
@@ -115,6 +116,6 @@ class RestoreDefaults(CustomItem):
         """
         parent_screen = self.parent
         if parent_screen:
-            init.menu.set_screen(parent_screen)
-            init.menu.draw()
+            self.init.menu.set_screen(parent_screen)
+            self.init.menu.draw()
         self.stop_monitoring()
