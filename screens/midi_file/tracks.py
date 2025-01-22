@@ -28,8 +28,7 @@ class MIDIFileTracks:
     def draw(self):
         self.midi_file.current_page = "tracks"
 
-        # Show the loading message.
-        self.display.loading_screen()
+        self.display.clear()
 
         if not self.midi_file.track_list:
             self.get_tracks()

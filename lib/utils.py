@@ -46,7 +46,8 @@ def midi_to_frequency(note):
     float
         The frequency corresponding to the MIDI note number.
     """
-    return 440 * 2 ** ((note - 69) / 12)
+    frequency = int(440 * 2 ** ((note - 69) / 12))
+    return frequency
 
 def velocity_to_ontime(velocity):
     """
@@ -62,5 +63,6 @@ def velocity_to_ontime(velocity):
     int
         The calculated pulse width.
     """
-    return int((velocity / 127) * 100)
+    ontime = int((velocity / 127) * 100)
+    return ontime
 

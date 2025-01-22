@@ -56,12 +56,15 @@ class MIDIInput(CustomItem):
         self.header_height = init.display.DISPLAY_HEADER_HEIGHT
         self.level = 50
 
+        self.init = init
+        self.display = self.init.display
+
     def draw(self):
         """
         Displays the MIDI input screen.
         """
-        self.display.fill(0)
-        utils.header(str.upper("MIDI Input"))
+        self.display.clear()
+        self.display.header(str.upper("MIDI Input"))
         self.display.text("Ready for input", 0, 20, 1)
         self.display.show()
         self.start_midi_input()
@@ -72,7 +75,7 @@ class MIDIInput(CustomItem):
         """
         if not self.listening:
             self.listening = True
-            init.init_uart()
+            self.init.init_uart()
             self.midi_thread = _thread.start_new_thread(self.midi_input_thread, ())
 
     def stop_midi_input(self):
@@ -81,15 +84,15 @@ class MIDIInput(CustomItem):
         """
         if self.listening:
             self.listening = False
-            init.display.fill(0)
+            self.display.clear()
 
     def midi_input_thread(self):
         """
         Responds to input from the UART and passes the data to the MIDI parser.
         """
         while self.listening:
-            if init.uart.any():
-                data = init.uart.read(1)[0]
+            if self.init.uart.any():
+                data = self.init.uart.read(1)[0]
                 self.md.read(data)
 
     def note_on(self, ch, cmd, note, vel):
@@ -113,7 +116,7 @@ class MIDIInput(CustomItem):
 
         # Drive all four outputs equally.
         for output in range(4):
-            utils.set_output(output, int(frequency), on_time, True)
+            self.init.output.set_output(output, frequency, on_time, True)
 
     def note_off(self, ch, cmd, note, vel):
         """
@@ -132,16 +135,16 @@ class MIDIInput(CustomItem):
         """
         # Disable all outputs.
         for output in range(4):
-            utils.set_output(output, 0, 0, False)
+            self.init.output.set_output(output, 0, 0, False)
 
     def switch_2(self):
         """
         Responds to encoder 2 presses to return to the main menu.
         """
         self.stop_midi_input()
-        utils.disable_outputs()
+        self.init.output.disable_outputs()
         parent_screen = self.parent
         if parent_screen:
-            init.menu.set_screen(parent_screen)
-            init.menu.draw()
+            self.init.menu.set_screen(parent_screen)
+            self.init.menu.draw()
 

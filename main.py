@@ -15,7 +15,7 @@ import mptcc.screens as screens
 Input Devices
 
 Select one of the input device options below by commenting out the default option
-and removing the comment for the desired alternate option.
+and removing the comment for the desired, alternate option.
 
 Edit the class for the selected hardware to define configuration.
 """
@@ -36,7 +36,7 @@ init.inputs = inputs()
 Display
 
 Select one of the display options below by commenting out the default option
-and removing the comment for the desired alternate option.
+and removing the comment for the desired, alternate option.
 
 Edit the class for the selected hardware to define configuration.
 """
@@ -59,7 +59,7 @@ init.display = display()
 RGB LEDs
 
 Select one of the RGB LED options below by commenting out the default option
-and removing the comment for the desired alternate option.
+and removing the comment for the desired, alternate option.
 
 Edit the class for the selected hardware to define configuration.
 """

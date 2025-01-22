@@ -63,27 +63,27 @@ class Display(Hardware):
         text : str
             The alert message to display.
         """
-        init.display.fill(0)
+        self.clear()
 
         # Wrap the text if it's too wide for the display.
-        font_width = init.DISPLAY_FONT_WIDTH
+        font_width = self.DISPLAY_FONT_WIDTH
         # Add a small amount of padding.
-        max_width = init.display.width - (font_width * 2)
+        max_width = self.width - (font_width * 2)
         wrapped_lines = wrap_text(text, max_width)
 
         # Calculate the starting y position to center the text vertically.
-        total_text_height = len(wrapped_lines) * init.DISPLAY_LINE_HEIGHT
-        y_start = (init.display.height - total_text_height) // 2
+        total_text_height = len(wrapped_lines) * self.DISPLAY_LINE_HEIGHT
+        y_start = (self.height - total_text_height) // 2
 
         # Display each line of the wrapped text
         y = y_start
         for line in wrapped_lines:
             # Only center text if it is at least 3 font widths less than the screen width
             if len(line) * font_width <= max_width - 3 * font_width:
-                center_text(line, y)
+                self.center_text(line, y)
             else:
-                init.display.text(line.strip(), 0, y, 1)  # Left-align the text
-            y += init.DISPLAY_LINE_HEIGHT  # Use line height from init
+                self.text(line.strip(), 0, y, 1)  # Left-align the text
+            y += self.DISPLAY_LINE_HEIGHT  # Use line height from init
 
         init.display.show()
 
@@ -117,14 +117,14 @@ class Display(Hardware):
         center : bool, optional
             If True, the text will be centered on the display (default is False).
         """
-        max_chars = init.display.width // 8
+        max_chars = self.width // 8
         if len(text) > max_chars:
             text = text[:max_chars - 3] + "..."
         if center:
-            x = (init.display.width - len(text) * 8) // 2
+            x = (self.width - len(text) * 8) // 2
         else:
             x = 0
-        init.display.text(text, x, y, 1)
+        self.text(text, x, y, 1)
 
     def wrap_text(self, text, max_width):
         """
@@ -149,7 +149,7 @@ class Display(Hardware):
         for word in words:
             # Calculate the width of the current line if the word is added
             new_line = current_line + ("" if not current_line else " ") + word
-            new_line_width = len(new_line) * init.DISPLAY_FONT_WIDTH
+            new_line_width = len(new_line) * self.DISPLAY_FONT_WIDTH
 
             # Check if adding the next word exceeds the max width
             if new_line_width <= max_width:

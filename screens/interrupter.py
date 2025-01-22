@@ -63,13 +63,14 @@ class Interrupter(CustomItem):
         self.display = self.init.display
         self.config = config.read_config()
 
-        self.frequency = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
-        self.on_time = config.DEF_INTERRUPTER_MIN_ON_TIME
+        self.min_on_time = self.config.get("interrupter_min_on_time", config.DEF_INTERRUPTER_MIN_ON_TIME)
         self.min_freq = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
-        self.max_freq = self.config.get("interrupter_max_freq", config.DEF_INTERRUPTER_MAX_FREQ)
-        self.min_on_time = config.DEF_INTERRUPTER_MIN_ON_TIME
         self.max_on_time = self.config.get("interrupter_max_on_time", config.DEF_INTERRUPTER_MAX_ON_TIME)
+        self.max_freq = self.config.get("interrupter_max_freq", config.DEF_INTERRUPTER_MAX_FREQ)
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
+
+        self.frequency = self.min_freq  # Initialize with the saved min frequency
+        self.on_time = self.min_on_time  # Initialize with the saved min on time
         self.font_width = self.display.DISPLAY_FONT_WIDTH
         self.ten_x = False
         self.active = False
@@ -154,7 +155,7 @@ class Interrupter(CustomItem):
         Helper method to fire all outputs equally.
         """
         for i in range(4):
-            self.init.output.enable_output(i, self.frequency, self.on_time, self.active, self.max_duty)
+            self.init.output.set_output(i, self.frequency, self.on_time, self.active, self.max_duty)
 
     def output_control_thread(self):
         """

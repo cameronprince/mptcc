@@ -33,20 +33,23 @@ class BatteryStatus(CustomItem):
         """
         super().__init__(name)
 
+        self.init = init
+        self.display = self.init.display
+
     def draw(self):
         """
         Displays the current battery voltage on the screen.
         """
-        init.display.fill(0)
-        utils.header('Battery Status')
+        self.display.clear()
+        self.display.header('Battery Status')
         
         # Read the battery voltage.
-        value = ADC(init.PIN_BATT_STATUS_ADC).read_u16()
-        voltage = value * (3.3 / 65535) * init.VOLTAGE_DROP_FACTOR
-        
+        value = ADC(self.init.PIN_BATT_STATUS_ADC).read_u16()
+        voltage = value * (3.3 / 65535) * self.init.VOLTAGE_DROP_FACTOR
+
         # Display the voltage.
-        init.display.text(f"{voltage:.2f} VDC", 0, 20, 1)
-        init.display.show()
+        self.display.text(f"{voltage:.2f} VDC", 0, 20, 1)
+        self.display.show()
 
     def switch_2(self):
         """
@@ -54,6 +57,6 @@ class BatteryStatus(CustomItem):
         """
         parent_screen = self.parent
         if parent_screen:
-            init.menu.set_screen(parent_screen)
-            init.menu.draw()
+            self.init.menu.set_screen(parent_screen)
+            self.init.menu.draw()
 

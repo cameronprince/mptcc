@@ -16,14 +16,14 @@ class Init:
     PIN_I2C_1_SCL = 17
     PIN_I2C_1_SDA = 16
     I2C_1_INTERFACE = 0
-    I2C_1_FREQ = 1000000
+    I2C_1_FREQ = 400000
 
-    # I2C bus 1 pin assignments and settings.
+    # I2C bus 2 pin assignments and settings.
     # (used by the default PCA9685 RGB LED hardware)
     PIN_I2C_2_SCL = 19
     PIN_I2C_2_SDA = 18
     I2C_2_INTERFACE = 1
-    I2C_2_FREQ = 1000000
+    I2C_2_FREQ = 400000
 
     # SPI bus pin assignments and settings.
     # (used by SD card reader).
