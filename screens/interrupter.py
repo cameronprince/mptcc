@@ -6,7 +6,7 @@ screens/interrupter.py
 Provides functionality for the standard interrupter.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
@@ -265,4 +265,3 @@ class Interrupter(CustomItem):
         """
         self.ten_x = not self.ten_x
         self.update_display(update_on_time=False, update_frequency=False, update_ten_x=True)
-

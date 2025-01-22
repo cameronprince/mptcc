@@ -7,7 +7,7 @@ screens/midi_input.py
 Provides functionality for the MIDI input feature.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 import mptcc.lib.config as config
 import mptcc.lib.utils as utils
@@ -147,4 +147,3 @@ class MIDIInput(CustomItem):
         if parent_screen:
             self.init.menu.set_screen(parent_screen)
             self.init.menu.draw()
-

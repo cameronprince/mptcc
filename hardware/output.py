@@ -1,12 +1,21 @@
+"""
+MicroPython Tesla Coil Controller (MPTCC)
+by Cameron Prince
+teslauniverse.com
+
+hardware/output.py
+Class for handling outputs.
+"""
+
 from .hardware import Hardware
 from ..lib import utils
 from machine import Pin, PWM
-from .. import init
+from ..hardware.init import init
 
 class Output(Hardware):
     def __init__(self):
         super().__init__()
-        self.init = init.init
+        self.init = init
 
         self.output = [
             PWM(Pin(self.init.PIN_OUTPUT_1)),
@@ -58,4 +67,3 @@ class Output(Hardware):
         else:
             self.output[output].duty_u16(0)
             self.init.rgb_led[output].off()
-

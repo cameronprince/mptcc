@@ -7,7 +7,7 @@ screens/midi_file/tracks.py
 Provides the MIDI track listing screen.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 import mptcc.lib.utils as utils
 import umidiparser
 
@@ -140,4 +140,3 @@ class MIDIFileTracks:
         self.display.stop_scroll_task()
         self.midi_file.track_list = []
         self.midi_file.handlers["files"].draw()
-

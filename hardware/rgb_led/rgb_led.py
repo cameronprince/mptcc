@@ -11,4 +11,3 @@ from ..hardware import Hardware
 class RGBLED(Hardware):
     def __init__(self):
         super().__init__()
-

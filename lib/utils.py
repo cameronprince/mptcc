@@ -7,9 +7,6 @@ utils.py
 Shared utility functions.
 """
 
-from mptcc.init import init
-import mptcc.lib.config as config
-
 def calculate_percent(frequency, on_time, max_duty):
     """
     Calculates the percentage value based on frequency, on_time, and max_duty.

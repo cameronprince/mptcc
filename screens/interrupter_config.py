@@ -7,7 +7,7 @@ screens/interrupter_config.py
 Provides the screen for configuring interrupter settings.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
@@ -186,4 +186,3 @@ class InterrupterConfig(CustomItem):
         """
         self.page = (self.page + 1) % 3
         self.draw()
-

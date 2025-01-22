@@ -41,4 +41,3 @@ class SSD1309(Display):
 
     def show(self):
         self.driver.present()
-

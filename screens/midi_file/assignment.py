@@ -7,7 +7,7 @@ screens/midi_file/assignment.py
 Provides the track assignment screen.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 import mptcc.lib.utils as utils
 
 class MIDIFileAssignment:
@@ -121,4 +121,3 @@ class MIDIFileAssignment:
         Responds to presses of encoder 2 to go back.
         """
         self.midi_file.handlers["tracks"].draw()
-

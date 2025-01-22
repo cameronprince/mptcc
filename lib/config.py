@@ -7,7 +7,7 @@ config.py
 Provides default configuration values.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 import ujson
 
 class Config:
@@ -54,4 +54,3 @@ class Config:
         """
         with open(init.CONFIG_PATH, "w") as f:
             ujson.dump(config_data, f)
-

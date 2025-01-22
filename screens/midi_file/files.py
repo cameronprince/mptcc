@@ -7,7 +7,7 @@ screens/midi_file/files.py
 Provides the MIDI file listing screen.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 import mptcc.lib.utils as utils
 import uos
 
@@ -179,4 +179,3 @@ class MIDIFileFiles:
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
         file_path = self.init.SD_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
         self.midi_file.handlers["play"].draw(file_path)
-

@@ -7,7 +7,7 @@ screens/battery_status.py
 Provides the battery status screen.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 import mptcc.lib.utils as utils
 from machine import ADC
@@ -59,4 +59,3 @@ class BatteryStatus(CustomItem):
         if parent_screen:
             self.init.menu.set_screen(parent_screen)
             self.init.menu.draw()
-

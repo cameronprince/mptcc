@@ -6,8 +6,9 @@ teslauniverse.com
 hardware/display/display.py
 Parent class for displays - provides shared display-related functions.
 """
+
 from ..hardware import Hardware
-from ... import init
+from ...hardware.init import init
 from machine import I2C
 import _thread
 import time
@@ -15,7 +16,7 @@ import time
 class Display(Hardware):
     def __init__(self):
         super().__init__()
-        self.init = init.init
+        self.init = init
 
         # Prepare the I2C bus.
         self.init.init_i2c_1()
@@ -51,7 +52,7 @@ class Display(Hardware):
         text : str
             The alert message to display.
         """
-        message_screen(text)
+        self.message_screen(text)
         time.sleep(2)
 
     def message_screen(self, text):
@@ -69,7 +70,7 @@ class Display(Hardware):
         font_width = self.DISPLAY_FONT_WIDTH
         # Add a small amount of padding.
         max_width = self.width - (font_width * 2)
-        wrapped_lines = wrap_text(text, max_width)
+        wrapped_lines = self.wrap_text(text, max_width)
 
         # Calculate the starting y position to center the text vertically.
         total_text_height = len(wrapped_lines) * self.DISPLAY_LINE_HEIGHT
@@ -230,4 +231,3 @@ class Display(Hardware):
                 self.text(scroll_text[:20], 0, y_position + v_padding, 0)
                 self.show()
                 time.sleep(0.2)
-

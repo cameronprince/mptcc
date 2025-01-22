@@ -8,7 +8,7 @@ Provides shared attributes/methods and routes inputs to sub-screens for the MIDI
 The modules in the midi_file subdirectory provide the primary functionality.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 import mptcc.lib.utils as utils
 import json
@@ -251,4 +251,3 @@ class MIDIFile(CustomItem):
         handler = self.handlers.get(self.current_page)
         if handler and hasattr(handler, "switch_4"):
             handler.switch_4()
-

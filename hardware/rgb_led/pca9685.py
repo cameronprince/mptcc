@@ -1,7 +1,16 @@
+"""
+MicroPython Tesla Coil Controller (MPTCC)
+by Cameron Prince
+teslauniverse.com
+
+hardware/rgb_led/pca9685.py
+RGB LED device utilitizing the PCA9685 external PWD board.
+"""
+
 from pca9685 import PCA9685 as driver
 from ..rgb_led.rgb_led import RGBLED
 from ...lib.rgb import RGB
-from ... import init
+from ...hardware.init import init
 from machine import Pin
 import time
 
@@ -29,7 +38,7 @@ class PCA9685(RGBLED):
 
     def __init__(self):
         super().__init__()
-        self.init = init.init
+        self.init = init
 
         # Prepare the I2C bus.
         self.init.init_i2c_2()
@@ -44,4 +53,3 @@ class PCA9685(RGBLED):
         ]
 
         # self.init.rgb_led[1].status_color(1)
-

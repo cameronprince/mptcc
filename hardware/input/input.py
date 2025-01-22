@@ -11,4 +11,3 @@ from ..hardware import Hardware
 class Input(Hardware):
     def __init__(self):
         super().__init__()
-

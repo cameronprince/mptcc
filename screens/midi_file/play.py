@@ -6,7 +6,7 @@ screens/midi_file/play.py
 Provides the MIDI playback functionality.
 """
 
-from mptcc.init import init
+from mptcc.hardware.init import init
 import mptcc.lib.utils as utils
 import _thread
 import gc
@@ -236,4 +236,3 @@ class MIDIFilePlay:
 
     def switch_4(self):
         self.playback_active = False
-
