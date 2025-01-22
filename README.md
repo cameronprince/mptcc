@@ -100,7 +100,7 @@ Total estimated cost: $160 USD (not including output transmitters or connectors)
 
 ## Diagram
 
-![MicroPython Tesla coil controller connections](docs/mptcc_connections_v1.1.png?raw=true "MicroPython Tesla coil controller connections")
+![MicroPython Tesla coil controller connections](docs/mptcc_connections_v1.1.jpg?raw=true "MicroPython Tesla coil controller connections")
 
 You can download the Fritzing file for this project [here](docs/mptcc_v1.1.fzz).
 
