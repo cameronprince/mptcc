@@ -10,7 +10,40 @@ Carries configuration and initialized hardware between classes.
 from machine import Pin
 
 class Init:
+    """
+    A class to carry configuration and initialized hardware between classes 
+    for the MicroPython Tesla Coil Controller (MPTCC).
+
+    Attributes:
+    -----------
+    display : object
+        The display object.
+    i2c_1 : object
+        The first I2C bus.
+    i2c_2 : object
+        The second I2C bus.
+    menu : object
+        The menu object.
+    spi_1 : object
+        The first SPI bus.
+    spi_2 : object
+        The second SPI bus.
+    switch_1 : object
+        The first switch.
+    switch_2 : object
+        The second switch.
+    switch_3 : object
+        The third switch.
+    switch_4 : object
+        The fourth switch.
+    uart : object
+        The UART for MIDI input.
+    """
+
     def __init__(self):
+        """
+        Constructs all the necessary attributes for the Init object.
+        """
         self.display = None
         self.i2c_1 = None
         self.i2c_2 = None
@@ -23,8 +56,10 @@ class Init:
         self.switch_4 = None
         self.uart = None
 
-    # Initializes the first I2C bus.
     def init_i2c_1(self):
+        """
+        Initializes the first I2C bus.
+        """
         from machine import I2C
         if not isinstance(self.i2c_1, I2C):
             self.i2c_1 = I2C(
@@ -34,8 +69,10 @@ class Init:
                 freq=self.I2C_1_FREQ
             )
 
-    # Initializes the second I2C bus.
     def init_i2c_2(self):
+        """
+        Initializes the second I2C bus.
+        """
         from machine import I2C
         if not isinstance(self.i2c_2, I2C):
             self.i2c_2 = I2C(
@@ -45,8 +82,10 @@ class Init:
                 freq=self.I2C_2_FREQ
             )
 
-    # Initializes the first SPI bus.
     def init_spi_1(self):
+        """
+        Initializes the first SPI bus.
+        """
         from machine import SPI
         if isinstance(self.spi_1, SPI):
             self.spi_1.deinit()
@@ -60,8 +99,10 @@ class Init:
             miso=Pin(self.PIN_SPI_1_MISO)
         )
 
-    # Initializes the second SPI bus.
     def init_spi_2(self):
+        """
+        Initializes the second SPI bus.
+        """
         from machine import SPI
         if isinstance(self.spi_2, SPI):
             self.spi_2.deinit()
@@ -75,8 +116,10 @@ class Init:
             miso=Pin(self.PIN_SPI_2_MISO)
         )
 
-    # Initializes the UART for MIDI input.
     def init_uart(self):
+        """
+        Initializes the UART for MIDI input.
+        """
         from machine import UART
         self.uart = UART(
             self.UART_INTERFACE,

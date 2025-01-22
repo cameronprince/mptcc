@@ -11,20 +11,28 @@ from mptcc.hardware.init import init
 import ujson
 
 class Config:
+    """
+    A class to provide default configuration values and handle reading and writing
+    configuration data for the MicroPython Tesla Coil Controller (MPTCC).
 
-    # Default minimum on time for the interrupter in microseconds
+    Attributes:
+    -----------
+    DEF_INTERRUPTER_MIN_ON_TIME : int
+        Default minimum on time for the interrupter in microseconds.
+    DEF_INTERRUPTER_MIN_FREQ : int
+        Default minimum frequency for the interrupter in Hz.
+    DEF_INTERRUPTER_MAX_ON_TIME : int
+        Default maximum on time for the interrupter in microseconds.
+    DEF_INTERRUPTER_MAX_FREQ : int
+        Default maximum frequency for the interrupter in Hz.
+    DEF_INTERRUPTER_MAX_DUTY : float
+        Default maximum duty cycle for the interrupter in percent.
+    """
+
     DEF_INTERRUPTER_MIN_ON_TIME = 20
-
-    # Default minimum frequency for the interrupter in Hz
     DEF_INTERRUPTER_MIN_FREQ = 100
-
-    # Default maximum on time for the interrupter in microseconds
     DEF_INTERRUPTER_MAX_ON_TIME = 300
-
-    # Default maximum frequency for the interrupter in Hz
     DEF_INTERRUPTER_MAX_FREQ = 1000
-
-    # Default maximum duty cycle for the interrupter in percent
     DEF_INTERRUPTER_MAX_DUTY = 5.0
 
     def read_config():
@@ -34,7 +42,8 @@ class Config:
         Returns:
         -------
         dict
-            The configuration data read from the flash memory. If the file does not exist or contains invalid data, an empty dictionary is returned.
+            The configuration data read from the flash memory. If the file does not exist 
+            or contains invalid data, an empty dictionary is returned.
         """
         try:
             with open(init.CONFIG_PATH, "r") as f:

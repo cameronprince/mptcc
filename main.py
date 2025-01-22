@@ -7,8 +7,7 @@ main.py
 Defines and initializes the hardware and menu.
 """
 
-# Prepare the init object to store configuration and initialized
-# hardware.
+# Prepare the init object to store configuration and initialized hardware.
 from mptcc.hardware.init import init
 
 """
@@ -29,7 +28,7 @@ init.I2C_2_INTERFACE = 1
 init.I2C_2_FREQ = 400000
 
 # SPI bus 1 pin assignments and settings.
-# (used by SD card reader).
+# (used by SD card reader)
 init.SPI_1_INTERFACE = 0
 init.SPI_1_BAUD = 1000000
 init.PIN_SPI_1_SCK = 2
@@ -40,7 +39,7 @@ init.PIN_SPI_1_DC = 4
 init.PIN_SPI_1_RST = 16
 
 # SPI bus 2 pin assignments and settings.
-# (optionally used by a display).
+# (optionally used by a display)
 # init.SPI_2_INTERFACE = 1
 # init.SPI_2_BAUD = 1000000
 # init.PIN_SPI_2_SCK = 0
@@ -70,8 +69,7 @@ init.UART_BAUD = 31250
 init.SD_MOUNT_POINT = "/sd"
 init.CONFIG_PATH = "/mptcc/config.json"
 
-# Frequencies listed here are filtered from the available
-# choices for the interrupter function.
+# Frequencies listed here are filtered from the available choices for the interrupter function.
 init.BANNED_INTERRUPTER_FREQUENCIES = []
 
 # Rotary encoder pin assignments.
@@ -103,16 +101,13 @@ and removing the comment for the desired, alternate option.
 
 Edit the class for the selected hardware to define configuration.
 """
-
 # KY-040 Rotary Encoder - https://amzn.to/42E63l1 or https://amzn.to/3CdzIqi
 # Requires: https://github.com/miketeachman/micropython-rotary
-# --------
-from mptcc.hardware.input.ky_040 import KY040 as inputs # Default option.
+from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
 # I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# --------
-# from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs # Alternate option.
+# from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs  # Alternate option.
 
 init.inputs = inputs()
 
@@ -124,19 +119,16 @@ and removing the comment for the desired, alternate option.
 
 Edit the class for the selected hardware to define configuration.
 """
-
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
-# --------
-from mptcc.hardware.display.ssd1306 import SSD1306 as display # Default option.
+from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
 # Requires: https://github.com/rdagger/micropython-ssd1309
-# Note: This library supports custom fonts, shapes, images and more, beyond
+# Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands. This driver also works with SSD1306 displays.
-# --------
-# from mptcc.hardware.display.ssd1309 import SSD1309 as display # Alternate option.
+# from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
 
 init.display = display()
 
@@ -150,13 +142,11 @@ Edit the class for the selected hardware to define configuration.
 """
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
-# --------
-from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led # Default option.
+from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# --------
-# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoderInput as rgb_leds # Alternate option.
+# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoderInput as rgb_leds  # Alternate option.
 
 init.rgb_driver = rgb_led()
 

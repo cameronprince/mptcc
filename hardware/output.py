@@ -7,13 +7,27 @@ hardware/output.py
 Class for handling outputs.
 """
 
+from machine import Pin, PWM
 from .hardware import Hardware
 from ..lib import utils
-from machine import Pin, PWM
 from ..hardware.init import init
 
 class Output(Hardware):
+    """
+    A class to handle outputs for the MicroPython Tesla Coil Controller (MPTCC).
+
+    Attributes:
+    -----------
+    init : object
+        The initialization object containing configuration and hardware settings.
+    output : list
+        List of PWM objects for the output channels.
+    """
+
     def __init__(self):
+        """
+        Constructs all the necessary attributes for the Output object.
+        """
         super().__init__()
         self.init = init
 
@@ -60,10 +74,12 @@ class Output(Hardware):
             self.output[output].duty_u16(duty_cycle)
             if max_duty is not None:
                 percent = utils.calculate_percent(frequency, on_time, max_duty)
-                self.init.rgb_led[output].status_color(max(1, min(100, percent)), mode="percentage")
+                self.init.rgb_led[output].status_color(
+                    max(1, min(100, percent)), mode="percentage")
             else:
                 velocity = int((on_time / 65535) * 127)
-                self.init.rgb_led[output].status_color(velocity, mode="velocity")
+                self.init.rgb_led[output].status_color(
+                    velocity, mode="velocity")
         else:
             self.output[output].duty_u16(0)
             self.init.rgb_led[output].off()

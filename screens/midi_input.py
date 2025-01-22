@@ -7,12 +7,12 @@ screens/midi_input.py
 Provides functionality for the MIDI input feature.
 """
 
+import _thread
+import SimpleMIDIDecoder
 from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 import mptcc.lib.config as config
 import mptcc.lib.utils as utils
-import _thread
-import SimpleMIDIDecoder
 
 class MIDIInput(CustomItem):
     """
@@ -112,7 +112,6 @@ class MIDIInput(CustomItem):
         """
         frequency = utils.midi_to_frequency(note)
         on_time = utils.velocity_to_ontime(vel)
-        # scaled_on_time = int(on_time * self.level / 100)
 
         # Drive all four outputs equally.
         for output in range(4):

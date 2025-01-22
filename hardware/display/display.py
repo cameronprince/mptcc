@@ -7,14 +7,35 @@ hardware/display/display.py
 Parent class for displays - provides shared display-related functions.
 """
 
+import time
+import _thread
+from machine import I2C
 from ..hardware import Hardware
 from ...hardware.init import init
-from machine import I2C
-import _thread
-import time
 
 class Display(Hardware):
+    """
+    A parent class for displays, providing shared display-related functions for 
+    the MicroPython Tesla Coil Controller (MPTCC).
+
+    Attributes:
+    -----------
+    init : object
+        The initialization object containing configuration and hardware settings.
+    scroll_thread : _thread
+        The thread object for handling scrolling text.
+    scroll_flag : bool
+        Flag to indicate if scrolling is active.
+    scroll_text : str
+        The text to be scrolled.
+    scroll_y_position : int
+        The y-coordinate position of the scrolling text.
+    """
+
     def __init__(self):
+        """
+        Constructs all the necessary attributes for the Display object.
+        """
         super().__init__()
         self.init = init
 
@@ -30,6 +51,14 @@ class Display(Hardware):
     Display functions.
     """
     def header(self, text):
+        """
+        Displays a header with a horizontal line below the text.
+
+        Parameters:
+        ----------
+        text : str
+            The header text to display.
+        """
         self.center_text(str.upper(text), 0)
         self.hline(0, self.DISPLAY_HEADER_HEIGHT, self.width, 1)
 
@@ -76,15 +105,15 @@ class Display(Hardware):
         total_text_height = len(wrapped_lines) * self.DISPLAY_LINE_HEIGHT
         y_start = (self.height - total_text_height) // 2
 
-        # Display each line of the wrapped text
+        # Display each line of the wrapped text.
         y = y_start
         for line in wrapped_lines:
-            # Only center text if it is at least 3 font widths less than the screen width
+            # Only center text if it is at least 3 font widths less than the screen width.
             if len(line) * font_width <= max_width - 3 * font_width:
                 self.center_text(line, y)
             else:
-                self.text(line.strip(), 0, y, 1)  # Left-align the text
-            y += self.DISPLAY_LINE_HEIGHT  # Use line height from init
+                self.text(line.strip(), 0, y, 1)  # Left-align the text.
+            y += self.DISPLAY_LINE_HEIGHT  # Use line height from init.
 
         init.display.show()
 
@@ -94,8 +123,6 @@ class Display(Hardware):
 
         Parameters:
         ----------
-        display : Display
-            The display object to show the text on.
         text : str
             The text to display.
         y : int
@@ -148,21 +175,21 @@ class Display(Hardware):
         current_line = ""
 
         for word in words:
-            # Calculate the width of the current line if the word is added
+            # Calculate the width of the current line if the word is added.
             new_line = current_line + ("" if not current_line else " ") + word
             new_line_width = len(new_line) * self.DISPLAY_FONT_WIDTH
 
-            # Check if adding the next word exceeds the max width
+            # Check if adding the next word exceeds the max width.
             if new_line_width <= max_width:
-                # Add the word to the current line
+                # Add the word to the current line.
                 current_line = new_line
             else:
-                # Add the current line to lines and start a new line
+                # Add the current line to lines and start a new line.
                 if current_line:
                     lines.append(current_line)
                 current_line = word
 
-        # Add the last line
+        # Add the last line.
         if current_line:
             lines.append(current_line)
 

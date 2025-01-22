@@ -6,16 +6,17 @@ screens/interrupter.py
 Provides functionality for the standard interrupter.
 """
 
+import _thread
+import time
 from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
-import _thread
-import time
 
 class Interrupter(CustomItem):
     """
-    A class to represent and handle the standard interrupter functionality for the MicroPython Tesla Coil Controller (MPTCC).
+    A class to represent and handle the standard interrupter functionality 
+    for the MicroPython Tesla Coil Controller (MPTCC).
 
     Attributes:
     -----------
@@ -69,15 +70,15 @@ class Interrupter(CustomItem):
         self.max_freq = self.config.get("interrupter_max_freq", config.DEF_INTERRUPTER_MAX_FREQ)
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
 
-        self.frequency = self.min_freq  # Initialize with the saved min frequency
-        self.on_time = self.min_on_time  # Initialize with the saved min on time
+        self.frequency = self.min_freq  # Initialize with the saved min frequency.
+        self.on_time = self.min_on_time  # Initialize with the saved min on time.
         self.font_width = self.display.DISPLAY_FONT_WIDTH
         self.ten_x = False
         self.active = False
         self.val_old = [0, 0]
         self.banned_frequencies = self.init.BANNED_INTERRUPTER_FREQUENCIES
         self.thread = None
-        self.settings_changed = True  # Initialize to True for first-time setup
+        self.settings_changed = True  # Initialize to True for first-time setup.
 
     def draw(self):
         """
@@ -229,7 +230,7 @@ class Interrupter(CustomItem):
         self.frequency = max(self.min_freq, min(self.max_freq, new_frequency))
         if self.on_time > max_on_time:
             self.on_time = max_on_time
-        self.val_old[1] = val
+        self.val_old[1] = val       
         self.update_display(update_on_time=False, update_frequency=True)
         self.settings_changed = True
 

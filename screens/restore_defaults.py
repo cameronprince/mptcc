@@ -11,14 +11,14 @@ class-based methods. This is due to the requirement of responding to
 two inputs at once.
 """
 
-from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
-import mptcc.lib.config as config
-import mptcc.lib.utils as utils
 import _thread
 import os
 import time
 from machine import Pin
+from mptcc.hardware.init import init
+from mptcc.lib.menu import CustomItem
+import mptcc.lib.config as config
+import mptcc.lib.utils as utils
 
 class RestoreDefaults(CustomItem):
     """

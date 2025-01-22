@@ -21,7 +21,7 @@ each output. The RGB LEDs are active any time the outputs are active and their c
 level of each output with colors ranging from green, to yellow, to red.
 
 This software provides a framework for any number of screens with each screen optionally having any number
-of sub-screens. The rotary encoder and push-button inputs cascade down to each screen or sub-screen,
+of sub-screens. The rotary encoder and pushbutton inputs cascade down to each screen or sub-screen,
 ensuring that all code for a particular screen is contained within its class. Adding your own screens
 to customize the controller should be pretty straightforward.
 
@@ -45,12 +45,12 @@ be improved in many ways and I invite anyone to participate.
 ## Warning
 
 Tesla coils are dangerous devices which can cause shocks, burns, fires and even death. The author assumes no
-responsibility for any devices operated by the controller project described herewithin, or for any damage or
+responsibility for any devices operated by the controller project described herein, or for any damage or
 injury that may be caused by their operation.
 
 This controller is experimental. If not assembled and operated correctly, it can cause damage to driver and
 bridge components. It is solely up to the builder to verify the controller output prior to connecting it to
-a Tesla coil. Author assumes no responsibility for damage to equipment, components, tools, etc. which can be
+a Tesla coil. The author assumes no responsibility for damage to equipment, components, tools, etc. which can be
 caused by the use of this controller. You have been warned.
 
 ## Features
@@ -96,13 +96,13 @@ Total estimated cost: $160 USD (not including output transmitters or connectors)
 
 ## Schematic
 
-![MicroPython Tesla coil controller schematic](images/mptcc_schematic_v1.0.png?raw=true "MicroPython Tesla coil controller schematic")
+![MicroPython Tesla coil controller schematic](images/mptcc_schematic_v1.1.png?raw=true "MicroPython Tesla coil controller schematic")
 
 ## Diagram
 
-![MicroPython Tesla coil controller connections](images/mptcc_connections_v1.0.png?raw=true "MicroPython Tesla coil controller connections")
+![MicroPython Tesla coil controller connections](images/mptcc_connections_v1.1.png?raw=true "MicroPython Tesla coil controller connections")
 
-You can download the Fritzing file for this project [here](images/mptcc_v1.0.fzz).
+You can download the Fritzing file for this project [here](images/mptcc_v1.1.fzz).
 
 ## Installation
 
@@ -149,7 +149,7 @@ rotation to scroll through the list of files. Press encoder 1 pushbutton to sele
 display will then show a list of MIDI tracks within the selected file. As with files, use encoder 1
 to scroll through the list and press encoder 1 pushbutton to select a track. On the subsequent
 assignment screen, rotate encoder 1 to cycle between None, 1, 2, 3 and 4. Pressing encoder 1 pushbutton
-saves the assignment. Pressing encoder 2 push button returns to the track listing without saving the assignment.
+saves the assignment. Pressing encoder 2 pushbutton returns to the track listing without saving the assignment.
 
 The number of track assignments for a selected MIDI file is displayed in the header of the track listing screen,
 such as 2/4, indicating two of the maximum of four mappings have been made. Selecting an output for a track

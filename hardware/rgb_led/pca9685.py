@@ -4,18 +4,28 @@ by Cameron Prince
 teslauniverse.com
 
 hardware/rgb_led/pca9685.py
-RGB LED device utilitizing the PCA9685 external PWD board.
+RGB LED device utilizing the PCA9685 external PWM board.
 """
 
+import time
+from machine import Pin
 from pca9685 import PCA9685 as driver
 from ..rgb_led.rgb_led import RGBLED
 from ...lib.rgb import RGB
 from ...hardware.init import init
-from machine import Pin
-import time
 
 class PCA9685(RGBLED):
-    
+    """
+    A class to control RGB LED devices using the PCA9685 external PWM board.
+
+    Attributes:
+    -----------
+    init : object
+        The initialization object containing configuration and hardware settings.
+    driver : PCA9685
+        The PCA9685 PWM driver instance.
+    """
+
     # RGB LED to PCA9685 channel assignments.
     PCA_LED1_RED = 0
     PCA_LED1_GREEN = 1
@@ -37,6 +47,9 @@ class PCA9685(RGBLED):
     PCA9685_FREQ = 1000
 
     def __init__(self):
+        """
+        Constructs all the necessary attributes for the PCA9685 object.
+        """
         super().__init__()
         self.init = init
 
@@ -51,5 +64,3 @@ class PCA9685(RGBLED):
             RGB(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE),
             RGB(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE),
         ]
-
-        # self.init.rgb_led[1].status_color(1)

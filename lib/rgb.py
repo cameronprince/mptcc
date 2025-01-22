@@ -1,6 +1,7 @@
 """
 MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
+teslauniverse.com
 
 rgb.py
 Provides functions for controlling RGB LED colors.

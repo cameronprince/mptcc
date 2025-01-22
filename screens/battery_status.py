@@ -7,14 +7,15 @@ screens/battery_status.py
 Provides the battery status screen.
 """
 
+from machine import ADC
 from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 import mptcc.lib.utils as utils
-from machine import ADC
 
 class BatteryStatus(CustomItem):
     """
-    A class to represent and handle the battery status screen for the MicroPython Tesla Coil Controller (MPTCC).
+    A class to represent and handle the battery status screen for the 
+    MicroPython Tesla Coil Controller (MPTCC).
 
     Attributes:
     -----------
@@ -32,7 +33,6 @@ class BatteryStatus(CustomItem):
             The name of the battery status screen.
         """
         super().__init__(name)
-
         self.init = init
         self.display = self.init.display
 

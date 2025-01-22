@@ -8,11 +8,11 @@ Provides shared attributes/methods and routes inputs to sub-screens for the MIDI
 The modules in the midi_file subdirectory provide the primary functionality.
 """
 
+import json
+import uos
 from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 import mptcc.lib.utils as utils
-import json
-import uos
 
 class MIDIFile(CustomItem):
     """
@@ -117,12 +117,10 @@ class MIDIFile(CustomItem):
         ----------
         file_path : str
             Path to the MIDI file, which will be used to determine the map file path.
-        init_sd : bool
-            Flag to indicate whether to initialize the SD card.
         """
         map_path = file_path.replace('.mid', '.map').replace('.midi', '.map')
 
-        # Ensure the outputs array is always initialized with a fixed length of four
+        # Ensure the outputs array is always initialized with a fixed length of four.
         self.outputs = [None] * 4
 
         try:

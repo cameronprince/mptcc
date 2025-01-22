@@ -62,4 +62,3 @@ def velocity_to_ontime(velocity):
     """
     ontime = int((velocity / 127) * 100)
     return ontime
-

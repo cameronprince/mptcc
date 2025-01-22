@@ -26,6 +26,9 @@ class MIDIFileTracks:
         self.display = self.init.display
 
     def draw(self):
+        """
+        Draw the MIDI tracks on the display.
+        """
         self.midi_file.current_page = "tracks"
 
         self.display.clear()

@@ -1,16 +1,17 @@
 """
 MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
+teslauniverse.com
 
 screens/midi_file/play.py
 Provides the MIDI playback functionality.
 """
 
-from mptcc.hardware.init import init
-import mptcc.lib.utils as utils
 import _thread
 import gc
 import time
+from mptcc.hardware.init import init
+import mptcc.lib.utils as utils
 import umidiparser
 
 class MIDIFilePlay:
