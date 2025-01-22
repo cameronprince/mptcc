@@ -2,7 +2,7 @@
 
 A MicroPython-based controller for Tesla coils, developed by Cameron Prince.
 
-![MicroPython Tesla coil controller build](images/mptcc_build_v1.0.jpg?raw=true "MicroPython Tesla coil controller build")
+![MicroPython Tesla coil controller build](docs/mptcc_build_v1.0.jpg?raw=true "MicroPython Tesla coil controller build")
 
 This project is based on the MIDI Pro Tesla Coil Controller (also MPTCC) by Phillip Slawinski. A best
 effort was made to maintain control functionality matching Phillip's controller, along with feature
@@ -96,13 +96,13 @@ Total estimated cost: $160 USD (not including output transmitters or connectors)
 
 ## Schematic
 
-![MicroPython Tesla coil controller schematic](images/mptcc_schematic_v1.1.png?raw=true "MicroPython Tesla coil controller schematic")
+![MicroPython Tesla coil controller schematic](docs/mptcc_schematic_v1.1.png?raw=true "MicroPython Tesla coil controller schematic")
 
 ## Diagram
 
-![MicroPython Tesla coil controller connections](images/mptcc_connections_v1.1.png?raw=true "MicroPython Tesla coil controller connections")
+![MicroPython Tesla coil controller connections](docs/mptcc_connections_v1.1.png?raw=true "MicroPython Tesla coil controller connections")
 
-You can download the Fritzing file for this project [here](images/mptcc_v1.1.fzz).
+You can download the Fritzing file for this project [here](docs/mptcc_v1.1.fzz).
 
 ## Installation
 
