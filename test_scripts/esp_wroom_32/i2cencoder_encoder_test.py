@@ -4,7 +4,7 @@ from machine import Pin, I2C
 import i2cEncoderLibV2
 
 # Setup the Interrupt Pin from the encoder.
-INT_pin = Pin(34, Pin.IN)
+INT_pin = Pin(34, Pin.IN, Pin.PULL_UP)
 
 # Initialize the device.
 i2c = I2C(1, scl=Pin(33), sda=Pin(32), freq=400000)
@@ -76,8 +76,19 @@ def EncoderMin2():
 # Repeat the same for Encoder 3 and Encoder 4...
 
 def Encoder_INT(pin):
+    print('Encoder_INT')
     for encoder in encoders:
-        encoder.updateStatus()
+        # status = encoder.readStatusRaw() # Read the status first
+        # print(status)
+        status = encoder.readEncoder8(0x05)
+        if status:
+            print(status)
+            break
+        #if status: # If the status is non-zero
+        #    print(f'Status: {status}')
+        #    encoder.updateStatus() # Update the status to handle the interrupt
+        #    print(f'Interrupt handled for encoder at address: {encoder.address}')
+        #    break # Handle only the first encoder with an interrupt
 
 # Initialize encoders
 for encoder in encoders:
@@ -85,7 +96,7 @@ for encoder in encoders:
     print("Encoder reset")
     time.sleep(0.1)
 
-encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
+encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_DISABLE
              | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE
              | i2cEncoderLibV2.RMOD_X1 | i2cEncoderLibV2.RGB_ENCODER)
 for index, encoder in enumerate(encoders):

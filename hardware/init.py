@@ -106,6 +106,9 @@ class Init:
         from machine import SPI
         if isinstance(self.spi_2, SPI):
             self.spi_2.deinit()
+        miso = None
+        if self.PIN_SPI_2_MISO is not None:
+            miso = Pin(self.PIN_SPI_2_MISO)
         self.spi_2 = SPI(
             self.SPI_2_INTERFACE,
             baudrate=self.SPI_2_BAUD,
@@ -113,7 +116,7 @@ class Init:
             phase=0,
             sck=Pin(self.PIN_SPI_2_SCK),
             mosi=Pin(self.PIN_SPI_2_MOSI),
-            miso=Pin(self.PIN_SPI_2_MISO)
+            miso=miso,
         )
 
     def init_uart(self):
