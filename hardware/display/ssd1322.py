@@ -7,9 +7,10 @@ hardware/display/ssd1322.py
 Display sub-class for interfacing with SSD1322 library.
 """
 
+from machine import Pin
 from .display import Display
 from ssd1322 import Display as driver
-from ... import init
+from ...hardware.init import init
 
 class SSD1322(Display):
     """
@@ -49,8 +50,15 @@ class SSD1322(Display):
         Constructs all the necessary attributes for the SSD1322 object.
         """
         super().__init__()
+        self.init = init
 
-        self.driver = driver(i2c=init.init.i2c_1, width=self.DISPLAY_WIDTH, height=self.DISPLAY_HEIGHT, flip=True)
+        init.init_spi_2()
+
+        dc=Pin(self.init.PIN_SPI_2_DC, Pin.OUT)
+        cs=Pin(self.init.PIN_SPI_2_CS, Pin.OUT)
+        res=Pin(self.init.PIN_SPI_2_RST, Pin.OUT)
+
+        self.driver = driver(self.init.spi_2, dc=dc, cs=cs, rst=res)
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 
@@ -60,7 +68,7 @@ class SSD1322(Display):
         """
         self.driver.clear()
 
-    def text(self, text, w, h, f):
+    def text(self, text, w, h, c):
         """
         Displays text on the screen.
 
@@ -72,10 +80,13 @@ class SSD1322(Display):
             The x-coordinate for the text.
         h : int
             The y-coordinate for the text.
-        f : int
+        c : int
             The font color (0 or 1).
         """
-        self.driver.monoFB.text(text, w, h, f)
+        # def draw_text8x8(self, x, y, text, gs=15):
+        if c > 0:
+            c = 15
+        self.driver.draw_text8x8(w, h, text, c)
 
     def hline(self, x, y, w, c):
         """
@@ -92,7 +103,9 @@ class SSD1322(Display):
         c : int
             The color of the line (0 or 1).
         """
-        self.driver.monoFB.hline(x, y, w, c)
+        if c > 0:
+            c = 15
+        self.driver.draw_hline(x, y, w, c)
 
     def fill_rect(self, x, y, w, h, c):
         """
@@ -111,7 +124,9 @@ class SSD1322(Display):
         c : int
             The color of the rectangle (0 or 1).
         """
-        self.driver.monoFB.fill_rect(x, y, w, h, c)
+        if c > 0:
+            c = 15
+        self.driver.fill_rectangle(x, y, w, h, c)
 
     def show(self):
         """

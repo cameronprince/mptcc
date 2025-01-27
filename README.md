@@ -67,6 +67,9 @@ caused by the use of this controller. You have been warned.
 - User configuration stored in flash memory with restore defaults feature
 - Intuitive menu system and navigation
 - Easily expandable to support additional features
+- Supports SSD1306, SSD1309, SSD1322 displays
+- Supports standard quadrature rotary encoders and I2CEncoders w/ RGB LED
+- Tested with both Raspberry Pi Pico 2 and ESP-WROOM-32
 
 ## Hardware
 1. Raspberry Pi Pico 2 (Qty 1) [Buy](https://amzn.to/4hhQxz3) - or similar MicroPython-compatible microcontroller with at least two cores
@@ -181,11 +184,24 @@ and configuration variables.
 
 ## File Descriptions
 
-- `mptcc/init.py`: Constants, shared attributes, and hardware initialization code.
-- `mptcc/main.py`: Main program file. Creates the menu object and sets up input interrupts.
+- `mptcc/main.py`: Main program file configured for Pico and default configuration.
+- `mptcc/main_esp32.py`: Main program file configured for ESP-WROOM-32 and I2CEncoders.
+- `mptcc/hardware/hardware.py`: Hardware parent class. (Placeholder for now)
+- `mptcc/hardware/init.py`: Provides a method of sharing hardware configuration and objects between screens.
+- `mptcc/hardware/output.py`: Provides the class for interfacing and controlling outputs.
+- `mptcc/hardware/sd_card_reader.py`: Provides the class for interfacing with the SD card reader.
+- `mptcc/hardware/display/display.py`: Display parent class. Provides display-related methods shared with child classes.
+- `mptcc/hardware/display/ssd1306.py`: Display child class for interfacing with SSD1306 display library.
+- `mptcc/hardware/display/ssd1309.py`: Display child class for interfacing with SSD1309 display library.
+- `mptcc/hardware/display/ssd1322.py`: Display child class for interfacing with SSD1322 display library.
+- `mptcc/hardware/input/input.py`: Input parent class. Provides input-related methods shared with child classes.
+- `mptcc/hardware/input/i2cencoder.py`: Input child class for interfacing with I2CEncoder library.
+- `mptcc/hardware/input/ky_040.py`: Input child class for interfacing with standard KY-040 rotary encoder.
+- `mptcc/hardware/rgb_led/rgb_led.py`: RGB LED parent class. Provides shared methods for LED control.
+- `mptcc/hardware/rgb_led/i2cencoder.py`: RGB LED child class for interfacing with I2CEncoder library.
+- `mptcc/hardware/rgb_led/pca9685.py`: RGB LED child class for interfacing with RGB LEDS via PCA9685 external PWM board.
 - `mptcc/lib/config.py`: Provides default user configuration values for the project.
 - `mptcc/lib/menu.py`: Provides menu functionality.
-- `mptcc/lib/rgb.py`: Functions for controlling RGB LED colors.
 - `mptcc/lib/utils.py`: Shared utility functions.
 - `mptcc/screens/battery_status.py`: Displays the current battery status.
 - `mptcc/screens/interrupter.py`: Provides the interrupter screen.
