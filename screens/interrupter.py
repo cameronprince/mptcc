@@ -94,9 +94,9 @@ class Interrupter(CustomItem):
 
     def rotary_1(self, val):
         increment = 10 if self.ten_x else 1
-        delta = ((val - self.val_old[0]) + 100) % 100  # Adjust for wrapping
+        delta = ((val - self.val_old[0]) + 101) % 101  # Adjust for wrapping
         if delta > 50:  # Handle wrapping in the negative direction
-            delta -= 100
+            delta -= 101
         new_on_time = self.on_time + increment * delta
         max_on_time = self.calculate_max_on_time(self.frequency)
         self.on_time = max(self.min_on_time, min(max_on_time, int(new_on_time)))
@@ -106,9 +106,9 @@ class Interrupter(CustomItem):
 
     def rotary_2(self, val):
         increment = 10 if self.ten_x else 1
-        delta = ((val - self.val_old[1]) + 100) % 100  # Adjust for wrapping
+        delta = ((val - self.val_old[1]) + 101) % 101  # Adjust for wrapping
         if delta > 50:  # Handle wrapping in the negative direction
-            delta -= 100
+            delta -= 101
         new_frequency = self.frequency + increment * delta
 
         direction = new_frequency - self.frequency
