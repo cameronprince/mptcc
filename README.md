@@ -69,6 +69,7 @@ caused by the use of this controller. You have been warned.
 - Easily expandable to support additional features
 - Supports SSD1306, SSD1309, SSD1322 displays
 - Supports standard quadrature rotary encoders and I2CEncoders w/ RGB LED
+- Tested with both Raspberry Pi Pico 2 and ESP-WROOM-32
 
 ## Hardware
 1. Raspberry Pi Pico 2 (Qty 1) [Buy](https://amzn.to/4hhQxz3) - or similar MicroPython-compatible microcontroller with at least two cores
