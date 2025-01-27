@@ -32,9 +32,6 @@ init.I2C_2_FREQ = 400000
 # I2CEncoder V2.1 settings. (optional)
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44]
 init.PIN_I2CENCODER_INT = 34 # I2CEncoder interrupt pin.
-init.I2CENCODER_SETTINGS = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
-                         | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE
-                         | i2cEncoderLibV2.RMOD_X1 | i2cEncoderLibV2.RGB_ENCODER)
 
 # SPI bus 1 pin assignments and settings.
 # (used by SD card reader)

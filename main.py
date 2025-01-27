@@ -7,6 +7,8 @@ main.py
 Defines and initializes the hardware and menu.
 """
 
+# import i2cEncoderLibV2
+
 # Prepare the init object to store configuration and initialized hardware.
 from mptcc.hardware.init import init
 
@@ -21,11 +23,15 @@ init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 
 # I2C bus 2 pin assignments and settings.
-# (used by the default PCA9685 RGB LED hardware)
+# (used by the default PCA9685 RGB LED hardware or optional I2CEncoder)
 init.PIN_I2C_2_SCL = 19
 init.PIN_I2C_2_SDA = 18
 init.I2C_2_INTERFACE = 1
 init.I2C_2_FREQ = 400000
+
+# I2CEncoder V2.1 settings. (optional)
+# init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44]
+# init.PIN_I2CENCODER_INT = 34 # I2CEncoder interrupt pin.
 
 # SPI bus 1 pin assignments and settings.
 # (used by SD card reader)

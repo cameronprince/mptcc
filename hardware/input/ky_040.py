@@ -23,16 +23,16 @@ class KY040(Input):
 
         self.rotary_encoders = [
             RotaryIRQ(pin_num_clk=init.PIN_ROTARY_1_CLK, pin_num_dt=init.PIN_ROTARY_1_DT,
-                      min_val=-50, max_val=50, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
+                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
                       pull_up=init.ROTARY_PULL_UP, half_step=False),
             RotaryIRQ(pin_num_clk=init.PIN_ROTARY_2_CLK, pin_num_dt=init.PIN_ROTARY_2_DT,
-                      min_val=-50, max_val=50, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
+                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
                       pull_up=init.ROTARY_PULL_UP, half_step=False),
             RotaryIRQ(pin_num_clk=init.PIN_ROTARY_3_CLK, pin_num_dt=init.PIN_ROTARY_3_DT,
-                      min_val=-50, max_val=50, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
+                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
                       pull_up=init.ROTARY_PULL_UP, half_step=False),
             RotaryIRQ(pin_num_clk=init.PIN_ROTARY_4_CLK, pin_num_dt=init.PIN_ROTARY_4_DT,
-                      min_val=-50, max_val=50, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
+                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
                       pull_up=init.ROTARY_PULL_UP, half_step=False),
         ]
         self.last_rotations = [encoder.value() for encoder in self.rotary_encoders]
