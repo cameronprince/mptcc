@@ -3,12 +3,12 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-hardware/rgb_led/pca9685.py
-RGB LED device utilizing the PCA9685 external PWM board.
+hardware/rgb_led/i2cencoder.py
+I2CEncoder V2.1 RGB LED device.
 """
 
 import time
-from ..rgb_led.rgb_led import RGBLED
+from ..rgb_led.rgb_led import RGBLED, RGB_I2CEncoder
 from ...lib.rgb import RGB
 from ...hardware.init import init
 
@@ -28,10 +28,5 @@ class I2CEncoder(RGBLED):
         """
         super().__init__()
         self.init = init
-
-        self.init.rgb_led = [
-            # RGB(self.driver, red_channel=self.PCA_LED1_RED, green_channel=self.PCA_LED1_GREEN, blue_channel=self.PCA_LED1_BLUE),
-            # RGB(self.driver, red_channel=self.PCA_LED2_RED, green_channel=self.PCA_LED2_GREEN, blue_channel=self.PCA_LED2_BLUE),
-            # RGB(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE),
-            # RGB(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE),
-        ]
+        self.encoders = self.init.inputs.encoders
+        self.init.rgb_led = [RGB_I2CEncoder(encoder) for encoder in self.encoders]

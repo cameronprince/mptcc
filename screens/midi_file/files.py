@@ -159,7 +159,7 @@ class MIDIFileFiles:
         """
         Responds to presses of encoder 2 to go back.
         """
-        utils.stop_scroll_task()
+        self.display.stop_scroll_task()
         # Clear all positioning so return visits start at the top of the list.
         self.midi_file.current_file_index = 0
         self.midi_file.file_cursor_position = 0

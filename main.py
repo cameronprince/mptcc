@@ -14,7 +14,7 @@ from mptcc.hardware.init import init
 Hardware Settings
 """
 # I2C bus 1 pin assignments and settings.
-# (used by the default PCA9685 RGB LED hardware)
+# (used by the default SSD1306 display.)
 init.PIN_I2C_1_SCL = 17
 init.PIN_I2C_1_SDA = 16
 init.I2C_1_INTERFACE = 0
@@ -89,27 +89,9 @@ init.PIN_ROTARY_4_CLK = 20
 init.PIN_ROTARY_4_DT = 21
 init.PIN_ROTARY_4_SW = 5
 
-# Enable/disable encoder pin pull-up resistors.
+# Enable/disable encoder pin internal pull-up resistors.
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
-
-"""
-Input Devices
-
-Select one of the input device options below by commenting out the default option
-and removing the comment for the desired, alternate option.
-
-Edit the class for the selected hardware to define configuration.
-"""
-# KY-040 Rotary Encoder - https://amzn.to/42E63l1 or https://amzn.to/3CdzIqi
-# Requires: https://github.com/miketeachman/micropython-rotary
-from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
-
-# I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
-# Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs  # Alternate option.
-
-init.inputs = inputs()
 
 """
 Display
@@ -131,6 +113,24 @@ from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 # from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
 
 init.display = display()
+
+"""
+Input Devices
+
+Select one of the input device options below by commenting out the default option
+and removing the comment for the desired, alternate option.
+
+Edit the class for the selected hardware to define configuration.
+"""
+# KY-040 Rotary Encoder - https://amzn.to/42E63l1 or https://amzn.to/3CdzIqi
+# Requires: https://github.com/miketeachman/micropython-rotary
+from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+
+# I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
+# Requires: https://github.com/cameronprince/i2cEncoderLibV2
+# from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs  # Alternate option.
+
+init.inputs = inputs()
 
 """
 RGB LEDs

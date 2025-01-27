@@ -59,6 +59,7 @@ class Init:
     def init_i2c_1(self):
         """
         Initializes the first I2C bus.
+        (Reserved for the display.)
         """
         from machine import I2C
         if not isinstance(self.i2c_1, I2C):
@@ -72,6 +73,7 @@ class Init:
     def init_i2c_2(self):
         """
         Initializes the second I2C bus.
+        (Optionally used by PCA9685 and I2CEncoder.)
         """
         from machine import I2C
         if not isinstance(self.i2c_2, I2C):
@@ -85,6 +87,7 @@ class Init:
     def init_spi_1(self):
         """
         Initializes the first SPI bus.
+        (Reserved for the SD card reader.)
         """
         from machine import SPI
         if isinstance(self.spi_1, SPI):
@@ -102,6 +105,7 @@ class Init:
     def init_spi_2(self):
         """
         Initializes the second SPI bus.
+        (Optionally used for an SPI display.)
         """
         from machine import SPI
         if isinstance(self.spi_2, SPI):

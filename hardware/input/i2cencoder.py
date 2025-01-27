@@ -8,7 +8,7 @@ Input module for I2CEncoder V2.1.
 """
 
 import time
-import struct  # Import the struct module
+import struct
 import i2cEncoderLibV2
 from machine import Pin, I2C
 from ...hardware.init import init
@@ -22,13 +22,13 @@ class I2CEncoder(Input):
         self.encoders = []
 
         # Prepare the I2C bus.
-        self.init.init_i2c_1()
+        self.init.init_i2c_2()
 
         self.interrupt_pin = Pin(self.init.PIN_I2CENCODER_INT, Pin.IN)
         self.interrupt_pin.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
 
         # Instantiate the encoder objects.
-        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.init.i2c_1, addr) for addr in init.I2CENCODER_ADDRESSES]
+        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.init.i2c_2, addr) for addr in init.I2CENCODER_ADDRESSES]
 
         self.last_rotations = [0] * len(self.encoders)
 
@@ -56,34 +56,15 @@ class I2CEncoder(Input):
         encoder.writeAntibouncingPeriod(12)
 
     def interrupt_handler(self, pin):
-        try:
-            if pin.value() == 0:
-                # Disable the interrupt.
-                self.interrupt_pin.irq(handler=None)
-                print("Interrupt triggered")
-
-                # Loop over all encoders to find the triggering instance.
-                for idx, encoder in enumerate(self.encoders):
-                    # Read and reset the status.
-                    status = encoder.readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
-                    print(f'Encoder {idx + 1} status: {status}')
-                    
-                    # Fire the appropriate callback.
-                    if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
-                        valBytes = struct.unpack('>i', encoder.readCounter32())
-                        new_value = valBytes[0]
-                        print(f'rotary_encoder_change triggered for encoder {idx + 1} with new value: {new_value}')
-                        self.rotary_encoder_change(idx, new_value)
-                    
-                    if status & i2cEncoderLibV2.PUSHP:
-                        print(f'switch_click triggered for switch {idx + 1}')
-                        self.switch_click(idx + 1)
-                    
-        except Exception as e:
-            print(f'Error in interrupt_handler: {str(e)}')
-
-        finally:
-            # Re-enable the interrupt.
-            self.interrupt_pin.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
-            print("Interrupt re-enabled")
-            time.sleep(0.1)
+        if pin.value() == 0:
+            # Loop over all encoders to find the triggering instance.
+            for idx, encoder in enumerate(self.encoders):
+                # Read and reset the status.
+                status = encoder.readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
+                # Fire the appropriate callback.
+                if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
+                    valBytes = struct.unpack('>i', encoder.readCounter32())
+                    new_value = valBytes[0]
+                    self.rotary_encoder_change(idx, new_value)
+                if status & i2cEncoderLibV2.PUSHP:
+                    self.switch_click(idx + 1)

@@ -8,8 +8,8 @@ Display sub-class for interfacing with SSD1306 library.
 """
 
 from .display import Display
-from ssd1306 import SSD1306_I2C as driver
 from ...hardware.init import init
+from machine import Pin
 
 class SSD1306(Display):
     """
@@ -44,13 +44,28 @@ class SSD1306(Display):
     DISPLAY_HEADER_HEIGHT = 10
     DISPLAY_ITEMS_PER_PAGE = 4
 
-    def __init__(self):
+    def __init__(self, interface=None):
         """
         Constructs all the necessary attributes for the SSD1306 object.
         """
+        self.interface = interface
+
         super().__init__()
         self.init = init
-        self.driver = driver(self.DISPLAY_WIDTH, self.DISPLAY_HEIGHT, i2c=self.init.i2c_1)
+        
+        if interface == 'spi':
+            from ssd1306 import SSD1306_SPI as driver
+            self.driver = driver(
+                self.DISPLAY_WIDTH,
+                self.DISPLAY_HEIGHT,
+                spi = self.init.spi_2,
+                dc = Pin(self.init.PIN_SPI_2_DC),
+                res = Pin(self.init.PIN_SPI_2_RST),
+                cs = Pin(self.init.PIN_SPI_2_CS),
+            )
+        else:
+            from ssd1306 import SSD1306_I2C as driver
+            self.driver = driver(self.DISPLAY_WIDTH, self.DISPLAY_HEIGHT, i2c=self.init.i2c_1)
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 

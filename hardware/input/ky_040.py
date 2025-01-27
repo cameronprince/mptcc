@@ -15,24 +15,7 @@ from ..input.input import Input
 from ...lib.menu import CustomItem
 
 class KY040(Input):
-    """
-    A class to handle input from standard KY-040 rotary encoders for the 
-    MicroPython Tesla Coil Controller (MPTCC).
-
-    Attributes:
-    -----------
-    init : object
-        The initialization object containing configuration and hardware settings.
-    rotary_encoders : list
-        List of RotaryIRQ objects for the rotary encoders.
-    last_rotations : list
-        List of the last rotation values for each encoder.
-    """
-
     def __init__(self):
-        """
-        Constructs all the necessary attributes for the KY040 object.
-        """
         super().__init__()
 
         self.init = init
@@ -68,41 +51,16 @@ class KY040(Input):
         self.init.switch_4.irq(lambda pin: self.switch_click(4), Pin.IRQ_FALLING)
 
     def create_listener(self, idx):
-        """
-        Create a listener function that captures the index.
-        
-        Parameters:
-        ----------
-        idx : int
-            The index of the encoder.
-
-        Returns:
-        -------
-        function
-            A listener function that captures the index.
-        """
         def listener():
             new_value = self.rotary_encoders[idx].value()
             self.rotary_encoder_change(idx, new_value)
         return listener
 
     def rotary_encoder_change(self, idx, new_value):
-        """
-        The primary rotary encoder callback function with debugging.
-
-        Parameters:
-        ----------
-        idx : int
-            Index of the encoder.
-        new_value : int
-            The new value of the encoder.
-        """
         encoder = self.rotary_encoders[idx]
-        print(f'rotary_encoder_change called for encoder {idx + 1} with new value: {new_value}')
         if self.last_rotations[idx] != new_value:
             current_screen = self.init.menu.get_current_screen()
             method_name = f'rotary_{idx + 1}'
-            print(f'Calling method {method_name} for current screen.')
             if isinstance(current_screen, CustomItem) and hasattr(current_screen, method_name):
                 getattr(current_screen, method_name)(new_value)
             elif idx == 0:
@@ -111,16 +69,9 @@ class KY040(Input):
             time.sleep_ms(50)
 
     def switch_click(self, switch):
-        """
-        The primary switch callback function with debouncing.
-
-        Parameters:
-        ----------
-        switch : int
-            The switch number (1 to 4).
-        """
         current_time = time.ticks_ms()
-        if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 200:
+        # Debounce by checking the time since the last switch click
+        if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 1000:
+            self.last_switch_click_time[switch - 1] = current_time
             # Call the parent class's switch_click method
             super().switch_click(switch)
-            self.last_switch_click_time[switch - 1] = current_time

@@ -39,8 +39,12 @@ class Display(Hardware):
         super().__init__()
         self.init = init
 
-        # Prepare the I2C bus.
-        self.init.init_i2c_1()
+        if self.interface == 'spi':
+            # Prepare the SPI bus.
+            self.init.init_spi_2()
+        else:
+            # Prepare the I2C bus.
+            self.init.init_i2c_1()
 
         self.scroll_thread = None
         self.scroll_flag = False

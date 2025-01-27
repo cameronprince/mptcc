@@ -23,8 +23,6 @@ class Input(Hardware):
         switch : int
             The switch number corresponding to the encoder (1 to 4).
         """
-        print(f'switch_click from switch: {switch}')
-
         current_screen = self.init.menu.get_current_screen()
         if isinstance(current_screen, CustomItem):
             method_name = f'switch_{switch}'
@@ -50,12 +48,9 @@ class Input(Hardware):
         new_value : int
             The new value of the encoder.
         """
-        print(f'rotary_encoder_change called for encoder {idx + 1} with new value: {new_value}')
-
         if self.last_rotations[idx] != new_value:
             current_screen = self.init.menu.get_current_screen()
             method_name = f'rotary_{idx + 1}'
-            print(f'Calling method {method_name} for current screen.')
             if isinstance(current_screen, CustomItem) and hasattr(current_screen, method_name):
                 getattr(current_screen, method_name)(new_value)
             elif idx == 0:

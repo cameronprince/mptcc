@@ -16,13 +16,20 @@ from mptcc.hardware.init import init
 Hardware Settings
 """
 # I2C bus 1 pin assignments and settings.
-# (used by the default PCA9685 RGB LED hardware)
-init.I2C_1_INTERFACE = 0
-init.I2C_1_FREQ = 400000
-init.PIN_I2C_1_SCL = 33
-init.PIN_I2C_1_SDA = 32
+# (used by the default SSD1306 display.)
+# init.PIN_I2C_1_SCL = 0
+# init.PIN_I2C_1_SDA = 0
+# init.I2C_1_INTERFACE = 0
+# init.I2C_1_FREQ = 400000
 
-# I2CEncoder V2.1 settings.
+# I2C bus 2 pin assignments and settings.
+# (used by the default PCA9685 RGB LED hardware or optional I2CEncoder)
+init.PIN_I2C_2_SCL = 33
+init.PIN_I2C_2_SDA = 32
+init.I2C_2_INTERFACE = 1
+init.I2C_2_FREQ = 400000
+
+# I2CEncoder V2.1 settings. (optional)
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44]
 init.PIN_I2CENCODER_INT = 34 # I2CEncoder interrupt pin.
 init.I2CENCODER_SETTINGS = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
@@ -33,7 +40,7 @@ init.I2CENCODER_SETTINGS = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENAB
 # (used by SD card reader)
 init.SPI_1_INTERFACE = 2
 init.SPI_1_BAUD = 1000000
-init.PIN_SPI_1_SCK = 10
+init.PIN_SPI_1_SCK = 18
 init.PIN_SPI_1_MOSI = 23
 init.PIN_SPI_1_MISO = 19
 init.PIN_SPI_1_CS = 5
@@ -75,6 +82,33 @@ init.CONFIG_PATH = "/mptcc/config.json"
 init.BANNED_INTERRUPTER_FREQUENCIES = []
 
 """
+Display
+
+Select one of the display options below by commenting out the default option
+and removing the comment for the desired, alternate option.
+
+Edit the class for the selected hardware to define configuration.
+"""
+# SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
+# Requires: https://github.com/TimHanewich/MicroPython-SSD1306
+# Note: This library only supports standard frame buffer commands.
+from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
+
+# SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
+# Requires: https://github.com/rdagger/micropython-ssd1309
+# Note: This library supports custom fonts, shapes, images, and more, beyond
+# the standard frame buffer commands. This driver also works with SSD1306 displays.
+# from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
+
+# SSD1322 3.12" 256x64 OLED LCD Display (https://amzn.to/4jupi6c)
+# Requires: https://github.com/rdagger/micropython-ssd1322
+# Note: This library supports custom fonts, shapes, images, and more, beyond
+# the standard frame buffer commands.
+# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
+
+init.display = display('spi')
+
+"""
 Input Devices
 
 Select one of the input device options below by commenting out the default option
@@ -91,33 +125,6 @@ Edit the class for the selected hardware to define configuration.
 from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 init.inputs = inputs()
-
-"""
-Display
-
-Select one of the display options below by commenting out the default option
-and removing the comment for the desired, alternate option.
-
-Edit the class for the selected hardware to define configuration.
-"""
-# SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
-# Requires: https://github.com/TimHanewich/MicroPython-SSD1306
-# Note: This library only supports standard frame buffer commands.
-# from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
-
-# SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
-# Requires: https://github.com/rdagger/micropython-ssd1309
-# Note: This library supports custom fonts, shapes, images, and more, beyond
-# the standard frame buffer commands. This driver also works with SSD1306 displays.
-# from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
-
-# SSD1322 3.12" 256x64 OLED LCD Display (https://amzn.to/4jupi6c)
-# Requires: https://github.com/rdagger/micropython-ssd1322
-# Note: This library supports custom fonts, shapes, images, and more, beyond
-# the standard frame buffer commands.
-from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
-
-init.display = display()
 
 """
 RGB LEDs
