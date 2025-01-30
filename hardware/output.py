@@ -14,20 +14,16 @@ from ..hardware.init import init
 
 class Output(Hardware):
     """
-    A class to handle outputs for the MicroPython Tesla Coil Controller (MPTCC).
+    A class to handle the outputs for the MPTCC.
 
     Attributes:
     -----------
     init : object
         The initialization object containing configuration and hardware settings.
     output : list
-        List of PWM objects for the output channels.
+        A list of PWM objects for each output.
     """
-
     def __init__(self):
-        """
-        Constructs all the necessary attributes for the Output object.
-        """
         super().__init__()
         self.init = init
 
@@ -40,46 +36,52 @@ class Output(Hardware):
 
     def disable_outputs(self):
         """
-        Turns off all transmitters and LEDs.
+        Disables all outputs by setting their duty cycle to 0 and turning off the associated LEDs.
         """
         for output in self.output:
             output.duty_u16(0)
         for led in self.init.rgb_led:
             led.off()
 
-    def set_output(self, output, frequency, on_time, active, max_duty=None):
+    def set_output(self, output, active, frequency=None, on_time=None, triggering_class=None):
         """
-        Controls the output of a transmitter and updates its corresponding LED.
+        Sets the output based on the provided parameters.
 
         Parameters:
         ----------
-        output: int
-            The output channel to control. A value of 0-3 is expected.
-        frequency : int
-            The frequency of the signal.
-        on_time : int
-            The on time of the signal in microseconds.
+        output : int
+            The index of the output to be set.
         active : bool
-            If True, the transmitter is active.
-        max_duty : float, optional
-            The maximum duty cycle as a percentage. If None, the mode is assumed to be "velocity".
+            Whether the output should be active.
+        frequency : int, optional
+            The frequency of the output signal.
+        on_time : int, optional
+            The on time of the output signal in microseconds.
+        triggering_class : object, optional
+            The class instance containing max_duty, min_on_time, and max_on_time attributes.
+
+        Raises:
+        -------
+        ValueError
+            If frequency or on_time is not provided when activating the output.
         """
-
-        frequency = int(frequency)
-        on_time = int(on_time)
-
         if active:
+            if frequency is None or on_time is None:
+                raise ValueError("Frequency and on_time must be provided when activating the output.")
+            
+            frequency = int(frequency)
+            on_time = int(on_time)
+
             self.output[output].freq(frequency)
             duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
             self.output[output].duty_u16(duty_cycle)
-            if max_duty is not None:
-                percent = utils.calculate_percent(frequency, on_time, max_duty)
-                self.init.rgb_led[output].status_color(
-                    max(1, min(100, percent)), mode="percentage")
+
+            if triggering_class:
+                percent = utils.calculate_percent(frequency, on_time, triggering_class)
+                self.init.rgb_led[output].status_color(percent)
             else:
                 velocity = int((on_time / 65535) * 127)
-                self.init.rgb_led[output].status_color(
-                    velocity, mode="velocity")
+                self.init.rgb_led[output].status_color(velocity, mode="velocity")
         else:
             self.output[output].duty_u16(0)
             self.init.rgb_led[output].off()

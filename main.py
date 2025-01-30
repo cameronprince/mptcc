@@ -94,28 +94,13 @@ init.PIN_ROTARY_4_SW = 5
 init.ROTARY_PULL_UP = False
 
 """
-Input Devices
-
-Select one of the input device options below by commenting out the default option
-and removing the comment for the desired, alternate option.
-
-Edit the class for the selected hardware to define configuration.
-"""
-# KY-040 Rotary Encoder - https://amzn.to/42E63l1 or https://amzn.to/3CdzIqi
-# Requires: https://github.com/miketeachman/micropython-rotary
-from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
-
-# I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
-# Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs  # Alternate option.
-
-init.inputs = inputs()
-
-"""
 Display
 
 Select one of the display options below by commenting out the default option
 and removing the comment for the desired, alternate option.
+
+The display needs to be initialized first as it needs a large block of
+contigious memory.
 
 Edit the class for the selected hardware to define configuration.
 """
@@ -133,6 +118,24 @@ from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 init.display = display()
 
 """
+Input Devices
+
+Select one of the input device options below by commenting out the default option
+and removing the comment for the desired, alternate option.
+
+Edit the class for the selected hardware to define configuration.
+"""
+# KY-040 Rotary Encoder - https://amzn.to/42E63l1 or https://amzn.to/3CdzIqi
+# Requires: https://github.com/miketeachman/micropython-rotary
+from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+
+# I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
+# Requires: https://github.com/cameronprince/i2cEncoderLibV2
+# from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs  # Alternate option.
+
+init.inputs = inputs()
+
+"""
 RGB LEDs
 
 Select one of the RGB LED options below by commenting out the default option
@@ -144,9 +147,9 @@ Edit the class for the selected hardware to define configuration.
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
 from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
-# I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
+# I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoderInput as rgb_leds  # Alternate option.
+# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 init.rgb_driver = rgb_led()
 

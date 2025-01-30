@@ -5,10 +5,10 @@ import time
 pwm_pin = Pin(22)
 
 # Create a PWM object
-pwm1 = PWM(Pin(22))
-pwm2 = PWM(Pin(6))
+pwm1 = PWM(Pin(9))
+pwm2 = PWM(Pin(8))
 pwm3 = PWM(Pin(7))
-pwm4 = PWM(Pin(8))
+pwm4 = PWM(Pin(6))
 
 # Set the frequency to 100Hz
 pwm1.freq(100)

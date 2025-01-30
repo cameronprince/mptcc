@@ -7,9 +7,9 @@ utils.py
 Shared utility functions.
 """
 
-def calculate_percent(frequency, on_time, max_duty):
+def calculate_percent(frequency, on_time, triggering_class):
     """
-    Calculates the percentage value based on frequency, on_time, and max_duty.
+    Calculates the percentage value based on frequency, on_time, and the provided class instance.
 
     Parameters:
     ----------
@@ -17,17 +17,30 @@ def calculate_percent(frequency, on_time, max_duty):
         The frequency of the signal.
     on_time : int
         The on time of the signal in microseconds.
-    max_duty : float
-        The maximum duty cycle as a percentage.
+    triggering_class : object
+        The class instance containing max_duty, min_on_time, and max_on_time attributes.
 
     Returns:
     -------
     int
         The calculated percentage value.
     """
-    max_on_time = (max_duty / 100) * (1000000 / frequency)
-    percent = (on_time / max_on_time) * 100
-    return int(max(0, min(100, percent)))
+    max_duty = triggering_class.max_duty
+    max_on_time = triggering_class.max_on_time
+
+    # Ensure the on_time does not exceed the maximum allowed on_time
+    on_time = min(on_time, max_on_time)
+
+    # Calculate the maximum on_time based on the max_duty
+    max_on_time_based_on_duty = (max_duty / 100) * (1000000 / frequency)
+
+    # Calculate the percentage based on the on_time
+    percent = (on_time / max_on_time_based_on_duty) * 100
+
+    # Ensure the percentage is within the range of 0 to 100
+    percent = int(round(max(0, min(100, percent))))
+
+    return percent
 
 def midi_to_frequency(note):
     """

@@ -9,7 +9,6 @@ I2CEncoder V2.1 RGB LED device.
 
 import time
 from ..rgb_led.rgb_led import RGBLED, RGB_I2CEncoder
-from ...lib.rgb import RGB
 from ...hardware.init import init
 
 class I2CEncoder(RGBLED):

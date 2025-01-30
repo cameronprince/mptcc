@@ -44,11 +44,13 @@ class SSD1322(Display):
     DISPLAY_FONT_HEIGHT = 8
     DISPLAY_HEADER_HEIGHT = 10
     DISPLAY_ITEMS_PER_PAGE = 4
+    interface = None
 
     def __init__(self):
         """
         Constructs all the necessary attributes for the SSD1322 object.
         """
+        self.interface == 'spi'
         super().__init__()
         self.init = init
 

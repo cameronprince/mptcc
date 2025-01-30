@@ -10,17 +10,19 @@ Parent class for RGB LEDs.
 from ..hardware import Hardware
 
 class RGBLED(Hardware):
+    """
+    Parent class for RGB LEDs.
+    """
     def __init__(self):
         super().__init__()
 
 class RGB:
     """
-    A class to represent and control RGB LED colors using the PCA9685 PWM driver.
+    A base class for RGB LED functionality.
     """
-
     def map(self, x, in_min, in_max, out_min, out_max):
         """
-        Handles value conversion from one range to another.
+        Converts a value from one range to another.
 
         Parameters:
         ----------
@@ -42,6 +44,31 @@ class RGB:
         """
         return (x - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
 
+    def constrain(self, x, out_min, out_max):
+        """
+        Constrains a value to be within a specified range.
+
+        Parameters:
+        ----------
+        x : int
+            The value to be constrained.
+        out_min : int
+            The minimum value of the range.
+        out_max : int
+            The maximum value of the range.
+
+        Returns:
+        -------
+        int
+            The constrained value.
+        """
+        if x < out_min:
+            return out_min
+        elif x > out_max:
+            return out_max
+        else:
+            return x
+
     def show(self):
         """
         Displays the current LED status by printing the channel numbers and their respective values.
@@ -56,115 +83,82 @@ class RGB:
         """
         self.setColor(0, 0, 0)
 
-    def status_color(self, value, mode="percentage"):
+    def status_color(self, value):
         """
-        Sets the color of the LED based on a value.
+        Sets the color of the LED based on a percentage value.
 
         Parameters:
         ----------
         value : int
-            The value to determine the color (0-100 for percentage mode, 0-127 for velocity mode).
-        mode : str
-            The mode to interpret the value ("percentage" or "velocity").
+            The percentage value (1-100).
         """
-        if mode == "percentage":
-            if value <= 50:
-                red = self.map(value, 0, 50, 0, 255)
-                green = 255
-                blue = 0
-            else:
-                red = 255
-                green = self.map(100 - value, 0, 50, 0, 255)
-                blue = 0
-        elif mode == "velocity":
-            red = self.map(value, 0, 127, 0, 255)
-            green = self.map(127 - value, 0, 127, 0, 255)
+        if value <= 50:
+            red = self.map(value, 1, 50, 0, 255)
+            green = 255
             blue = 0
+        else:
+            red = 255
+            green = self.map(value, 50, 100, 255, 0)
+            blue = 0
+
+        red = self.constrain(red, 0, 255)
+        green = self.constrain(green, 0, 255)
+        blue = self.constrain(blue, 0, 255)
+        
         self.setColor(red, green, blue)
 
-class RGB_PCA9685(RGB):
-    def __init__(self, pca, red_channel, green_channel, blue_channel, red_val=0, green_val=0, blue_val=0):
-        """
-        Constructs all the necessary attributes for the RGB object and sets the initial color.
-
-        Parameters:
-        ----------
-        pca : PCA9685
-            The PCA9685 PWM driver instance.
-        red_channel : int
-            The PWM channel for the red LED.
-        green_channel : int
-            The PWM channel for the green LED.
-        blue_channel : int
-            The PWM channel for the blue LED.
-        red_val : int
-            The initial intensity value for the red LED (default is 0).
-        green_val : int
-            The initial intensity value for the green LED (default is 0).
-        blue_val : int
-            The initial intensity value for the blue LED (default is 0).
-        """
-        self.pca = pca
-        self.red_channel = red_channel
-        self.green_channel = green_channel
-        self.blue_channel = blue_channel
-        self.red_val = red_val
-        self.green_val = green_val
-        self.blue_val = blue_val
-        self.setColor(red_val, green_val, blue_val)
-
-    def setColor(self, r, g, b):
-        """
-        Sets the color of the LED by updating the PWM values for the red, green, and blue channels.
-
-        Parameters:
-        ----------
-        r : int
-            The intensity value for the red LED (0-255).
-        g : int
-            The intensity value for the green LED (0-255).
-        b : int
-            The intensity value for the blue LED (0-255).
-        """
-        self.red_val = r
-        self.green_val = g
-        self.blue_val = b
-        r = self.map(r, 0, 255, 0, 4095)
-        g = self.map(g, 0, 255, 0, 4095)
-        b = self.map(b, 0, 255, 0, 4095)
-        self.pca.duty(self.red_channel, r)
-        self.pca.duty(self.green_channel, g)
-        self.pca.duty(self.blue_channel, b)
-
 class RGB_I2CEncoder(RGB):
+    """
+    A class for handling RGB LEDs with an I2C Encoder.
+    """
     def __init__(self, encoder):
         super().__init__()
         self.encoder = encoder
 
     def setColor(self, r, g, b):
         """
-        Sets the color of the LED by updating the PWM values for the red, green, and blue channels.
+        Sets the color of the RGB LED using the I2C Encoder.
 
         Parameters:
         ----------
         r : int
-            The intensity value for the red LED (0-255).
+            Red value (0-255).
         g : int
-            The intensity value for the green LED (0-255).
+            Green value (0-255).
         b : int
-            The intensity value for the blue LED (0-255).
+            Blue value (0-255).
         """
-        self.red_val = r
-        self.green_val = g
-        self.blue_val = b
+        color_code = (r << 16) | (g << 8) | b
+        self.encoder.writeRGBCode(color_code)
 
-        # Map the RGB values from 0-255 to 0-4095
+class RGB_PCA9685(RGB):
+    """
+    A class for handling RGB LEDs with a PCA9685 driver.
+    """
+    def __init__(self, pca, red_channel, green_channel, blue_channel):
+        super().__init__()
+        self.pca = pca
+        self.red_channel = red_channel
+        self.green_channel = green_channel
+        self.blue_channel = blue_channel
+        self.setColor(0, 0, 0)
+
+    def setColor(self, r, g, b):
+        """
+        Sets the color of the RGB LED using the PCA9685 driver.
+
+        Parameters:
+        ----------
+        r : int
+            Red value (0-255).
+        g : int
+            Green value (0-255).
+        b : int
+            Blue value (0-255).
+        """
         r_mapped = self.map(r, 0, 255, 0, 4095)
         g_mapped = self.map(g, 0, 255, 0, 4095)
         b_mapped = self.map(b, 0, 255, 0, 4095)
-
-        # Combine the RGB values into a single hex color code
-        color_code = (r_mapped << 16) | (g_mapped << 8) | b_mapped
-
-        # Write the RGB code to the encoder
-        self.encoder.writeRGBCode(color_code)
+        self.pca.duty(self.red_channel, r_mapped)
+        self.pca.duty(self.green_channel, g_mapped)
+        self.pca.duty(self.blue_channel, b_mapped)
