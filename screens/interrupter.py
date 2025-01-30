@@ -122,10 +122,11 @@ class Interrupter(CustomItem):
             self.display.text(freq_str, self.display.width - len(freq_str) * self.font_width, 30, 1)
 
         if update_ten_x:
+            ten_x_x = self.display.width - len("10x") * self.font_width
             if self.ten_x:
-                self.display.text("10x", 100, 50, 1)
+                self.display.text("10x", ten_x_x, 50, 1)
             else:
-                self.display.fill_rect(100, 50, 3 * self.font_width, 10, 0)
+                self.display.fill_rect(ten_x_x, 50, 3 * self.font_width, 10, 0)
         
         if update_active:
             if self.active:

@@ -332,11 +332,14 @@ class Menu:
 
         if hasattr(self.display, 'rich_text'):
             self.display.rich_text(str.upper(item.name), 2, y + v_padding, int(not background))
-            self.display.rich_text(str.upper(item.get_decorator()), None, y + v_padding, int(not background), align=RIGHT)
+            if item.get_decorator():
+                self.display.rich_text(str.upper(item.get_decorator()), None, y + v_padding, int(not background), align=RIGHT)
         else:
             self.display.text(item.name, 0, y + v_padding, int(not background))
-            x_pos = self.display.width - (len(item.get_decorator()) * self.font_width) - 1
-            self.display.text(item.get_decorator(), x_pos, y + v_padding, int(not background))
+            decorator_text = item.get_decorator()
+            if decorator_text:
+                x_pos = min(self.display.width - (len(decorator_text) * self.font_width) - 1, 255)
+                self.display.text(decorator_text, x_pos, y + v_padding, int(not background))
 
     def _menu_header(self, text):
         """Draws the menu header on the display."""
