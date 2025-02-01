@@ -36,7 +36,7 @@ class RestoreDefaults(CustomItem):
         """
         super().__init__(name)
         self.init = init
-        self.selection = "No"  # Default to "No" initially
+        self.selection = "No"
         self.val_old = 0
 
     def draw(self):
@@ -46,18 +46,40 @@ class RestoreDefaults(CustomItem):
         self.init.display.clear()
         self.init.display.header("Restore Defaults")
 
-        # Display the options
-        self.init.display.text("Restore defaults:", 0, 20, 1)
+        # Calculate positions for centering text.
+        screen_width = self.init.display.width
+        font_width = self.init.display.DISPLAY_FONT_WIDTH
+        font_height = self.init.display.DISPLAY_FONT_HEIGHT
+        padding = 2
+        vertical_spacing = 10
 
-        # Highlight the current selection
+        restore_defaults_text = "Restore defaults:"
+        restore_defaults_x = (screen_width - len(restore_defaults_text) * font_width) // 2
+
+        yes_text = "Yes"
+        no_text = "No"
+        yes_no_text = f"{yes_text}       {no_text}"
+        yes_no_x = (screen_width - len(yes_no_text) * font_width) // 2
+
+        # Display the centered options.
+        self.init.display.text(restore_defaults_text, restore_defaults_x, 20, 1)
+
+        # Highlight the current selection.
         yes_background = int(self.selection == "Yes")
         no_background = int(self.selection == "No")
 
-        self.init.display.fill_rect(0, 30, 35, 10, yes_background)
-        self.init.display.text("Yes", 0, 30, int(not yes_background))
+        yes_x = yes_no_x
+        no_x = yes_no_x + len(yes_text) * font_width + 7 * font_width
+        box_height = font_height + 2 * padding
+        yes_y = 30 + vertical_spacing
+        no_y = yes_y
 
-        self.init.display.fill_rect(40, 30, 35, 10, no_background)
-        self.init.display.text("No", 40, 30, int(not no_background))
+        # Draw the background rectangles with padding.
+        self.init.display.fill_rect(yes_x - padding, yes_y - padding, len(yes_text) * font_width + 2 * padding, box_height, yes_background)
+        self.init.display.text(yes_text, yes_x, yes_y, int(not yes_background))
+
+        self.init.display.fill_rect(no_x - padding, no_y - padding, len(no_text) * font_width + 2 * padding, box_height, no_background)
+        self.init.display.text(no_text, no_x, no_y, int(not no_background))
 
         self.init.display.show()
 
@@ -88,9 +110,9 @@ class RestoreDefaults(CustomItem):
         """
         direction = val - self.val_old
         if direction == 0:
-            return  # No change in direction, so no update needed.
+            return
 
-        # Toggle the selection between "Yes" and "No"
+        # Toggle the selection between "Yes" and "No".
         self.selection = "Yes" if self.selection == "No" else "No"
 
         self.val_old = val

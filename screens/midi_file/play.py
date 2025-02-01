@@ -39,11 +39,11 @@ class MIDIFilePlay:
         self.start_time = 0
         self.last_display_update = 0
 
-        # Read the default output level from the configuration
+        # Read the default output level from the configuration.
         self.config = config.read_config()
         default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE)
 
-        # Initialize levels with the default output level
+        # Initialize levels with the default output level.
         self.levels = [default_level] * 4
 
     def draw(self, file_path):

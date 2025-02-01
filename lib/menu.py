@@ -8,12 +8,6 @@ Provides menu functionality.
 Based on https://github.com/plugowski/umenu
 """
 
-try:
-    from display import CENTER, RIGHT
-except ImportError:
-    CENTER = 1
-    RIGHT = 2
-
 class MenuItem:
     """
     Represents a generic item in the menu.
@@ -22,7 +16,7 @@ class MenuItem:
     -----------
     name : str
         The name of the menu item.
-    decorator : str
+    decorator : str or callable
         The decorator string for the menu item.
     visible : bool or callable
         Determines if the menu item is visible.
@@ -30,15 +24,15 @@ class MenuItem:
 
     def __init__(self, name: str, decorator=None, visible=None):
         self.parent = None
-        self._visible = True if visible is None else visible
+        self._visible = visible if callable(visible) else (True if visible is None else visible)
         self.is_active = False
         self.name = name
-        self.decorator = '' if decorator is None else decorator
+        self.decorator = decorator if decorator is not None else ''
 
     @property
     def visible(self):
         """Returns the visibility status of the menu item."""
-        return self._visible if not self._check_callable(self._visible, False) else self._call_callable(self._visible)
+        return self._visible() if callable(self._visible) else self._visible
 
     def click(self):
         """Defines the action to take when the menu item is clicked."""
@@ -46,26 +40,8 @@ class MenuItem:
 
     def get_decorator(self):
         """Returns the decorator string for the menu item."""
-        return self.decorator if not callable(self.decorator) else self.decorator()
+        return self.decorator() if callable(self.decorator) else self.decorator
 
-    @staticmethod
-    def _check_callable(param, raise_error=True):
-        """Checks if a parameter is callable."""
-        if not (callable(param) or (type(param) is tuple and callable(param[0]))):
-            if raise_error:
-                raise ValueError('callable param should be callable or tuple with callable on first place!')
-            else:
-                return False
-        return True
-
-    @staticmethod
-    def _call_callable(func, *args):
-        """Calls a callable parameter."""
-        if callable(func):
-            return func(*args)
-        elif type(func) is tuple and callable(func[0]):
-            in_args = func[1] if type(func[1]) is tuple else (func[1],)
-            return func[0](*tuple(list(in_args) + list(args)))
 
 class SubMenuItem(MenuItem):
     """
@@ -75,7 +51,7 @@ class SubMenuItem(MenuItem):
     -----------
     name : str
         The name of the submenu item.
-    decorator : str
+    decorator : str or callable
         The decorator string for the submenu item.
     visible : bool or callable
         Determines if the submenu item is visible.
@@ -89,7 +65,7 @@ class SubMenuItem(MenuItem):
 
     def click(self):
         """Defines the action to take when the submenu item is clicked."""
-        pass
+        return self.menu
 
     def add(self, item, parent=None) -> 'SubMenuItem':
         """Adds a menu item to the submenu."""
@@ -99,6 +75,7 @@ class SubMenuItem(MenuItem):
     def reset(self):
         """Resets the submenu."""
         self.menu.reset()
+
 
 class CustomItem(MenuItem):
     """
@@ -137,9 +114,10 @@ class CustomItem(MenuItem):
         """
         raise NotImplementedError()
 
-    def draw(self):
+    def draw(self, menu):
         """Called when someone clicks on the menu item."""
         raise NotImplementedError()
+
 
 class BackItem(MenuItem):
     """
@@ -160,6 +138,7 @@ class BackItem(MenuItem):
     def click(self):
         """Defines the action to take when the back item is clicked."""
         return self.parent
+
 
 class MenuScreen:
     """
@@ -189,34 +168,34 @@ class MenuScreen:
     def add(self, item, parent=None):
         """Adds a menu item to the menu screen."""
         item.parent = self if parent is None else parent
-        if type(item) is SubMenuItem:
+        if isinstance(item, SubMenuItem):
             item.menu.parent = self if parent is None else parent
         self._items.append(item)
+        self._update_visible_items()
         return self
 
     def reset(self):
         """Resets the menu screen."""
         self._items = []
+        self._visible_items = []
+
+    def _update_visible_items(self):
+        """Updates the list of visible menu items."""
+        self._visible_items = [item for item in self._items if item.visible]
 
     def count(self) -> int:
         """Returns the count of visible menu items."""
-        elements = 0
-        self._visible_items = []
-        for item in self._items:
-            if item.visible:
-                elements += 1
-                self._visible_items.append(item)
-        return elements + (1 if self.parent is not None else 0)
+        return len(self._visible_items) + (1 if self.parent is not None else 0)
 
     def up(self) -> None:
         """Moves the selection up."""
         if self.selected > 0:
-            self.selected = self.selected - 1
+            self.selected -= 1
 
     def down(self) -> None:
         """Moves the selection down."""
         if self.selected + 1 < self.count():
-            self.selected = self.selected + 1
+            self.selected += 1
 
     def get(self, position):
         """Gets the menu item at the specified position."""
@@ -231,17 +210,33 @@ class MenuScreen:
         item.is_active = position == self.selected
         return item
 
-    def select(self) -> None:
+    def select(self):
         """Selects the current menu item."""
         item = self.get(self.selected)
-        if type(item) is BackItem:
+        if isinstance(item, BackItem):
             self.selected = 0
-
-        if type(item) is SubMenuItem:
-            return item.menu
-        else:
-            # do action and return current menu
             return item.click()
+        elif isinstance(item, SubMenuItem):
+            return item.click()
+        else:
+            return item.click()
+
+    def draw(self, menu):
+        """Draws the menu screen on the display."""
+        menu.display.clear()
+        menu._menu_header(self.title)
+
+        elements = self.count()
+        start = self.selected - menu.per_page + 1 if self.selected + 1 > menu.per_page else 0
+        end = start + menu.per_page
+
+        menu_pos = 0
+        for i in range(start, min(end, elements)):
+            menu._item_line(self.get(i), menu_pos)
+            menu_pos += 1
+
+        menu.display.show()
+
 
 class Menu:
     """
@@ -265,18 +260,16 @@ class Menu:
         The current screen being displayed.
     """
 
-    current_screen = None  # type: MenuScreen | CustomItem
-
     def __init__(self, display, per_page: int = 4, line_height: int = 14, font_width: int = 8, font_height: int = 8):
-        # todo: replace display and specific driver to framebuf
         self.display = display
         self.per_page = per_page
         self.line_height = line_height
         self.font_height = font_height
         self.font_width = font_width
         self.main_screen = None
+        self.current_screen = None
 
-    def set_screen(self, screen: MenuScreen):
+    def set_screen(self, screen):
         """Sets the current screen."""
         self.current_screen = screen
         if self.main_screen is None:
@@ -285,7 +278,10 @@ class Menu:
 
     def move(self, direction: int = 1):
         """Moves the selection in the specified direction."""
-        self.current_screen.up() if direction < 0 else self.current_screen.down()
+        if direction < 0:
+            self.current_screen.up()
+        else:
+            self.current_screen.down()
         self.draw()
 
     def click(self):
@@ -302,24 +298,7 @@ class Menu:
 
     def draw(self):
         """Draws the menu on the display."""
-        if isinstance(self.current_screen, CustomItem):
-            self.current_screen.draw()
-            return
-
-        self.display.clear()
-
-        self._menu_header(self.current_screen.title)
-
-        elements = self.current_screen.count()
-        start = self.current_screen.selected - self.per_page + 1 if self.current_screen.selected + 1 > self.per_page else 0
-        end = start + self.per_page
-
-        menu_pos = 0
-        for i in range(start, min(end, elements)):
-            self._item_line(self.current_screen.get(i), menu_pos)
-            menu_pos += 1
-
-        self.display.show()
+        self.current_screen.draw(self)  # Delegate drawing to the current screen
 
     def _item_line(self, item: MenuItem, pos):
         """Draws a single menu item line on the display."""
@@ -330,16 +309,11 @@ class Menu:
 
         self.display.fill_rect(0, y, self.display.width, self.line_height, background)
 
-        if hasattr(self.display, 'rich_text'):
-            self.display.rich_text(str.upper(item.name), 2, y + v_padding, int(not background))
-            if item.get_decorator():
-                self.display.rich_text(str.upper(item.get_decorator()), None, y + v_padding, int(not background), align=RIGHT)
-        else:
-            self.display.text(item.name, 0, y + v_padding, int(not background))
-            decorator_text = item.get_decorator()
-            if decorator_text:
-                x_pos = min(self.display.width - (len(decorator_text) * self.font_width) - 1, 255)
-                self.display.text(decorator_text, x_pos, y + v_padding, int(not background))
+        self.display.text(item.name, 0, y + v_padding, int(not background))
+        decorator_text = item.get_decorator()
+        if decorator_text:
+            x_pos = min(self.display.width - (len(decorator_text) * self.font_width) - 1, 255)
+            self.display.text(decorator_text, x_pos, y + v_padding, int(not background))
 
     def _menu_header(self, text):
         """Draws the menu header on the display."""
