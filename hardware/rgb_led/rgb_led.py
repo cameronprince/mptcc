@@ -7,6 +7,7 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
+import math
 from ..hardware import Hardware
 
 class RGBLED(Hardware):
@@ -16,33 +17,38 @@ class RGBLED(Hardware):
     def __init__(self):
         super().__init__()
 
+import math
+
 class RGB:
     """
     A base class for RGB LED functionality.
     """
-    def map(self, x, in_min, in_max, out_min, out_max):
+
+    def make_color(self, value):
         """
-        Converts a value from one range to another.
+        Return RGB color from scalar value.
 
         Parameters:
         ----------
-        x : int
-            The value to be converted.
-        in_min : int
-            The minimum value of the input range.
-        in_max : int
-            The maximum value of the input range.
-        out_min : int
-            The minimum value of the output range.
-        out_max : int
-            The maximum value of the output range.
+        value : float
+            Scalar value between 0 and 1
 
         Returns:
         -------
-        int
-            The converted value in the output range.
+        tuple
+            RGB values.
         """
-        return (x - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
+        # value must be between [0, 510].
+        value = max(0, min(1, value)) * 510
+
+        if value < 255:
+            red_value = int((value / 255) ** 2 * 255)
+            green_value = 255
+        else:
+            green_value = 256 - int((value - 255) ** 2 / 255)
+            red_value = 255
+
+        return red_value, green_value, 0
 
     def constrain(self, x, out_min, out_max):
         """
@@ -62,12 +68,7 @@ class RGB:
         int
             The constrained value.
         """
-        if x < out_min:
-            return out_min
-        elif x > out_max:
-            return out_max
-        else:
-            return x
+        return max(out_min, min(x, out_max))
 
     def show(self):
         """
@@ -83,28 +84,34 @@ class RGB:
         """
         self.setColor(0, 0, 0)
 
-    def status_color(self, value):
+    def status_color(self, value, mode="percent"):
         """
-        Sets the color of the LED based on a percentage value.
+        Sets the color of the LED based on a value and mode.
 
         Parameters:
         ----------
         value : int
-            The percentage value (1-100).
+            The value to determine the color (1-100 for percent, 0-127 for velocity).
+        mode : str
+            The mode to interpret the value ("percent" or "velocity").
         """
-        if value <= 50:
-            red = self.map(value, 1, 50, 0, 255)
-            green = 255
-            blue = 0
-        else:
-            red = 255
-            green = self.map(value, 50, 100, 255, 0)
-            blue = 0
+        # Convert velocity to percentage if in velocity mode
+        if mode == "velocity":
+            value = int(value * 100 / 127)
+
+        # Ensure value is between 1 and 100.
+        value = self.constrain(value, 1, 100)
+
+        # Map value to a range of 0 to 1.
+        normalized_value = value / 100.0
+
+        # Get color based on the normalized value.
+        red, green, blue = self.make_color(normalized_value)
 
         red = self.constrain(red, 0, 255)
         green = self.constrain(green, 0, 255)
         blue = self.constrain(blue, 0, 255)
-        
+
         self.setColor(red, green, blue)
 
 class RGB_I2CEncoder(RGB):
@@ -156,9 +163,6 @@ class RGB_PCA9685(RGB):
         b : int
             Blue value (0-255).
         """
-        r_mapped = self.map(r, 0, 255, 0, 4095)
-        g_mapped = self.map(g, 0, 255, 0, 4095)
-        b_mapped = self.map(b, 0, 255, 0, 4095)
-        self.pca.duty(self.red_channel, r_mapped)
-        self.pca.duty(self.green_channel, g_mapped)
-        self.pca.duty(self.blue_channel, b_mapped)
+        self.pca.duty(self.red_channel, r * 16)
+        self.pca.duty(self.green_channel, g * 16)
+        self.pca.duty(self.blue_channel, b * 16)

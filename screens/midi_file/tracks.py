@@ -31,7 +31,8 @@ class MIDIFileTracks:
         """
         self.midi_file.current_page = "tracks"
 
-        self.display.clear()
+        # Show a loading message.
+        self.display.loading_screen()
 
         if not self.midi_file.track_list:
             self.get_tracks()

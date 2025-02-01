@@ -111,6 +111,8 @@ class MIDIFileAssignment:
         if output_index is not None:
             self.midi_file.outputs[output_index] = self.midi_file.selected_track
 
+        print('calling: save_map_file')
+
         # Save the updated output assignments to the map file.
         self.midi_file.save_map_file()
         # Return to the track listing.

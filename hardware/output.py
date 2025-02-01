@@ -76,12 +76,17 @@ class Output(Hardware):
             duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
             self.output[output].duty_u16(duty_cycle)
 
+            # The triggering class is passed for any screen which allows
+            # variable signal constraints. The constraints are then used to
+            # determine the output percentage level of the current signal.
             if triggering_class:
                 percent = utils.calculate_percent(frequency, on_time, triggering_class)
                 self.init.rgb_led[output].status_color(percent)
             else:
-                velocity = int((on_time / 65535) * 127)
-                self.init.rgb_led[output].status_color(velocity, mode="velocity")
+                # MIDI signal constraints are fixed at 0-127 by the standard.
+                percent = utils.calculate_midi_percent(frequency, on_time)
+                # print('CH: ', output, ' %:', percent)
+                self.init.rgb_led[output].status_color(percent)
         else:
             self.output[output].duty_u16(0)
             self.init.rgb_led[output].off()

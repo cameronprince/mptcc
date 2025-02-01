@@ -11,7 +11,8 @@ import _thread
 import gc
 import time
 from mptcc.hardware.init import init
-import mptcc.lib.utils as utils
+from mptcc.lib.utils import midi_to_frequency, velocity_to_ontime
+from mptcc.lib.config import Config as config
 import umidiparser
 
 class MIDIFilePlay:
@@ -25,9 +26,8 @@ class MIDIFilePlay:
             The parent MIDIFile instance.
         """
         self.midi_file = midi_file
-        self.levels = [50] * 4
         self.events = []
-        self.val_old = [0, 0, 0, 0]
+        self.val_old = [None, None, None, None]
         self.playback_active = False
         self.init = init
         self.display = self.init.display
@@ -38,6 +38,13 @@ class MIDIFilePlay:
         self.seconds = 0
         self.start_time = 0
         self.last_display_update = 0
+
+        # Read the default output level from the configuration
+        self.config = config.read_config()
+        default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE)
+
+        # Initialize levels with the default output level
+        self.levels = [default_level] * 4
 
     def draw(self, file_path):
         """
@@ -52,49 +59,26 @@ class MIDIFilePlay:
 
         # Show a loading message.
         self.display.loading_screen()
+        self.display.clear()
 
         self.playback_active = True
 
         # Load the .map file so we can determine which tracks are to be played.
         self.midi_file.load_map_file(file_path)
+        # print('map file values: ', self.midi_file.outputs)
 
         if not hasattr(self.midi_file, 'outputs') or all(output is None for output in self.midi_file.outputs):
-            # Stop and return to file listing when the selected file has no corresponding map file.
+            # Stop and return to file listing when the selected file has no
+            # corresponding map file.
             self.playback_active = False
             self.display.alert_screen("No tracks mapped")
             self.midi_file.handlers["files"].draw()
             return
 
-        # Initialize the SD card reader so we can read the MIDI file.
-        self.init.sd_card_reader.init_sd()
-
-        # Parse the MIDI file and prepare the events array.
-        midi = umidiparser.MidiFile(file_path, buffer_size=0, reuse_event_object=False)
-        self.init.sd_card_reader.deinit_sd()
-
-        # Create a list of track indices from the outputs array and adjust by +1.
-        # This skips the metadata track.
-        track_indices = [track_index + 1 for track_index in self.midi_file.outputs if track_index is not None]
-
-        for track_index in track_indices:
-            self.current_time = 0
-            for event in midi.tracks[track_index]:
-                if event.status in (umidiparser.NOTE_ON, umidiparser.NOTE_OFF):
-                    self.current_time += event.delta_us / 1e6
-                    self.events.append((self.current_time, track_index, event))
-
-        # Sort the events by time.
-        self.events.sort(key=lambda x: x[0])
-
-        if not self.events:
-            self.playback_active = False
-            self.display.alert_screen("No MIDI events found")
-            return
-
         # Start playback in a separate thread.
-        _thread.start_new_thread(self.midi_events_handler, ())
+        _thread.start_new_thread(self.player, (file_path,))
 
-    def midi_events_handler(self):
+    def player(self, file_path):
         """
         Plays the MIDI events sequentially and updates the display with elapsed time.
         """
@@ -105,40 +89,50 @@ class MIDIFilePlay:
             # Show the initial screen values prior to playback start.
             self.update_levels()
             self.update_elapsed_time()
-            while self.playback_active and self.events:
-                self.current_time = time.ticks_us()
-                self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) / 1e6
 
-                if self.elapsed_time >= self.events[0][0]:
-                    event_time, track, event = self.events.pop(0)
+            self.init.sd_card_reader.init_sd()
 
-                    if track - 1 in self.midi_file.outputs:
-                        output = self.midi_file.outputs.index(track - 1)
+            midi_file = umidiparser.MidiFile(file_path)
+            
+            for event in midi_file.play():
+                if not self.playback_active:
+                    break
+
+                # Update the display every second.
+                current_time_ms = time.ticks_ms()
+                if time.ticks_diff(current_time_ms, self.last_display_update) >= 1000:
+                    self.update_elapsed_time()
+                    self.last_display_update = current_time_ms
+
+                if event.status in (umidiparser.NOTE_ON, umidiparser.NOTE_OFF):
+                    # print('note event - track: ', event.track, ' channel: ', event.channel, ' velocity: ', event.velocity, ' outputs: ', self.midi_file.outputs)
+                    track_index = event.track - 1
+                    if track_index in self.midi_file.outputs:
+                        output = self.midi_file.outputs.index(track_index)
                         if event.status == umidiparser.NOTE_ON:
                             note = event.note
                             velocity = event.velocity
                             if velocity == 0:
-                                self.init.output.set_output(output, 0, 0, False)
+                                self.init.output.set_output(output, False)
                             else:
-                                frequency = utils.midi_to_frequency(note)
-                                on_time = utils.velocity_to_ontime(velocity)
+                                frequency = midi_to_frequency(note)
+                                on_time = velocity_to_ontime(velocity)
                                 # Scale the on_time by the level control percentage.
                                 scaled_on_time = int(on_time * self.levels[output] / 100)
-                                self.init.output.set_output(output, frequency, scaled_on_time, True)
+                                # print('velocity: ', velocity, ' ontime from velocity: ', on_time, ' scaled_on_time: ', scaled_on_time)
+                                self.init.output.set_output(output, True, frequency, scaled_on_time)
                         elif event.status == umidiparser.NOTE_OFF:
-                            self.init.output.set_output(output, 0, 0, False)
+                            self.init.output.set_output(output, False)
                     else:
-                        print(f"Warning: No output mapped for track {track}")
+                        # print(f"Warning: No output mapped for track {event.track}")
+                        pass
 
-                if time.ticks_diff(time.ticks_ms(), self.last_display_update) >= 1 * 1000:
-                    self.update_elapsed_time()
-                    self.last_display_update = time.ticks_ms()
-
-                time.sleep(0.01)
+            self.init.sd_card_reader.deinit_sd()
 
             self.stop_playback()
         except Exception as e:
             print(f"Exception: {e}")
+            self.stop_playback()
 
     def update_elapsed_time(self):
         """
@@ -169,15 +163,7 @@ class MIDIFilePlay:
 
         self.init.output.disable_outputs()
 
-        # Clear events.
-        self.events = []
-
-        # Force garbage collection to free up memory.
-        gc.collect()
-
         # Return to the file listing.
-        # self.midi_file.handlers["files"].draw()
-
         self.midi_file.current_page = ""
         parent_screen = self.midi_file.parent
         if parent_screen:
@@ -207,10 +193,25 @@ class MIDIFilePlay:
         val : int
             The new value from the rotary encoder.
         """
+        if self.val_old[index] is None:
+            self.val_old[index] = val
+
         increment = 1
-        new_level = self.levels[index] + increment * (val - self.val_old[index])
-        self.levels[index] = max(0, min(100, new_level))
+        # Adjust for wrapping.
+        delta = ((val - self.val_old[index]) + 101) % 101
+        # Handle wrapping in the negative direction.
+        if delta > 50:
+            delta -= 101
+
+        new_level = self.levels[index] + increment * delta
+
+        # Constrain the new level between 1 and 100.
+        self.levels[index] = max(1, min(100, new_level))
+        
+        # Update the old value.
         self.val_old[index] = val
+
+        # Update the levels display.
         self.update_levels()
 
     def rotary_1(self, val):

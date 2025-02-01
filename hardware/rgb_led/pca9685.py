@@ -10,7 +10,8 @@ RGB LED device utilizing the PCA9685 external PWM board.
 import time
 from machine import Pin
 from pca9685 import PCA9685 as driver
-from ..rgb_led.rgb_led import RGBLED, RGB_PCA9685
+from ..rgb_led.rgb_led import RGBLED
+from ...lib.rgb import RGB
 from ...hardware.init import init
 
 class PCA9685(RGBLED):
@@ -58,8 +59,8 @@ class PCA9685(RGBLED):
         self.driver.freq(self.PCA9685_FREQ)
 
         self.init.rgb_led = [
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED1_RED, green_channel=self.PCA_LED1_GREEN, blue_channel=self.PCA_LED1_BLUE),
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED2_RED, green_channel=self.PCA_LED2_GREEN, blue_channel=self.PCA_LED2_BLUE),
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE),
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE),
+            RGB(self.driver, red_channel=self.PCA_LED1_RED, green_channel=self.PCA_LED1_GREEN, blue_channel=self.PCA_LED1_BLUE),
+            RGB(self.driver, red_channel=self.PCA_LED2_RED, green_channel=self.PCA_LED2_GREEN, blue_channel=self.PCA_LED2_BLUE),
+            RGB(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE),
+            RGB(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE),
         ]

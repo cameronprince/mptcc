@@ -159,6 +159,8 @@ class MIDIFile(CustomItem):
 
             map_data = [(output + 1) if output is not None else 0 for output in self.outputs]
 
+            print('save_map_file - data: ', map_data)
+
             with open(map_path, 'w') as f:
                 json.dump(map_data, f)
         except Exception as e:

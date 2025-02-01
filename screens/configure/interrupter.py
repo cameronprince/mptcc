@@ -3,7 +3,7 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-screens/interrupter_config.py
+screens/configure/interrupter.py
 Provides the screen for configuring interrupter settings.
 """
 
