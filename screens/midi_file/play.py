@@ -75,6 +75,8 @@ class MIDIFilePlay:
             self.midi_file.handlers["files"].draw()
             return
 
+        self.init.sd_card_reader.init_sd()
+
         # Start playback in a separate thread.
         _thread.start_new_thread(self.player, (file_path,))
 
@@ -89,8 +91,6 @@ class MIDIFilePlay:
             # Show the initial screen values prior to playback start.
             self.update_levels()
             self.update_elapsed_time()
-
-            self.init.sd_card_reader.init_sd()
 
             midi_file = umidiparser.MidiFile(file_path)
             
@@ -127,8 +127,6 @@ class MIDIFilePlay:
                         # print(f"Warning: No output mapped for track {event.track}")
                         pass
 
-            self.init.sd_card_reader.deinit_sd()
-
             self.stop_playback()
         except Exception as e:
             print(f"Exception: {e}")
@@ -160,8 +158,8 @@ class MIDIFilePlay:
         Stop MIDI playback and return to the file listing.
         """
         self.playback_active = False
-
         self.init.output.disable_outputs()
+        self.init.sd_card_reader.deinit_sd()
 
         # Return to the file listing.
         self.midi_file.current_page = ""

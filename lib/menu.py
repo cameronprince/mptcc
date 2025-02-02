@@ -114,7 +114,7 @@ class CustomItem(MenuItem):
         """
         raise NotImplementedError()
 
-    def draw(self, menu):
+    def draw(self):
         """Called when someone clicks on the menu item."""
         raise NotImplementedError()
 
@@ -298,7 +298,14 @@ class Menu:
 
     def draw(self):
         """Draws the menu on the display."""
-        self.current_screen.draw(self)  # Delegate drawing to the current screen
+        if isinstance(self.current_screen, MenuScreen):
+            # Call MenuScreen's draw method with the menu argument
+            self.current_screen.draw(self)
+        elif isinstance(self.current_screen, CustomItem):
+            # Call CustomItem's draw method without the menu argument
+            self.current_screen.draw()
+        else:
+            raise TypeError("Unsupported screen type")
 
     def _item_line(self, item: MenuItem, pos):
         """Draws a single menu item line on the display."""

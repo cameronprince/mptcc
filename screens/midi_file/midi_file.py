@@ -107,6 +107,9 @@ class MIDIFile(CustomItem):
         }
 
     def draw(self):
+        """
+        Calls the draw function of the sub-screen.
+        """
         self.handlers["files"].draw()
 
     def load_map_file(self, file_path):
