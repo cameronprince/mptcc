@@ -111,10 +111,10 @@ class MIDIFileAssignment:
         if output_index is not None:
             self.midi_file.outputs[output_index] = self.midi_file.selected_track
 
-        print('calling: save_map_file')
+        file_path = self.init.SD_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
 
         # Save the updated output assignments to the map file.
-        self.midi_file.save_map_file()
+        self.midi_file.save_map_file(file_path)
         # Return to the track listing.
         self.midi_file.handlers["tracks"].draw()
 

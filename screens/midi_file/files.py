@@ -9,6 +9,7 @@ Provides the MIDI file listing screen.
 
 from mptcc.hardware.init import init
 import mptcc.lib.utils as utils
+from mptcc.lib.config import Config as config
 import uos
 
 class MIDIFileFiles:
@@ -33,7 +34,9 @@ class MIDIFileFiles:
         self.display.loading_screen()
 
         # Get the files from the SD card.
+        self.init.sd_card_reader.init_sd()
         sd_init = self.load_files()
+        self.init.sd_card_reader.deinit_sd()
 
         # Only proceed if the SD card was initialized successfully.
         if sd_init:
@@ -64,10 +67,7 @@ class MIDIFileFiles:
             is_active = (i == self.midi_file.current_file_index + self.midi_file.file_cursor_position)
             background = int(is_active)
             self.display.fill_rect(0, y, self.display.width, self.midi_file.line_height, background)
-            if is_active:
-                self.display.text(midi_file[:20], 0, y + v_padding, 0)
-            else:
-                self.display.text(midi_file[:20], 0, y + v_padding, 1)
+            self.display.text(midi_file, 0, y + v_padding, not is_active)
         self.display.show()
 
         # Handle scrolling of long filenames.
@@ -84,8 +84,6 @@ class MIDIFileFiles:
         Load the list of MIDI files from the SD card.
         """
         try:
-            self.init.sd_card_reader.init_sd()
-
             self.midi_file.file_list = [
                 f[0] if isinstance(f, tuple) else f 
                 for f in uos.listdir(self.init.SD_MOUNT_POINT)
@@ -93,8 +91,6 @@ class MIDIFileFiles:
                     ((isinstance(f, str) and (f.endswith(".mid") or f.endswith(".midi")) and not f.startswith("._")) or
                     (isinstance(f, tuple) and f[0].endswith((".mid", ".midi")) and not f[0].startswith("._")))
             ]
-
-            self.init.sd_card_reader.deinit_sd()
             return True
         except OSError as e:
             print(f"Error initializing SD card: {e}")
@@ -153,6 +149,8 @@ class MIDIFileFiles:
         self.display.stop_scroll_task()
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
         self.midi_file.track_cursor_position = 0
+        self.midi_file.outputs = [None] * 4
+        self.midi_file.levels = [config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE] * 4
         self.midi_file.handlers["tracks"].draw()
 
     def switch_2(self):

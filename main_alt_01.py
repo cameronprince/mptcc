@@ -15,14 +15,14 @@ Hardware Settings
 """
 # I2C bus 1 pin assignments and settings.
 # (used by the I2CEncoders.)
-init.PIN_I2C_1_SCL = 17
-init.PIN_I2C_1_SDA = 16
-init.I2C_1_INTERFACE = 0
+init.PIN_I2C_1_SCL = 19
+init.PIN_I2C_1_SDA = 18
+init.I2C_1_INTERFACE = 1
 init.I2C_1_FREQ = 400000
 
 # I2CEncoder V2.1 settings.
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48]
-init.PIN_I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
+init.PIN_I2CENCODER_INTERRUPTS = [21, 22, 26, 27]
 
 # SPI bus 1 pin assignments and settings.
 # (used by the SD card reader)
@@ -58,8 +58,8 @@ init.PIN_BATT_STATUS_ADC = 28
 init.VOLTAGE_DROP_FACTOR = 848.5
 
 # MIDI input pin assignment and UART settings.
-init.PIN_MIDI_INPUT = 5
-init.UART_INTERFACE = 1
+init.PIN_MIDI_INPUT = 17
+init.UART_INTERFACE = 0
 init.UART_BAUD = 31250
 
 # Miscellaneous definitions.

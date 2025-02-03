@@ -18,21 +18,13 @@ class MenuItem:
         The name of the menu item.
     decorator : str or callable
         The decorator string for the menu item.
-    visible : bool or callable
-        Determines if the menu item is visible.
     """
 
-    def __init__(self, name: str, decorator=None, visible=None):
+    def __init__(self, name: str, decorator=None):
         self.parent = None
-        self._visible = visible if callable(visible) else (True if visible is None else visible)
         self.is_active = False
         self.name = name
         self.decorator = decorator if decorator is not None else ''
-
-    @property
-    def visible(self):
-        """Returns the visibility status of the menu item."""
-        return self._visible() if callable(self._visible) else self._visible
 
     def click(self):
         """Defines the action to take when the menu item is clicked."""
@@ -53,14 +45,12 @@ class SubMenuItem(MenuItem):
         The name of the submenu item.
     decorator : str or callable
         The decorator string for the submenu item.
-    visible : bool or callable
-        Determines if the submenu item is visible.
     menu : MenuScreen
         The menu screen associated with the submenu item.
     """
 
-    def __init__(self, name, decorator=None, visible=None):
-        super().__init__(name, '>' if decorator is None else decorator, visible)
+    def __init__(self, name, decorator=None):
+        super().__init__(name, '>' if decorator is None else decorator)
         self.menu = MenuScreen(name, None)
 
     def click(self):
@@ -85,14 +75,12 @@ class CustomItem(MenuItem):
     -----------
     name : str
         The name of the custom item.
-    visible : bool or callable
-        Determines if the custom item is visible.
     display : object
         The display object associated with the custom item.
     """
 
-    def __init__(self, name, visible=None):
-        super().__init__(name, visible=visible)
+    def __init__(self, name):
+        super().__init__(name)
         self.display = None  # it is set after initialization via Menu._update_display()
 
     def click(self):
@@ -154,13 +142,10 @@ class MenuScreen:
         The index of the selected menu item.
     _items : list
         The list of menu items in the menu screen.
-    _visible_items : list
-        The list of visible menu items in the menu screen.
     """
 
     def __init__(self, title: str, parent=None):
         self._items = []
-        self._visible_items = []
         self.selected = 0
         self.parent = parent
         self.title = title
@@ -171,21 +156,15 @@ class MenuScreen:
         if isinstance(item, SubMenuItem):
             item.menu.parent = self if parent is None else parent
         self._items.append(item)
-        self._update_visible_items()
         return self
 
     def reset(self):
         """Resets the menu screen."""
         self._items = []
-        self._visible_items = []
-
-    def _update_visible_items(self):
-        """Updates the list of visible menu items."""
-        self._visible_items = [item for item in self._items if item.visible]
 
     def count(self) -> int:
-        """Returns the count of visible menu items."""
-        return len(self._visible_items) + (1 if self.parent is not None else 0)
+        """Returns the count of menu items."""
+        return len(self._items) + (1 if self.parent is not None else 0)
 
     def up(self) -> None:
         """Moves the selection up."""
@@ -205,7 +184,7 @@ class MenuScreen:
         if position + 1 == self.count() and self.parent is not None:
             item = BackItem(self.parent)
         else:
-            item = self._visible_items[position]
+            item = self._items[position]
 
         item.is_active = position == self.selected
         return item
@@ -299,10 +278,10 @@ class Menu:
     def draw(self):
         """Draws the menu on the display."""
         if isinstance(self.current_screen, MenuScreen):
-            # Call MenuScreen's draw method with the menu argument
+            # Call MenuScreen's draw method with the menu argument.
             self.current_screen.draw(self)
         elif isinstance(self.current_screen, CustomItem):
-            # Call CustomItem's draw method without the menu argument
+            # Call CustomItem's draw method without the menu argument.
             self.current_screen.draw()
         else:
             raise TypeError("Unsupported screen type")

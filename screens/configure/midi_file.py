@@ -1,12 +1,3 @@
-"""
-MicroPython Tesla Coil Controller (MPTCC)
-by Cameron Prince
-teslauniverse.com
-
-screens/configure/midi_file.py
-Provides the screen for configuring the MIDI file feature.
-"""
-
 from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 from mptcc.lib.config import Config as config
@@ -26,6 +17,8 @@ class MIDIFileConfig(CustomItem):
         The configuration dictionary read from the flash memory.
     output_level : int
         The default output level for MIDI file playback.
+    save_levels_on_end : bool
+        Whether to save levels on end of playback.
     val_old : int
         The old value of the rotary encoder.
     font_width : int
@@ -45,21 +38,29 @@ class MIDIFileConfig(CustomItem):
         self.init = init
         self.display = self.init.display
         self.config = config.read_config()
-        self.output_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE)
+        self.output_level = self.config.get("midi_file_save_levels_on_end", config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE)
+        self.save_levels_on_end = self.config.get("midi_file_save_levels_on_end", config.DEF_MIDI_FILE_SAVE_LEVELS_ON_END)
         self.val_old = 0
         self.font_width = self.init.display.DISPLAY_FONT_WIDTH
 
     def draw(self):
         """
-        Displays the MIDI file configuration screen with the output level.
+        Displays the MIDI file configuration screen with the output level and the save levels on end setting.
         """
         self.display.clear()
         self.display.header("MIDI File Config")
 
+        # Display output level
         output_level_str = f"{self.output_level}%"
         self.display.text("Default output", 0, 20, 1)
         self.display.text("level:", 0, 30, 1)
         self.display.text(output_level_str, self.display.width - len(output_level_str) * self.font_width, 30, 1)
+
+        # Display save levels on end setting on the same line as the label
+        save_levels_on_end_label = "Save levels on end:"
+        save_levels_on_end_str = "Yes" if self.save_levels_on_end else "No"
+        self.display.text(save_levels_on_end_label, 0, 50, 1)
+        self.display.text(save_levels_on_end_str, self.display.width - len(save_levels_on_end_str) * self.font_width, 50, 1)
 
         self.display.show()
 
@@ -68,6 +69,7 @@ class MIDIFileConfig(CustomItem):
         Writes the MIDI file configuration to flash memory.
         """
         self.config["midi_file_output_level"] = self.output_level
+        self.config["midi_file_save_levels_on_end"] = self.save_levels_on_end
         config.write_config(self.config)
 
     def rotary_1(self, val):
@@ -87,6 +89,20 @@ class MIDIFileConfig(CustomItem):
         self.output_level = max(1, min(100, self.output_level + increment * (1 if direction > 0 else -1)))
 
         self.val_old = val
+        self.save_config()
+        self.draw()
+
+    def rotary_2(self, val):
+        """
+        Responds to encoder 2 rotation to toggle the save levels on end setting.
+
+        Parameters:
+        ----------
+        val : int
+            The new value from the rotary encoder.
+        """
+        # Toggle the save levels on end setting
+        self.save_levels_on_end = not self.save_levels_on_end
         self.save_config()
         self.draw()
 

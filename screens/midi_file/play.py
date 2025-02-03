@@ -31,6 +31,8 @@ class MIDIFilePlay:
         self.playback_active = False
         self.init = init
         self.display = self.init.display
+        self.save_levels = False
+        self.file_path = None
 
         self.current_time = 0
         self.elapsed_time = 0
@@ -41,10 +43,6 @@ class MIDIFilePlay:
 
         # Read the default output level from the configuration.
         self.config = config.read_config()
-        default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE)
-
-        # Initialize levels with the default output level.
-        self.levels = [default_level] * 4
 
     def draw(self, file_path):
         """
@@ -57,6 +55,8 @@ class MIDIFilePlay:
         """
         self.midi_file.current_page = "play"
 
+        self.file_path = file_path
+
         # Show a loading message.
         self.display.loading_screen()
         self.display.clear()
@@ -64,8 +64,10 @@ class MIDIFilePlay:
         self.playback_active = True
 
         # Load the .map file so we can determine which tracks are to be played.
-        self.midi_file.load_map_file(file_path)
-        # print('map file values: ', self.midi_file.outputs)
+        self.midi_file.load_map_file(self.file_path)
+
+        # Update levels from the loaded map file
+        self.levels = self.midi_file.levels
 
         if not hasattr(self.midi_file, 'outputs') or all(output is None for output in self.midi_file.outputs):
             # Stop and return to file listing when the selected file has no
@@ -78,7 +80,7 @@ class MIDIFilePlay:
         self.init.sd_card_reader.init_sd()
 
         # Start playback in a separate thread.
-        _thread.start_new_thread(self.player, (file_path,))
+        _thread.start_new_thread(self.player, (self.file_path,))
 
     def player(self, file_path):
         """
@@ -105,7 +107,6 @@ class MIDIFilePlay:
                     self.last_display_update = current_time_ms
 
                 if event.status in (umidiparser.NOTE_ON, umidiparser.NOTE_OFF):
-                    # print('note event - track: ', event.track, ' channel: ', event.channel, ' velocity: ', event.velocity, ' outputs: ', self.midi_file.outputs)
                     track_index = event.track - 1
                     if track_index in self.midi_file.outputs:
                         output = self.midi_file.outputs.index(track_index)
@@ -119,7 +120,6 @@ class MIDIFilePlay:
                                 on_time = velocity_to_ontime(velocity)
                                 # Scale the on_time by the level control percentage.
                                 scaled_on_time = int(on_time * self.levels[output] / 100)
-                                # print('velocity: ', velocity, ' ontime from velocity: ', on_time, ' scaled_on_time: ', scaled_on_time)
                                 self.init.output.set_output(output, True, frequency, scaled_on_time)
                         elif event.status == umidiparser.NOTE_OFF:
                             self.init.output.set_output(output, False)
@@ -159,6 +159,17 @@ class MIDIFilePlay:
         """
         self.playback_active = False
         self.init.output.disable_outputs()
+
+        if (self.save_levels or self.config.get("midi_file_save_levels_on_end")):
+            # Save the current levels to the .map file
+            self.save_levels = False
+            self.midi_file.levels = self.levels
+            self.midi_file.save_map_file(self.file_path, False)
+
+            # Display "Levels saved" message
+            self.display.clear()
+            self.display.alert_screen("Levels saved")
+
         self.init.sd_card_reader.deinit_sd()
 
         # Return to the file listing.
@@ -226,6 +237,7 @@ class MIDIFilePlay:
 
     # All switches act as stop buttons.
     def switch_1(self):
+        self.save_levels = True
         self.playback_active = False
 
     def switch_2(self):
