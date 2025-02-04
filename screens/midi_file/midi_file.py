@@ -13,6 +13,7 @@ import uos
 from mptcc.hardware.init import init
 from mptcc.lib.menu import CustomItem
 import mptcc.lib.utils as utils
+from mptcc.lib.config import Config as config
 
 class MIDIFile(CustomItem):
     """
@@ -37,7 +38,7 @@ class MIDIFile(CustomItem):
         Current page being displayed.
     selected_filename : str
         Name of the selected file.
-    selected_track : str
+    selected_track : int
         Index of the selected track.
     outputs : list
         List of outputs for each track.
@@ -84,12 +85,16 @@ class MIDIFile(CustomItem):
         self.selected_track = None
         self.outputs = [None] * 4
         self.last_rotary_1_value = 0
+        self.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * 4
         self.per_page = self.display.DISPLAY_ITEMS_PER_PAGE
         self.output_y = None
         self.line_height = self.display.DISPLAY_LINE_HEIGHT
         self.font_width = self.display.DISPLAY_FONT_WIDTH
         self.font_height = self.display.DISPLAY_FONT_HEIGHT
         self.header_height = self.display.DISPLAY_HEADER_HEIGHT
+
+        self.config = config.read_config()
+        self.default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_LEVEL)
 
         # Initialize handlers.
         from mptcc.screens.midi_file import (
@@ -107,64 +112,66 @@ class MIDIFile(CustomItem):
         }
 
     def draw(self):
+        """
+        Calls the draw function of the sub-screen.
+        """
         self.handlers["files"].draw()
 
     def load_map_file(self, file_path):
         """
-        Load the output assignments from the map file.
-
-        Parameters:
-        ----------
-        file_path : str
-            Path to the MIDI file, which will be used to determine the map file path.
+        Load the output assignments and levels from the map file.
         """
         map_path = file_path.replace('.mid', '.map').replace('.midi', '.map')
-
-        # Ensure the outputs array is always initialized with a fixed length of four.
-        self.outputs = [None] * 4
 
         try:
             self.init.sd_card_reader.init_sd()
             with open(map_path, 'r') as f:
                 map_data = json.load(f)
-                for i in range(min(len(self.outputs), len(map_data))):
-                    self.outputs[i] = map_data[i] - 1 if map_data[i] != 0 else None
+
+                if isinstance(map_data, dict):
+                    mappings = map_data["mappings"]
+                    levels = map_data["levels"]
+                else:
+                    mappings = map_data
+                    
+                    levels = [self.default_level] * 4
+
+                if not isinstance(mappings, list) or not isinstance(levels, list):
+                    raise ValueError("Invalid map file format: mappings and levels must be lists")
+
+                for i in range(min(len(self.outputs), len(mappings))):
+                    self.outputs[i] = mappings[i] - 1 if mappings[i] != 0 else None
+                for i in range(min(len(self.levels), len(levels))):
+                    self.levels[i] = levels[i]
         except OSError:
-            pass
+            self.save_map_file(file_path, False)
         except Exception as e:
-            pass
+            print(f"Error loading map file: {e}")
         finally:
             self.init.sd_card_reader.deinit_sd()
 
-    def save_map_file(self):
+    def save_map_file(self, file_path, initsd=True):
         """
-        Save the output assignments to the map file.
-        Assumes the SD card is already mounted.
+        Save the output assignments and levels to the map file.
         """
-        map_filename = self.file_list[self.selected_file].replace('.mid', '.map').replace('.midi', '.map')
-        map_path = self.init.SD_MOUNT_POINT + "/" + map_filename
+        map_path = file_path.replace('.mid', '.map').replace('.midi', '.map')
 
         try:
-            self.init.sd_card_reader.init_sd()
+            if initsd:
+                self.init.sd_card_reader.init_sd()
 
-            if self.selected_track is None:
-                raise ValueError("No track selected.")
-
-            current_track = self.selected_track
-            current_output = self.outputs[current_track]
-
-            for i in range(len(self.outputs)):
-                if i != current_track and self.outputs[i] == current_output:
-                    self.outputs[i] = None
-
-            map_data = [(output + 1) if output is not None else 0 for output in self.outputs]
+            map_data = {
+                "mappings": [(output + 1) if output is not None else 0 for output in self.outputs],
+                "levels": self.levels
+            }
 
             with open(map_path, 'w') as f:
                 json.dump(map_data, f)
         except Exception as e:
-            pass
+            print(f"Error saving map file: {e}")
         finally:
-            self.init.sd_card_reader.deinit_sd()
+            if initsd:
+                self.init.sd_card_reader.deinit_sd()
 
     def rotary_1(self, val):
         """

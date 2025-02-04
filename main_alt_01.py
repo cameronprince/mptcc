@@ -7,8 +7,6 @@ main.py
 Defines and initializes the hardware and menu.
 """
 
-import i2cEncoderLibV2
-
 # Prepare the init object to store configuration and initialized hardware.
 from mptcc.hardware.init import init
 
@@ -16,58 +14,51 @@ from mptcc.hardware.init import init
 Hardware Settings
 """
 # I2C bus 1 pin assignments and settings.
-# (used by the default SSD1306 display.)
-# init.PIN_I2C_1_SCL = 0
-# init.PIN_I2C_1_SDA = 0
-# init.I2C_1_INTERFACE = 0
-# init.I2C_1_FREQ = 400000
+# (used by the I2CEncoders.)
+init.PIN_I2C_1_SCL = 19
+init.PIN_I2C_1_SDA = 18
+init.I2C_1_INTERFACE = 1
+init.I2C_1_FREQ = 400000
 
-# I2C bus 2 pin assignments and settings.
-# (used by the default PCA9685 RGB LED hardware or optional I2CEncoder)
-init.PIN_I2C_2_SCL = 33
-init.PIN_I2C_2_SDA = 32
-init.I2C_2_INTERFACE = 1
-init.I2C_2_FREQ = 400000
-
-# I2CEncoder V2.1 settings. (optional)
-init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44]
-init.PIN_I2CENCODER_INT = 34 # I2CEncoder interrupt pin.
+# I2CEncoder V2.1 settings.
+init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48]
+init.PIN_I2CENCODER_INTERRUPTS = [21, 22, 26, 27]
 
 # SPI bus 1 pin assignments and settings.
-# (used by SD card reader)
-init.SPI_1_INTERFACE = 2
+# (used by the SD card reader)
+init.SPI_1_INTERFACE = 0
 init.SPI_1_BAUD = 1000000
-init.PIN_SPI_1_SCK = 18
-init.PIN_SPI_1_MOSI = 23
-init.PIN_SPI_1_MISO = 19
-init.PIN_SPI_1_CS = 5
+init.PIN_SPI_1_SCK = 2
+init.PIN_SPI_1_MOSI = 3
+init.PIN_SPI_1_MISO = 4
+init.PIN_SPI_1_CS = 1
 # init.PIN_SPI_1_DC = 0
 # init.PIN_SPI_1_RST = 0
 
 # SPI bus 2 pin assignments and settings.
-# (optionally used by a display)
+# (used by the display.)
 init.SPI_2_INTERFACE = 1
-init.SPI_2_BAUD = 1000000
-init.PIN_SPI_2_SCK = 14
-init.PIN_SPI_2_MOSI = 13
+init.SPI_2_BAUD = 16000000
+init.PIN_SPI_2_SCK = 10
+init.PIN_SPI_2_MOSI = 11
 init.PIN_SPI_2_MISO = None
-init.PIN_SPI_2_CS = 22
-init.PIN_SPI_2_DC = 17
-init.PIN_SPI_2_RST = 16
+init.PIN_SPI_2_CS = 13
+init.PIN_SPI_2_DC = 12
+init.PIN_SPI_2_RST = 14
 
 # Output pin assignments.
-init.PIN_OUTPUT_1 = 0
-init.PIN_OUTPUT_2 = 0
-init.PIN_OUTPUT_3 = 0
-init.PIN_OUTPUT_4 = 0
+init.PIN_OUTPUT_1 = 9
+init.PIN_OUTPUT_2 = 8
+init.PIN_OUTPUT_3 = 7
+init.PIN_OUTPUT_4 = 6
 
 # Battery status ADC pin assignment and settings.
-init.PIN_BATT_STATUS_ADC = 0
+init.PIN_BATT_STATUS_ADC = 28
 # Adjust for specific supply voltage used.
-init.VOLTAGE_DROP_FACTOR = 0
+init.VOLTAGE_DROP_FACTOR = 848.5
 
 # MIDI input pin assignment and UART settings.
-init.PIN_MIDI_INPUT = 0
+init.PIN_MIDI_INPUT = 17
 init.UART_INTERFACE = 0
 init.UART_BAUD = 31250
 
@@ -78,18 +69,42 @@ init.CONFIG_PATH = "/mptcc/config.json"
 # Frequencies listed here are filtered from the available choices for the interrupter function.
 init.BANNED_INTERRUPTER_FREQUENCIES = []
 
+# Rotary encoder pin assignments.
+# init.PIN_ROTARY_1_CLK = 11
+# init.PIN_ROTARY_1_DT = 10
+# init.PIN_ROTARY_1_SW = 12
+
+# init.PIN_ROTARY_2_CLK = 14
+# init.PIN_ROTARY_2_DT = 9
+# init.PIN_ROTARY_2_SW = 15
+
+# init.PIN_ROTARY_3_CLK = 26
+# init.PIN_ROTARY_3_DT = 27
+# init.PIN_ROTARY_3_SW = 0
+
+# init.PIN_ROTARY_4_CLK = 20
+# init.PIN_ROTARY_4_DT = 21
+# init.PIN_ROTARY_4_SW = 5
+
+# Enable/disable encoder pin pull-up resistors.
+# Most of the PCB-mounted encoders have pull-ups on the boards.
+# init.ROTARY_PULL_UP = False
+
 """
 Display
 
 Select one of the display options below by commenting out the default option
 and removing the comment for the desired, alternate option.
 
+The display needs to be initialized first as it needs a large block of
+contigious memory.
+
 Edit the class for the selected hardware to define configuration.
 """
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
-from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
+# from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
 # Requires: https://github.com/rdagger/micropython-ssd1309
@@ -100,10 +115,11 @@ from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 # SSD1322 3.12" 256x64 OLED LCD Display (https://amzn.to/4jupi6c)
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
-# the standard frame buffer commands.
-# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
+# the standard frame buffer commands. Note, this is an SPI device. You must pass
+# an 'spi' argument when instantiating the display object as: init.display = display('spi').
+from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
-init.display = display('spi')
+init.display = display()
 
 """
 Input Devices
@@ -117,7 +133,7 @@ Edit the class for the selected hardware to define configuration.
 # Requires: https://github.com/miketeachman/micropython-rotary
 # from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
-# I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
+# I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
@@ -135,7 +151,7 @@ Edit the class for the selected hardware to define configuration.
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
 # from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
-# I2CEncoder V2.1 - https://www.tindie.com/products/saimon/i2cencoder-v21-connect-rotary-encoder-on-i2c-bus
+# I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
@@ -175,6 +191,7 @@ init.menu.set_screen(MenuScreen('MicroPython TCC')
     .add(screens.BatteryStatus('Battery Status'))
     .add(SubMenuItem('Configure')
         .add(screens.InterrupterConfig('Interrupter'))
+        .add(screens.MIDIFileConfig('MIDI File'))
         .add(screens.RestoreDefaults('Restore Defaults'))
     )
 )

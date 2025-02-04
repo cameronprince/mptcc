@@ -19,7 +19,7 @@ class KY040(Input):
         super().__init__()
 
         self.init = init
-        self.last_switch_click_time = [0] * 4  # Store the last click time for each switch
+        self.last_switch_click_time = [0] * 4
 
         self.rotary_encoders = [
             RotaryIRQ(pin_num_clk=init.PIN_ROTARY_1_CLK, pin_num_dt=init.PIN_ROTARY_1_DT,
@@ -56,22 +56,8 @@ class KY040(Input):
             self.rotary_encoder_change(idx, new_value)
         return listener
 
-    def rotary_encoder_change(self, idx, new_value):
-        encoder = self.rotary_encoders[idx]
-        if self.last_rotations[idx] != new_value:
-            current_screen = self.init.menu.get_current_screen()
-            method_name = f'rotary_{idx + 1}'
-            if isinstance(current_screen, CustomItem) and hasattr(current_screen, method_name):
-                getattr(current_screen, method_name)(new_value)
-            elif idx == 0:
-                self.init.menu.move(-1 if self.last_rotations[idx] > new_value else 1)
-            self.last_rotations[idx] = new_value
-            time.sleep_ms(50)
-
     def switch_click(self, switch):
         current_time = time.ticks_ms()
-        # Debounce by checking the time since the last switch click
         if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 1000:
             self.last_switch_click_time[switch - 1] = current_time
-            # Call the parent class's switch_click method
             super().switch_click(switch)

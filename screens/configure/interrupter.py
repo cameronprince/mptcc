@@ -3,7 +3,7 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-screens/interrupter_config.py
+screens/configure/interrupter.py
 Provides the screen for configuring interrupter settings.
 """
 
@@ -37,8 +37,6 @@ class InterrupterConfig(CustomItem):
         The maximum duty cycle for the interrupter.
     page : int
         The current page index for the configuration screen.
-    val_old : list
-        List to store old values of the rotary encoders.
     font_width : int
         The width of the font used in the display.
     """
@@ -62,7 +60,6 @@ class InterrupterConfig(CustomItem):
         self.max_freq = self.config.get("interrupter_max_freq", config.DEF_INTERRUPTER_MAX_FREQ)
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
         self.page = 0
-        self.val_old = [0, 0]
         self.font_width = self.init.display.DISPLAY_FONT_WIDTH
 
     def draw(self):
@@ -110,47 +107,38 @@ class InterrupterConfig(CustomItem):
         self.config["interrupter_max_duty"] = self.max_duty
         config.write_config(self.config)
 
-    def rotary_1(self, val):
+    def rotary_1(self, direction):
         """
         Respond to encoder 1 rotation to increase or decrease the first values on each config page.
 
         Parameters:
         ----------
-        val : int
-            The new value from the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        direction = val - self.val_old[0]
-        if direction == 0:
-            return  # No change in direction, so no update needed.
 
         if self.page == 0:
             increment = 1
-            self.min_on_time = max(1, min(100, self.min_on_time + increment * (1 if direction > 0 else -1)))
+            self.min_on_time = max(1, min(100, self.min_on_time + increment * direction))
         elif self.page == 1:
             increment = 10
-            self.max_on_time = max(10, min(5000, self.max_on_time + increment * (1 if direction > 0 else -1)))
+            self.max_on_time = max(10, min(5000, self.max_on_time + increment * direction))
         elif self.page == 2:
             increment = 0.1
-            self.max_duty = max(0.0, min(100.0, self.max_duty + increment * (1 if direction > 0 else -1)))
+            self.max_duty = max(0.0, min(100.0, self.max_duty + increment * direction))
 
-        self.val_old[0] = val
         self.save_config()
         self.draw()
 
-
-    def rotary_2(self, val):
+    def rotary_2(self, direction):
         """
         Respond to encoder 2 rotation to increase or decrease the second values on each config page.
 
         Parameters:
         ----------
-        val : int
-            The new value from the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        direction = val - self.val_old[1]
-
-        if direction == 0:
-            return  # No change in direction, so no update needed.
 
         if self.page == 0:
             increment = 10
@@ -159,7 +147,6 @@ class InterrupterConfig(CustomItem):
             increment = 10
             self.max_freq = max(1000, min(2550, self.max_freq + increment * direction))
 
-        self.val_old[1] = val
         self.save_config()
         self.draw()
 

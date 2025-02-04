@@ -3,17 +3,14 @@ import struct
 from machine import Pin, I2C
 import i2cEncoderLibV2
 
-# Setup the Interrupt Pin from the encoder.
-INT_pin = Pin(34, Pin.IN)
-
 # Initialize the device.
-i2c = I2C(1, scl=Pin(33), sda=Pin(32), freq=400000)
+i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 
 encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
              | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE
              | i2cEncoderLibV2.RMOD_X1 | i2cEncoderLibV2.RGB_ENCODER)
 
-encoder_addresses = [0x50, 0x30, 0x60, 0x44]
+encoder_addresses = [0x50, 0x30, 0x60, 0x48]
 encoders = []
 
 for address in encoder_addresses:

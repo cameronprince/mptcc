@@ -31,7 +31,8 @@ class MIDIFileTracks:
         """
         self.midi_file.current_page = "tracks"
 
-        self.display.clear()
+        # Show a loading message.
+        self.display.loading_screen()
 
         if not self.midi_file.track_list:
             self.get_tracks()
@@ -90,17 +91,15 @@ class MIDIFileTracks:
 
         self.init.sd_card_reader.deinit_sd()
 
-    def rotary_1(self, val):
+    def rotary_1(self, direction):
         """
         Responds to rotation of encoder 1 for scrolling the track list.
 
         Parameters:
         ----------
-        val : int
-            The value from the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        direction = 1 if val > self.midi_file.last_rotary_1_value else -1
-        self.midi_file.last_rotary_1_value = val
 
         item_list = self.midi_file.track_list
         cursor_position = self.midi_file.track_cursor_position

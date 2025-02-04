@@ -22,13 +22,16 @@ class I2CEncoder(Input):
         self.encoders = []
 
         # Prepare the I2C bus.
-        self.init.init_i2c_2()
+        self.init.init_i2c_1()
+        self.interrupts = []
 
-        self.interrupt_pin = Pin(self.init.PIN_I2CENCODER_INT, Pin.IN)
-        self.interrupt_pin.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
+        for int_pin in self.init.PIN_I2CENCODER_INTERRUPTS:
+            ip = Pin(int_pin, Pin.IN)
+            ip.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
+            self.interrupts.append(ip)
 
         # Instantiate the encoder objects.
-        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.init.i2c_2, addr) for addr in init.I2CENCODER_ADDRESSES]
+        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.init.i2c_1, addr) for addr in init.I2CENCODER_ADDRESSES]
 
         self.last_rotations = [0] * len(self.encoders)
 
@@ -36,12 +39,14 @@ class I2CEncoder(Input):
         for encoder in self.encoders:
             self.init_encoder(encoder)
 
-    # Initialize a specific encoder.
     def init_encoder(self, encoder):
+        """
+        Initialize a specific encoder.
+        """
         encoder.reset()
         time.sleep(0.1)
 
-        encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE  # Enable wrapping
+        encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
                      | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE
                      | i2cEncoderLibV2.RMOD_X1 | i2cEncoderLibV2.RGB_ENCODER)
         encoder.begin(encconfig)
@@ -53,18 +58,18 @@ class I2CEncoder(Input):
         encoder.writeMax(100)
         encoder.writeMin(0)
         encoder.writeStep(1)
-        encoder.writeAntibouncingPeriod(12)
+        encoder.writeAntibouncingPeriod(40)
+        encoder.writeGammaRLED(i2cEncoderLibV2.GAMMA_2)
+        encoder.writeGammaGLED(i2cEncoderLibV2.GAMMA_2)
+        encoder.writeGammaBLED(i2cEncoderLibV2.GAMMA_2)
 
     def interrupt_handler(self, pin):
-        if pin.value() == 0:
-            # Loop over all encoders to find the triggering instance.
-            for idx, encoder in enumerate(self.encoders):
-                # Read and reset the status.
-                status = encoder.readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
-                # Fire the appropriate callback.
-                if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
-                    valBytes = struct.unpack('>i', encoder.readCounter32())
-                    new_value = valBytes[0]
-                    self.rotary_encoder_change(idx, new_value)
-                if status & i2cEncoderLibV2.PUSHP:
-                    self.switch_click(idx + 1)
+        idx = self.interrupts.index(pin)
+        status = self.encoders[idx].readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
+        # Fire the appropriate callback.
+        if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
+            valBytes = struct.unpack('>i', self.encoders[idx].readCounter32())
+            new_value = valBytes[0]
+            super().rotary_encoder_change(idx, new_value)
+        if status & i2cEncoderLibV2.PUSHP:
+            super().switch_click(idx + 1)

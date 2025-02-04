@@ -1,7 +1,7 @@
 import machine
 import SimpleMIDIDecoder
 
-uart = machine.UART(0, baudrate=31250, rx=machine.Pin(13))
+uart = machine.UART(1, baudrate=31250, rx=machine.Pin(5))
 md = SimpleMIDIDecoder.SimpleMIDIDecoder()
 
 from machine import Pin, I2C, SPI
