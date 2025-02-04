@@ -112,8 +112,8 @@ class Display(Hardware):
         # Display each line of the wrapped text.
         y = y_start
         for line in wrapped_lines:
-            # Only center text if it is at least 3 font widths less than the screen width.
-            if len(line) * font_width <= max_width - 3 * font_width:
+            # Center the text if it fits within the display width.
+            if len(line) * font_width <= max_width:
                 self.center_text(line, y)
             else:
                 self.text(line.strip(), 0, y, 1)  # Left-align the text.

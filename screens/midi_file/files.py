@@ -104,18 +104,15 @@ class MIDIFileFiles:
                 self.init.menu.draw()
             return False
 
-    def rotary_1(self, val):
+    def rotary_1(self, direction):
         """
         Responds to rotation of encoder 1 for scrolling the file list.
 
         Parameters:
         ----------
-        val : int
-            The value from the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        direction = 1 if val > self.midi_file.last_rotary_1_value else -1
-        self.midi_file.last_rotary_1_value = val
-
         item_list = self.midi_file.file_list
         cursor_position = self.midi_file.file_cursor_position
         index = self.midi_file.current_file_index
@@ -136,11 +133,11 @@ class MIDIFileFiles:
             if index + self.midi_file.per_page > len(item_list):
                 index = max(0, len(item_list) - self.midi_file.per_page)
 
-        self.midi_file.current_file_index = index
-        self.midi_file.file_cursor_position = cursor_position
+            self.midi_file.current_file_index = index
+            self.midi_file.file_cursor_position = cursor_position
 
-        # Refresh the display with the new cursor positioning.
-        self.update_display()
+            # Refresh the display with the new cursor positioning.
+            self.update_display()
 
     def switch_1(self):
         """
@@ -150,7 +147,7 @@ class MIDIFileFiles:
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
         self.midi_file.track_cursor_position = 0
         self.midi_file.outputs = [None] * 4
-        self.midi_file.levels = [config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE] * 4
+        self.midi_file.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * 4
         self.midi_file.handlers["tracks"].draw()
 
     def switch_2(self):

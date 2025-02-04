@@ -70,6 +70,6 @@ class I2CEncoder(Input):
         if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
             valBytes = struct.unpack('>i', self.encoders[idx].readCounter32())
             new_value = valBytes[0]
-            self.rotary_encoder_change(idx, new_value)
+            super().rotary_encoder_change(idx, new_value)
         if status & i2cEncoderLibV2.PUSHP:
-            self.switch_click(idx + 1)
+            super().switch_click(idx + 1)

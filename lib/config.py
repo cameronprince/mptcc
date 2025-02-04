@@ -27,10 +27,10 @@ class Config:
         Default maximum frequency for the interrupter in Hz.
     DEF_INTERRUPTER_MAX_DUTY : float
         Default maximum duty cycle for the interrupter in percent.
-    DEF_MIDI_FILE_OUTPUT_PERCENTAGE : int
+    DEF_MIDI_FILE_OUTPUT_LEVEL : float
         Default MIDI file output level in percent.
-    DEF_MIDI_FILE_SAVE_LEVELS_ON_END: bool
-        Save the current levels each time playback ends.
+    DEF_MIDI_FILE_AUTO_SAVE_LEVELS: bool
+        Automatically save the current levels each time playback ends.
     """
 
     DEF_INTERRUPTER_MIN_ON_TIME = 20
@@ -38,8 +38,8 @@ class Config:
     DEF_INTERRUPTER_MAX_ON_TIME = 300
     DEF_INTERRUPTER_MAX_FREQ = 1000
     DEF_INTERRUPTER_MAX_DUTY = 5.0
-    DEF_MIDI_FILE_OUTPUT_PERCENTAGE = 20
-    DEF_MIDI_FILE_SAVE_LEVELS_ON_END = False
+    DEF_MIDI_FILE_OUTPUT_LEVEL = 20
+    DEF_MIDI_FILE_AUTO_SAVE_LEVELS = False
 
     @staticmethod
     def read_config():

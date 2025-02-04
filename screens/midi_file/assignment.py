@@ -64,18 +64,15 @@ class MIDIFileAssignment:
         self.display.center_text(f"Output: {output_text}", self.midi_file.output_y)
         self.display.show()
 
-    def rotary_1(self, val):
+    def rotary_1(self, direction):
         """
         Responds to the rotation of encoder 1 for cycling through output values.
 
         Parameters:
         ----------
-        val : int
-            The value from the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        direction = 1 if val > self.midi_file.last_rotary_1_value else -1
-        self.midi_file.last_rotary_1_value = val
-
         # Calculate the new output index.
         if self.output_selection is None:
             new_output = -1

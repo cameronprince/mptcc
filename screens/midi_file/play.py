@@ -8,7 +8,6 @@ Provides the MIDI playback functionality.
 """
 
 import _thread
-import gc
 import time
 from mptcc.hardware.init import init
 from mptcc.lib.utils import midi_to_frequency, velocity_to_ontime
@@ -27,7 +26,6 @@ class MIDIFilePlay:
         """
         self.midi_file = midi_file
         self.events = []
-        self.val_old = [None, None, None, None]
         self.playback_active = False
         self.init = init
         self.display = self.init.display
@@ -191,7 +189,7 @@ class MIDIFilePlay:
         self.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48, 1)
         self.display.show()
 
-    def rotary(self, index, val):
+    def rotary(self, index, direction):
         """
         The common rotary method which updates the output levels array and prints debug information.
 
@@ -199,41 +197,29 @@ class MIDIFilePlay:
         ----------
         index : int
             The index of the output to adjust.
-        val : int
-            The new value from the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        if self.val_old[index] is None:
-            self.val_old[index] = val
-
         increment = 1
-        # Adjust for wrapping.
-        delta = ((val - self.val_old[index]) + 101) % 101
-        # Handle wrapping in the negative direction.
-        if delta > 50:
-            delta -= 101
-
-        new_level = self.levels[index] + increment * delta
+        new_level = self.levels[index] + increment * direction
 
         # Constrain the new level between 1 and 100.
         self.levels[index] = max(1, min(100, new_level))
-        
-        # Update the old value.
-        self.val_old[index] = val
 
         # Update the levels display.
         self.update_levels()
 
-    def rotary_1(self, val):
-        self.rotary(0, val)
+    def rotary_1(self, direction):
+        self.rotary(0, direction)
 
-    def rotary_2(self, val):
-        self.rotary(1, val)
+    def rotary_2(self, direction):
+        self.rotary(1, direction)
 
-    def rotary_3(self, val):
-        self.rotary(2, val)
+    def rotary_3(self, direction):
+        self.rotary(2, direction)
 
-    def rotary_4(self, val):
-        self.rotary(3, val)
+    def rotary_4(self, direction):
+        self.rotary(3, direction)
 
     # All switches act as stop buttons.
     def switch_1(self):

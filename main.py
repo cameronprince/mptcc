@@ -58,7 +58,7 @@ init.PIN_OUTPUT_4 = 8
 # Battery status ADC pin assignment and settings.
 init.PIN_BATT_STATUS_ADC = 28
 # Adjust for specific supply voltage used.
-init.VOLTAGE_DROP_FACTOR = 848.5
+init.VOLTAGE_DROP_FACTOR = 5 # Default value for 5V supply.
 
 # MIDI input pin assignment and UART settings.
 init.PIN_MIDI_INPUT = 13

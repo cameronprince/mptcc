@@ -45,8 +45,6 @@ class Interrupter(CustomItem):
         Whether the 10x mode is enabled.
     active : bool
         Whether the interrupter is active.
-    val_old : list of int
-        Stores old values for rotary inputs.
     banned_frequencies : list of int
         Frequencies that are not allowed.
     thread : thread
@@ -59,20 +57,20 @@ class Interrupter(CustomItem):
         super().__init__(name)
         self.init = init
         self.display = self.init.display
-        self.config = config.read_config()
+        self.font_width = self.display.DISPLAY_FONT_WIDTH
+        self.init_settings()
 
+    def init_settings(self):
+        self.config = config.read_config()
         self.min_on_time = self.config.get("interrupter_min_on_time", config.DEF_INTERRUPTER_MIN_ON_TIME)
         self.min_freq = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
         self.max_on_time = self.config.get("interrupter_max_on_time", config.DEF_INTERRUPTER_MAX_ON_TIME)
         self.max_freq = self.config.get("interrupter_max_freq", config.DEF_INTERRUPTER_MAX_FREQ)
         self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
-
         self.frequency = self.min_freq
         self.on_time = self.min_on_time
-        self.font_width = self.display.DISPLAY_FONT_WIDTH
         self.ten_x = False
         self.active = False
-        self.val_old = [0, 0]
         self.banned_frequencies = self.init.BANNED_INTERRUPTER_FREQUENCIES
         self.thread = None
         self.settings_changed = True
@@ -81,6 +79,7 @@ class Interrupter(CustomItem):
         """
         Draws the initial interrupter screen.
         """
+        self.init_settings()
         self.display.clear()
         self.display.header("Interrupter")
         self.display.text("On Time:", 0, 20, 1)
@@ -183,74 +182,58 @@ class Interrupter(CustomItem):
             max_on_time = self.calculate_max_on_time(self.frequency)
             self.on_time = max_on_time
 
-    def rotary_1(self, val):
+    def rotary_1(self, direction):
         """
         Handles the first rotary encoder input to adjust the on time.
 
         Parameters:
         ----------
-        val : int
-            The current value of the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
         increment = 10 if self.ten_x else 1
-        delta = ((val - self.val_old[0]) + 101) % 101  # Adjust for wrapping
-        if delta > 50:  # Handle wrapping in the negative direction
-            delta -= 101
-        new_on_time = self.on_time + increment * delta
+
+        new_on_time = self.on_time + increment * direction
         max_on_time = self.calculate_max_on_time(self.frequency)
 
-        # Check limits
         if new_on_time < self.min_on_time:
             if self.on_time == self.min_on_time:
-                self.val_old[0] = val  # Reset val_old to prevent skipping
                 return
         elif new_on_time > max_on_time:
             if self.on_time == max_on_time:
-                self.val_old[0] = val  # Reset val_old to prevent skipping
                 return
 
         self.on_time = max(self.min_on_time, min(max_on_time, int(new_on_time)))
-        self.val_old[0] = val
         self.update_duty_cycle()
         self.update_display(update_on_time=True, update_frequency=False)
         self.settings_changed = True
 
-    def rotary_2(self, val):
+    def rotary_2(self, direction):
         """
         Handles the second rotary encoder input to adjust the frequency.
 
         Parameters:
         ----------
-        val : int
-            The current value of the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
         increment = 10 if self.ten_x else 1
-        delta = ((val - self.val_old[1]) + 101) % 101  # Adjust for wrapping
-        if delta > 50:  # Handle wrapping in the negative direction
-            delta -= 101
-        new_frequency = self.frequency + increment * delta
 
-        direction = new_frequency - self.frequency
+        new_frequency = self.frequency + increment * direction
+
         while new_frequency in self.banned_frequencies:
-            if direction > 0:
-                new_frequency += increment
-            elif direction < 0:
-                new_frequency -= increment
+            new_frequency += increment * direction
 
-        # Check limits
         if new_frequency < self.min_freq:
             if self.frequency == self.min_freq:
-                self.val_old[1] = val  # Reset val_old to prevent skipping
                 return
         elif new_frequency > self.max_freq:
             if self.frequency == self.max_freq:
-                self.val_old[1] = val  # Reset val_old to prevent skipping
                 return
 
         max_on_time = self.calculate_max_on_time(new_frequency)
         self.frequency = max(self.min_freq, min(self.max_freq, new_frequency))
         self.update_duty_cycle()
-        self.val_old[1] = val       
         self.update_display(update_on_time=True, update_frequency=True)
         self.settings_changed = True
 

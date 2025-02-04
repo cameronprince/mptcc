@@ -85,7 +85,7 @@ class MIDIFile(CustomItem):
         self.selected_track = None
         self.outputs = [None] * 4
         self.last_rotary_1_value = 0
-        self.levels = [config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE] * 4
+        self.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * 4
         self.per_page = self.display.DISPLAY_ITEMS_PER_PAGE
         self.output_y = None
         self.line_height = self.display.DISPLAY_LINE_HEIGHT
@@ -94,7 +94,7 @@ class MIDIFile(CustomItem):
         self.header_height = self.display.DISPLAY_HEADER_HEIGHT
 
         self.config = config.read_config()
-        self.default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_PERCENTAGE)
+        self.default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_LEVEL)
 
         # Initialize handlers.
         from mptcc.screens.midi_file import (

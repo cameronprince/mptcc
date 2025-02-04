@@ -37,7 +37,6 @@ class RestoreDefaults(CustomItem):
         super().__init__(name)
         self.init = init
         self.selection = "No"
-        self.val_old = 0
 
     def draw(self):
         """
@@ -53,7 +52,7 @@ class RestoreDefaults(CustomItem):
         padding = 2
         vertical_spacing = 10
 
-        restore_defaults_text = "Restore defaults:"
+        restore_defaults_text = "Restore now?"
         restore_defaults_x = (screen_width - len(restore_defaults_text) * font_width) // 2
 
         yes_text = "Yes"
@@ -99,23 +98,18 @@ class RestoreDefaults(CustomItem):
         self.init.menu.reset()
         self.init.menu.draw()
 
-    def rotary_1(self, val):
+    def rotary_1(self, direction):
         """
         Responds to encoder 1 rotation to select between "Yes" and "No".
 
         Parameters:
         ----------
-        val : int
-            The new value from the rotary encoder.
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        direction = val - self.val_old
-        if direction == 0:
-            return
-
         # Toggle the selection between "Yes" and "No".
         self.selection = "Yes" if self.selection == "No" else "No"
 
-        self.val_old = val
         self.draw()
 
     def switch_1(self):
@@ -124,6 +118,7 @@ class RestoreDefaults(CustomItem):
         or return to the configuration menu if "No" is selected.
         """
         if self.selection == "Yes":
+            self.init.inputs.switch_disabled = True
             self.restore_defaults()
         else:
             self.switch_2()

@@ -65,7 +65,7 @@ class MIDIInput(CustomItem):
         """
         self.display.clear()
         self.display.header(str.upper("MIDI Input"))
-        self.display.text("Ready for input", 0, 20, 1)
+        self.display.center_text("Ready for input", 20)
         self.display.show()
         self.start_midi_input()
 
