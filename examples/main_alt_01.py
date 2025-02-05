@@ -159,8 +159,16 @@ init.rgb_driver = rgb_led()
 
 """
 Outputs
+
+Select one of the output options below by commenting out the default option
+and removing the comment for the desired, alternate option.
 """
-from mptcc.hardware.output import Output as output
+# Standard GPIO pin outputs.
+# from mptcc.hardware.output.gpio import GPIO as output # Default option.
+
+# PIO pin outputs.
+from mptcc.hardware.output.pio import PIO as output # Alternate option.
+
 init.output = output()
 
 """
