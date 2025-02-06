@@ -163,11 +163,11 @@ Outputs
 Select one of the output options below by commenting out the default option
 and removing the comment for the desired, alternate option.
 """
-# Standard GPIO pin outputs.
-# from mptcc.hardware.output.gpio import GPIO as output # Default option.
+# GPIO pin outputs with hardware PWM.
+# from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
-# PIO pin outputs.
-from mptcc.hardware.output.pio import PIO as output # Alternate option.
+# GPIO pin outputs with Programmable Input Output (PIO).
+from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
 init.output = output()
 
