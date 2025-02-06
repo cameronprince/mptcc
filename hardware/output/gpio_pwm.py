@@ -3,8 +3,8 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-hardware/output/gpio.py
-Class for driving outputs with GPIO PWM.
+hardware/output/gpio_pwm.py
+Class for driving outputs with hardware PWM.
 """
 
 from machine import Pin, PWM
@@ -12,9 +12,9 @@ from ...lib import utils
 from ...hardware.init import init
 from ..output.output import Output
 
-class GPIO(Output):
+class GPIO_PWM(Output):
     """
-    A class to provide GPIO PWM outputs for the MPTCC.
+    A class to provide hardware PWM outputs for the MPTCC.
 
     Attributes:
     -----------
