@@ -43,6 +43,7 @@ class PCA9685(RGBLED):
     PCA_LED4_BLUE = 11
 
     # Miscellaneous settings.
+    PCA9685_ADDR = 0x40
     PCA9685_FREQ = 1000
 
     def __init__(self):
@@ -54,7 +55,7 @@ class PCA9685(RGBLED):
 
         # Prepare the I2C bus.
         self.init.init_i2c_2()
-        self.driver = driver(self.init.i2c_2)
+        self.driver = driver(self.init.i2c_2, address=self.PCA9685_ADDR)
         self.driver.freq(self.PCA9685_FREQ)
 
         self.init.rgb_led = [

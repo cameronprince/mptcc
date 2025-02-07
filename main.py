@@ -100,7 +100,7 @@ Select one of the display options below by commenting out the default option
 and removing the comment for the desired, alternate option.
 
 The display needs to be initialized first as it needs a large block of
-contigious memory.
+contiguous memory.
 
 Edit the class for the selected hardware to define configuration.
 """
@@ -114,6 +114,12 @@ from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands. This driver also works with SSD1306 displays.
 # from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
+
+# SSD1322 3.12" 256x64 OLED LCD Display (https://amzn.to/4jupi6c)
+# Requires: https://github.com/rdagger/micropython-ssd1322
+# Note: This library supports custom fonts, shapes, images, and more, beyond
+# the standard frame buffer commands. Note, this is an SPI device.
+# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
 
@@ -155,8 +161,16 @@ init.rgb_driver = rgb_led()
 
 """
 Outputs
+
+Select one of the output options below by commenting out the default option
+and removing the comment for the desired, alternate option.
 """
-from mptcc.hardware.output import Output as output
+# GPIO pin outputs with hardware PWM.
+from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
+
+# GPIO pin outputs with Programmable Input Output (PIO).
+# from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
+
 init.output = output()
 
 """
