@@ -40,35 +40,47 @@ class MIDIFileTracks:
             self.display.alert_screen("No tracks found")
             self.midi_file.handlers["files"].draw()
         else:
-            # Calculate the number of mapped tracks
+            # Calculate the number of mapped tracks.
             mapped_tracks_count = sum(1 for output in self.midi_file.outputs if output is not None)
             self.display.header(f'MIDI Tracks {mapped_tracks_count}/{len(self.midi_file.outputs)}')
             start = self.midi_file.current_track_index
             end = min(self.midi_file.current_track_index + 4, len(self.midi_file.track_list))
             menu_y_end = 12
             for i in range(start, end):
-                midi_track = self.midi_file.track_list[i]
+                track_info = self.midi_file.track_list[i]
+                track_name = track_info["name"]
+                original_index = track_info["original_index"]
+
+                # Check if the track is mapped.
+                if original_index in self.midi_file.outputs:
+                    track_name = f"* {track_name}"
+
                 y = menu_y_end + ((i - start) * self.midi_file.line_height)
                 v_padding = int((self.midi_file.line_height - self.midi_file.font_height) / 2)
                 is_active = (i == self.midi_file.current_track_index + self.midi_file.track_cursor_position)
                 background = int(is_active)
                 self.display.fill_rect(0, y, self.display.width, self.midi_file.line_height, background)
                 if is_active:
-                    self.display.text(midi_track[:20], 0, y + v_padding, 0)
+                    self.display.text(track_name[:20], 0, y + v_padding, 0)
                 else:
-                    self.display.text(midi_track[:20], 0, y + v_padding, 1)
+                    self.display.text(track_name[:20], 0, y + v_padding, 1)
             self.display.show()
-            active_track = self.midi_file.track_list[self.midi_file.current_track_index + self.midi_file.track_cursor_position]
+
+            active_track_info = self.midi_file.track_list[self.midi_file.current_track_index + self.midi_file.track_cursor_position]
+            active_track_name = active_track_info["name"]
+            if active_track_info["original_index"] in self.midi_file.outputs:
+                active_track_name = f"* {active_track_name}"
             active_y_position = menu_y_end + ((self.midi_file.track_cursor_position) * self.midi_file.line_height)
-            text_width = len(active_track) * self.midi_file.font_width
+            text_width = len(active_track_name) * self.midi_file.font_width
             if text_width > self.display.width:
-                self.display.start_scroll_task(active_track, active_y_position)
+                self.display.start_scroll_task(active_track_name, active_y_position)
             else:
                 self.display.stop_scroll_task()
 
     def get_tracks(self):
         """
-        Get the track names from the selected MIDI file.
+        Get the track names from the selected MIDI file, filtering out tracks
+        without NOTE_ON events.
         """
         self.midi_file.track_list = []
 
@@ -80,14 +92,28 @@ class MIDIFileTracks:
 
         # Initialize the SD card reader so we can read the MIDI file.
         self.init.sd_card_reader.init_sd()
-        
-        midi = umidiparser.MidiFile(file_path, buffer_size=0, reuse_event_object=False)
-        for track in midi.tracks:
+
+        # Track counter for default names.
+        track_counter = 1
+
+        for index, track in enumerate(umidiparser.MidiFile(file_path, buffer_size=0).tracks):
+            has_note_on = False
+            track_name = None
+
+            # First pass: Check for NOTE_ON events and track name.
             for event in track:
-                if not event.is_meta():
-                    break
-                if event.status == umidiparser.TRACK_NAME:
-                    self.midi_file.track_list.append(event.name)
+                if event.is_meta() and event.status == umidiparser.TRACK_NAME:
+                    track_name = event.name
+                elif not event.is_meta() and event.status == umidiparser.NOTE_ON:
+                    has_note_on = True
+
+            # Only add tracks with NOTE_ON events.
+            if has_note_on:
+                # Assign a default name if the track has no name.
+                if not track_name:
+                    track_name = f"Track {track_counter}"
+                    track_counter += 1  # Increment the track counter.
+                self.midi_file.track_list.append({"name": track_name, "original_index": index})
 
         self.init.sd_card_reader.deinit_sd()
 
@@ -132,7 +158,8 @@ class MIDIFileTracks:
         Responds to presses of encoder 1 to select tracks.
         """
         self.display.stop_scroll_task()
-        self.midi_file.selected_track = self.midi_file.current_track_index + self.midi_file.track_cursor_position
+        selected_track_info = self.midi_file.track_list[self.midi_file.current_track_index + self.midi_file.track_cursor_position]
+        self.midi_file.selected_track = selected_track_info["original_index"]
         self.midi_file.handlers["assignment"].draw()
 
     def switch_2(self):
