@@ -15,6 +15,10 @@ from ...hardware.init import init
 from ..input.input import Input
 
 class I2CEncoder(Input):
+
+    I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48]
+    PIN_I2CENCODER_INTERRUPTS = [21, 22, 26, 27]
+
     def __init__(self):
         super().__init__()
 
@@ -22,16 +26,17 @@ class I2CEncoder(Input):
         self.encoders = []
 
         # Prepare the I2C bus.
-        self.init.init_i2c_1()
+        self.init.init_i2c_2()
+        self.i2c = self.init.i2c_2
         self.interrupts = []
 
-        for int_pin in self.init.PIN_I2CENCODER_INTERRUPTS:
+        for int_pin in self.PIN_I2CENCODER_INTERRUPTS:
             ip = Pin(int_pin, Pin.IN)
             ip.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
             self.interrupts.append(ip)
 
         # Instantiate the encoder objects.
-        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.init.i2c_1, addr) for addr in init.I2CENCODER_ADDRESSES]
+        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.i2c, addr) for addr in self.I2CENCODER_ADDRESSES]
 
         self.last_rotations = [0] * len(self.encoders)
 

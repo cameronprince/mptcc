@@ -105,20 +105,29 @@ contiguous memory.
 Edit the class for the selected hardware to define configuration.
 """
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
+# Interface: I2C/SPI
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
+# To use with SPI, include an 'spi' argument when instantiating the
+# display object as: init.display = display('spi').
 from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
+# Interface: I2C/SPI
 # Requires: https://github.com/rdagger/micropython-ssd1309
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands. This driver also works with SSD1306 displays.
+# To use with SPI, include an 'spi' argument when instantiating the
+# display object as: init.display = display('spi').
 # from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
 
 # SSD1322 3.12" 256x64 OLED LCD Display (https://amzn.to/4jupi6c)
+# Interface: SPI
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
-# the standard frame buffer commands. Note, this is an SPI device.
+# the standard frame buffer commands.
+# To use with SPI, include an 'spi' argument when instantiating the
+# display object as: init.display = display('spi').
 # from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()

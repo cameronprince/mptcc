@@ -10,7 +10,7 @@ RGB LED device utilizing the PCA9685 external PWM board.
 import time
 from machine import Pin
 from pca9685 import PCA9685 as driver
-from ..rgb_led.rgb_led import RGBLED, RGB_PCA9685
+from ..rgb_led.rgb_led import RGBLED, RGB
 from ...hardware.init import init
 
 class PCA9685(RGBLED):
@@ -64,3 +64,32 @@ class PCA9685(RGBLED):
             RGB_PCA9685(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE),
             RGB_PCA9685(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE),
         ]
+
+class RGB_PCA9685(RGB):
+    """
+    A class for handling RGB LEDs with a PCA9685 driver.
+    """
+    def __init__(self, pca, red_channel, green_channel, blue_channel):
+        super().__init__()
+        self.pca = pca
+        self.red_channel = red_channel
+        self.green_channel = green_channel
+        self.blue_channel = blue_channel
+        self.setColor(0, 0, 0)
+
+    def setColor(self, r, g, b):
+        """
+        Sets the color of the RGB LED using the PCA9685 driver.
+
+        Parameters:
+        ----------
+        r : int
+            Red value (0-255).
+        g : int
+            Green value (0-255).
+        b : int
+            Blue value (0-255).
+        """
+        self.pca.duty(self.red_channel, r * 16)
+        self.pca.duty(self.green_channel, g * 16)
+        self.pca.duty(self.blue_channel, b * 16)

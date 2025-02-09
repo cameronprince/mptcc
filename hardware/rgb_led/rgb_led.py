@@ -7,7 +7,6 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
-import math
 from ..hardware import Hardware
 
 class RGBLED(Hardware):
@@ -16,8 +15,6 @@ class RGBLED(Hardware):
     """
     def __init__(self):
         super().__init__()
-
-import math
 
 class RGB:
     """
@@ -113,56 +110,3 @@ class RGB:
         blue = self.constrain(blue, 0, 255)
 
         self.setColor(red, green, blue)
-
-class RGB_I2CEncoder(RGB):
-    """
-    A class for handling RGB LEDs with an I2C Encoder.
-    """
-    def __init__(self, encoder):
-        super().__init__()
-        self.encoder = encoder
-
-    def setColor(self, r, g, b):
-        """
-        Sets the color of the RGB LED using the I2C Encoder.
-
-        Parameters:
-        ----------
-        r : int
-            Red value (0-255).
-        g : int
-            Green value (0-255).
-        b : int
-            Blue value (0-255).
-        """
-        color_code = (r << 16) | (g << 8) | b
-        self.encoder.writeRGBCode(color_code)
-
-class RGB_PCA9685(RGB):
-    """
-    A class for handling RGB LEDs with a PCA9685 driver.
-    """
-    def __init__(self, pca, red_channel, green_channel, blue_channel):
-        super().__init__()
-        self.pca = pca
-        self.red_channel = red_channel
-        self.green_channel = green_channel
-        self.blue_channel = blue_channel
-        self.setColor(0, 0, 0)
-
-    def setColor(self, r, g, b):
-        """
-        Sets the color of the RGB LED using the PCA9685 driver.
-
-        Parameters:
-        ----------
-        r : int
-            Red value (0-255).
-        g : int
-            Green value (0-255).
-        b : int
-            Blue value (0-255).
-        """
-        self.pca.duty(self.red_channel, r * 16)
-        self.pca.duty(self.green_channel, g * 16)
-        self.pca.duty(self.blue_channel, b * 16)

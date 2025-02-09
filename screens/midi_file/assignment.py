@@ -48,9 +48,23 @@ class MIDIFileAssignment:
         total_spacing = available_height - total_text_height
         track_y = self.midi_file.header_height + total_spacing // 3
         self.midi_file.output_y = track_y + self.midi_file.font_height + total_spacing // 3
-        full_track_name = self.midi_file.track_list[self.midi_file.selected_track]
 
-        self.display.truncate_text(full_track_name, track_y, center=True)
+        # Use a generator expression to find the selected track.
+        track_generator = (track for track in self.midi_file.track_list if track["original_index"] == self.midi_file.selected_track)
+
+        # Use next to get the first matching track, or handle StopIteration if no match is found.
+        try:
+            selected_track_info = next(track_generator)
+        except StopIteration:
+            selected_track_info = None
+
+        if selected_track_info:
+            full_track_name = selected_track_info["name"]
+        else:
+            full_track_name = "Unknown Track"
+
+        # Call truncate_text with the correct arguments.
+        self.display.truncate_text(full_track_name, y=track_y, center=True)
         self.update_output_value()
 
     def update_output_value(self):

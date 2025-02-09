@@ -8,7 +8,7 @@ I2CEncoder V2.1 RGB LED device.
 """
 
 import time
-from ..rgb_led.rgb_led import RGBLED, RGB_I2CEncoder
+from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init
 
 class I2CEncoder(RGBLED):
@@ -29,3 +29,27 @@ class I2CEncoder(RGBLED):
         self.init = init
         self.encoders = self.init.inputs.encoders
         self.init.rgb_led = [RGB_I2CEncoder(encoder) for encoder in self.encoders]
+
+class RGB_I2CEncoder(RGB):
+    """
+    A class for handling RGB LEDs with an I2C Encoder.
+    """
+    def __init__(self, encoder):
+        super().__init__()
+        self.encoder = encoder
+
+    def setColor(self, r, g, b):
+        """
+        Sets the color of the RGB LED using the I2C Encoder.
+
+        Parameters:
+        ----------
+        r : int
+            Red value (0-255).
+        g : int
+            Green value (0-255).
+        b : int
+            Blue value (0-255).
+        """
+        color_code = (r << 16) | (g << 8) | b
+        self.encoder.writeRGBCode(color_code)
