@@ -216,3 +216,7 @@ init.menu.set_screen(MenuScreen('MicroPython TCC')
 )
 
 init.menu.draw()
+
+# Start the asyncio loop.
+import mptcc.lib.asyncio
+init.asyncio_loop.start_loop()

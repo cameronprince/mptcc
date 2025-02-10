@@ -63,8 +63,16 @@ class MIDIFileAssignment:
         else:
             full_track_name = "Unknown Track"
 
-        # Call truncate_text with the correct arguments.
-        self.display.truncate_text(full_track_name, y=track_y, center=True)
+        # Handle scrolling for the track name if it's too long.
+        text_width = len(full_track_name) * self.midi_file.font_width
+        if text_width > self.display.width:
+            # Pass the track index as the unique identifier.
+            self.display.start_scroll_task(full_track_name, track_y, self.midi_file.selected_track, background_color=0)
+        else:
+            # If the text doesn't require scrolling, display it normally (inactive color).
+            self.display.fill_rect(0, track_y, self.display.width, self.midi_file.line_height, 0)  # Clear the line.
+            self.display.text(full_track_name, 0, track_y, 1)  # Display in inactive color (white text on black background).
+
         self.update_output_value()
 
     def update_output_value(self):

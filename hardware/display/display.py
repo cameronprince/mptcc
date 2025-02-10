@@ -8,48 +8,25 @@ Parent class for displays - provides shared display-related functions.
 """
 
 import time
-import _thread
+import uasyncio as asyncio
 from machine import I2C
 from ..hardware import Hardware
 from ...hardware.init import init
 
 class Display(Hardware):
-    """
-    A parent class for displays, providing shared display-related functions for 
-    the MicroPython Tesla Coil Controller (MPTCC).
-
-    Attributes:
-    -----------
-    init : object
-        The initialization object containing configuration and hardware settings.
-    scroll_thread : _thread
-        The thread object for handling scrolling text.
-    scroll_flag : bool
-        Flag to indicate if scrolling is active.
-    scroll_text : str
-        The text to be scrolled.
-    scroll_y_position : int
-        The y-coordinate position of the scrolling text.
-    """
-
     def __init__(self):
-        """
-        Constructs all the necessary attributes for the Display object.
-        """
         super().__init__()
         self.init = init
 
         if self.interface == 'spi':
-            # Prepare the SPI bus.
             self.init.init_spi_2()
         else:
-            # Prepare the I2C bus.
             self.init.init_i2c_1()
 
-        self.scroll_thread = None
-        self.scroll_flag = False
-        self.scroll_text = None
-        self.scroll_y_position = None
+        self.scroll_task = None        # Holds the asyncio task for scrolling.
+        self.scroll_flag = None        # Stores the unique identifier of the currently scrolling item.
+        self.scroll_text = None        # The text to be scrolled.
+        self.scroll_y_position = None  # The y-coordinate position of the scrolling text.
 
     """
     Display functions.
@@ -202,63 +179,104 @@ class Display(Hardware):
     """
     Scrolling functions.
     """
-    def start_scroll_task(self, text, y_position):
+    def start_scroll_task(self, text, y_position, identifier, background_color=1):
         """
-        Helper to start scrolling text as a separate thread.
+        Helper to start scrolling text as an asyncio task.
 
         Parameters:
         ----------
         text : str
-            The text to be scrolled.
+            The text to scroll.
         y_position : int
-            The y-coordinate position of the text on the display.
+            The y-coordinate where the text will be displayed.
+        identifier : int
+            A unique identifier (e.g., file index) for the scrolling task.
+        background_color : int, optional
+            The background color for the text (0 for inactive, 1 for active). Defaults to 1 (active).
         """
-        time.sleep(0.2)
+        # Stop any existing scrolling task.
         self.stop_scroll_task()
-        if self.scroll_text != text:
-            self.scroll_flag = True
+
+        # Start a new scrolling task if the text requires scrolling.
+        text_width = len(text) * self.DISPLAY_FONT_WIDTH
+        if text_width > self.width:
+            self.scroll_flag = identifier  # Set the unique identifier.
             self.scroll_text = text
             self.scroll_y_position = y_position
-            self.scroll_thread = _thread.start_new_thread(self.scroll_task, (text, y_position))
+
+            # Immediately update the display with the new filename.
+            self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, background_color)  # Set background color.
+            v_padding = int((self.DISPLAY_LINE_HEIGHT - self.DISPLAY_FONT_HEIGHT) / 2)
+            self.text(text, 0, y_position + v_padding, not background_color)  # Set text color.
+            self.show()
+
+            # Create the scrolling task.
+            self.scroll_task = asyncio.create_task(self._scroll_task(text, y_position, identifier, background_color))
 
     def stop_scroll_task(self):
         """
-        Helper to stop scrolling text and end the thread.
+        Helper to stop scrolling text and reset the scroll state.
         """
-        if self.scroll_thread:
-            self.scroll_flag = False
-            # Small delay to ensure the thread has stopped.
-            time.sleep(0.2)
-            self.scroll_thread = None
+        if self.scroll_task:
+            self.scroll_flag = None  # Reset the unique identifier.
+            task_to_cancel = self.scroll_task  # Store the task reference.
+            self.scroll_task = None  # Reset the task reference immediately.
+
+            try:
+                if not task_to_cancel.done():
+                    task_to_cancel.cancel()  # Cancel the task.
+            except Exception as e:
+                # Ignore the "can't cancel self" error.
+                if "can't cancel self" not in str(e):
+                    print(f"[ERROR] Failed to cancel scroll task: {e}")
+
+            # Clear the previous scrolling text and redraw it in a non-scrolling state.
+            if self.scroll_text and self.scroll_y_position is not None:
+                self.fill_rect(0, self.scroll_y_position, self.width, self.DISPLAY_LINE_HEIGHT, 0)  # Clear the line.
+                v_padding = int((self.DISPLAY_LINE_HEIGHT - self.DISPLAY_FONT_HEIGHT) / 2)
+                self.text(self.scroll_text, 0, self.scroll_y_position + v_padding, 1)  # Redraw the text.
+                self.show()
             self.scroll_text = None
             self.scroll_y_position = None
 
-    def scroll_task(self, text, y_position):
+    async def _scroll_task(self, text, y_position, identifier, background_color=1):
         """
-        The main function for handling text scrolling.
+        The main coroutine for handling text scrolling.
 
         Parameters:
         ----------
         text : str
-            The text to be scrolled.
+            The text to scroll.
         y_position : int
-            The y-coordinate position of the text on the display.
+            The y-coordinate where the text will be displayed.
+        identifier : int
+            A unique identifier (e.g., file index) for the scrolling task.
+        background_color : int, optional
+            The background color for the text (0 for inactive, 1 for active). Defaults to 1 (active).
         """
         delay_seconds = 1
         delay_interval = 0.1
         elapsed_time = 0
-        while self.scroll_flag and elapsed_time < delay_seconds:
-            time.sleep(delay_interval)
+
+        # Initial delay before scrolling starts.
+        while self.scroll_flag == identifier and elapsed_time < delay_seconds:
+            await asyncio.sleep(delay_interval)
             elapsed_time += delay_interval
-        if not self.scroll_flag:
-            return
+
         v_padding = int((self.DISPLAY_LINE_HEIGHT - self.DISPLAY_FONT_HEIGHT) / 2)
-        while self.scroll_flag:
+
+        # Main scrolling loop.
+        while self.scroll_flag == identifier:
             for i in range(len(text) + self.DISPLAY_ITEMS_PER_PAGE):
-                if not self.scroll_flag:
-                    return
+                if self.scroll_flag != identifier:
+                    return  # Exit if the identifier no longer matches.
+
+                # Generate the scrolling text.
                 scroll_text = (text + "    ")[i:] + (text + "    ")[:i]
-                self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, 1)
-                self.text(scroll_text[:20], 0, y_position + v_padding, 0)
+                self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, background_color)  # Set background color.
+                self.text(scroll_text[:20], 0, y_position + v_padding, not background_color)  # Set text color.
                 self.show()
-                time.sleep(0.2)
+                await asyncio.sleep(0.2)  # Adjust the scroll speed as needed.
+
+        # Ensure the task exits cleanly.
+        return
