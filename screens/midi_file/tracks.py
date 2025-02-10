@@ -25,14 +25,15 @@ class MIDIFileTracks:
         self.init = init
         self.display = self.init.display
 
-    def draw(self):
+    def draw(self, surpress_loading_message=False):
         """
         Draw the MIDI tracks on the display.
         """
         self.midi_file.current_page = "tracks"
 
-        # Show a loading message.
-        self.display.loading_screen()
+        if not surpress_loading_message:
+            # Show a loading message.
+            self.display.loading_screen()
 
         if not self.midi_file.track_list:
             self.get_tracks()
@@ -60,12 +61,11 @@ class MIDIFileTracks:
                 is_active = (i == self.midi_file.current_track_index + self.midi_file.track_cursor_position)
                 background = int(is_active)
                 self.display.fill_rect(0, y, self.display.width, self.midi_file.line_height, background)
-                if is_active:
-                    self.display.text(track_name[:20], 0, y + v_padding, 0)
-                else:
-                    self.display.text(track_name[:20], 0, y + v_padding, 1)
+                self.display.text(track_name[:20], 0, y + v_padding, 0 if is_active else 1)
+
             self.display.show()
 
+            # Handle scrolling for the active track.
             active_track_info = self.midi_file.track_list[self.midi_file.current_track_index + self.midi_file.track_cursor_position]
             active_track_name = active_track_info["name"]
             if active_track_info["original_index"] in self.midi_file.outputs:
@@ -73,9 +73,15 @@ class MIDIFileTracks:
             active_y_position = menu_y_end + ((self.midi_file.track_cursor_position) * self.midi_file.line_height)
             text_width = len(active_track_name) * self.midi_file.font_width
             if text_width > self.display.width:
-                self.display.start_scroll_task(active_track_name, active_y_position)
+                # Pass the track index as the unique identifier.
+                self.display.start_scroll_task(active_track_name, active_y_position, self.midi_file.current_track_index + self.midi_file.track_cursor_position)
             else:
                 self.display.stop_scroll_task()
+                # If the text doesn't require scrolling, ensure the display is updated.
+                self.display.fill_rect(0, active_y_position, self.display.width, self.midi_file.line_height, 1)  # Clear the line.
+                v_padding = int((self.midi_file.line_height - self.midi_file.font_height) / 2)
+                self.display.text(active_track_name, 0, active_y_position + v_padding, 0)
+                self.display.show()
 
     def get_tracks(self):
         """
@@ -106,6 +112,7 @@ class MIDIFileTracks:
                     track_name = event.name
                 elif not event.is_meta() and event.status == umidiparser.NOTE_ON:
                     has_note_on = True
+                    break  # Exit the loop early once a NOTE_ON event is found.
 
             # Only add tracks with NOTE_ON events.
             if has_note_on:
@@ -126,7 +133,6 @@ class MIDIFileTracks:
         direction : int
             The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-
         item_list = self.midi_file.track_list
         cursor_position = self.midi_file.track_cursor_position
         index = self.midi_file.current_track_index
@@ -151,7 +157,7 @@ class MIDIFileTracks:
         self.midi_file.track_cursor_position = cursor_position
 
         # Refresh the display with the new cursor positioning.
-        self.draw()
+        self.draw(True)
 
     def switch_1(self):
         """

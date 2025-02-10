@@ -25,6 +25,8 @@ class MIDIFileFiles:
         self.midi_file = midi_file
         self.init = init
         self.display = self.init.display
+        self.previous_active_file = None
+        self.previous_active_y_position = None
 
     def draw(self):
         """
@@ -60,6 +62,7 @@ class MIDIFileFiles:
         start = self.midi_file.current_file_index
         end = min(self.midi_file.current_file_index + self.midi_file.per_page, len(self.midi_file.file_list))
         menu_y_end = self.midi_file.line_height
+
         for i in range(start, end):
             midi_file = self.midi_file.file_list[i]
             y = menu_y_end + ((i - start) * self.midi_file.line_height)
@@ -68,16 +71,21 @@ class MIDIFileFiles:
             background = int(is_active)
             self.display.fill_rect(0, y, self.display.width, self.midi_file.line_height, background)
             self.display.text(midi_file, 0, y + v_padding, not is_active)
-        self.display.show()
 
-        # Handle scrolling of long filenames.
-        active_file = self.midi_file.file_list[self.midi_file.current_file_index + self.midi_file.file_cursor_position]
-        active_y_position = menu_y_end + ((self.midi_file.file_cursor_position) * self.midi_file.line_height)
-        text_width = len(active_file) * self.midi_file.font_width
-        if text_width > self.display.width:
-            self.display.start_scroll_task(active_file, active_y_position)
-        else:
-            self.display.stop_scroll_task()
+            if is_active:
+                # Handle scrolling for the new active file.
+                text_width = len(midi_file) * self.midi_file.font_width
+                if text_width > self.display.width:
+                    self.display.start_scroll_task(midi_file, y, i)  # Pass the file index as the unique identifier.
+                else:
+                    # If the text doesn't require scrolling, stop the scrolling task.
+                    self.display.stop_scroll_task()
+                    # Ensure the display is updated.
+                    self.display.fill_rect(0, y, self.display.width, self.midi_file.line_height, background)
+                    self.display.text(midi_file, 0, y + v_padding, not is_active)
+                    self.display.show()
+
+        self.display.show()
 
     def load_files(self):
         """

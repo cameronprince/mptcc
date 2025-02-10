@@ -15,14 +15,17 @@ Hardware Settings
 """
 # I2C bus 1 pin assignments and settings.
 # (used by the I2CEncoders.)
-init.PIN_I2C_1_SCL = 19
-init.PIN_I2C_1_SDA = 18
-init.I2C_1_INTERFACE = 1
+init.PIN_I2C_1_SCL = 17
+init.PIN_I2C_1_SDA = 16
+init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 
-# I2CEncoder V2.1 settings.
-init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48]
-init.PIN_I2CENCODER_INTERRUPTS = [21, 22, 26, 27]
+# I2C bus 2 pin assignments and settings.
+# (used by the display)
+# init.PIN_I2C_2_SCL = 19
+# init.PIN_I2C_2_SDA = 18
+# init.I2C_2_INTERFACE = 1
+# init.I2C_2_FREQ = 400000
 
 # SPI bus 1 pin assignments and settings.
 # (used by the SD card reader)
@@ -97,26 +100,32 @@ Select one of the display options below by commenting out the default option
 and removing the comment for the desired, alternate option.
 
 The display needs to be initialized first as it needs a large block of
-contigious memory.
+contiguous memory.
 
 Edit the class for the selected hardware to define configuration.
 """
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
+# Interface: I2C/SPI
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
+# To use with SPI, include an 'spi' argument when instantiating the
+# display object as: init.display = display('spi').
 # from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
+# Interface: I2C/SPI
 # Requires: https://github.com/rdagger/micropython-ssd1309
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands. This driver also works with SSD1306 displays.
+# To use with SPI, include an 'spi' argument when instantiating the
+# display object as: init.display = display('spi').
 # from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
 
 # SSD1322 3.12" 256x64 OLED LCD Display (https://amzn.to/4jupi6c)
+# Interface: SPI
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
-# the standard frame buffer commands. Note, this is an SPI device. You must pass
-# an 'spi' argument when instantiating the display object as: init.display = display('spi').
+# the standard frame buffer commands.
 from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
@@ -205,3 +214,7 @@ init.menu.set_screen(MenuScreen('MicroPython TCC')
 )
 
 init.menu.draw()
+
+# Start the asyncio loop.
+import mptcc.lib.asyncio
+init.asyncio_loop.start_loop()
