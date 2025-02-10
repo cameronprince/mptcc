@@ -176,15 +176,7 @@ and removing the comment for the desired, alternate option.
 # from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
-# from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
-
-# GPIO pin outputs with software PWM (bit banging).
-# init.ASYNCIO_ENABLED = True # Bit banging requires asyncio.
-# from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
-
-# GPIO pin outputs with timers.
-init.ASYNCIO_ENABLED = True # Timer outputs require asyncio.
-from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
 init.output = output()
 
