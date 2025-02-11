@@ -66,7 +66,7 @@ class Interrupter(CustomItem):
         self.min_freq = self.config.get("interrupter_min_freq", config.INTERRUPTER_MIN_FREQ_DEF)
         self.max_on_time = self.config.get("interrupter_max_on_time", config.INTERRUPTER_MAX_ON_TIME_DEF)
         self.max_freq = self.config.get("interrupter_max_freq", config.INTERRUPTER_MAX_FREQ_DEF)
-        self.max_duty = self.config.get("interrupter_max_duty", config.INTERRUPTER_MAX_DUTY_DEF)  # Updated to use INTERRUPTER_MAX_DUTY_DEF
+        self.max_duty = self.config.get("interrupter_max_duty", config.INTERRUPTER_MAX_DUTY_DEF)
         self.frequency = self.min_freq
         self.on_time = self.min_on_time
         self.ten_x = False
