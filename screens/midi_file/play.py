@@ -105,7 +105,7 @@ class MIDIFilePlay:
                     self.last_display_update = current_time_ms
 
                 if event.status in (umidiparser.NOTE_ON, umidiparser.NOTE_OFF):
-                    track_index = event.track - 1
+                    track_index = event.track
                     if track_index in self.midi_file.outputs:
                         output = self.midi_file.outputs.index(track_index)
                         if event.status == umidiparser.NOTE_ON:
@@ -171,11 +171,7 @@ class MIDIFilePlay:
         self.init.sd_card_reader.deinit_sd()
 
         # Return to the file listing.
-        self.midi_file.current_page = ""
-        parent_screen = self.midi_file.parent
-        if parent_screen:
-            self.init.menu.set_screen(parent_screen)
-            self.init.menu.draw()
+        self.midi_file.handlers["files"].draw()
 
     def update_levels(self):
         """
