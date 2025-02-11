@@ -110,6 +110,11 @@ class InterrupterConfig(CustomItem):
     def rotary_1(self, direction):
         """
         Respond to encoder 1 rotation to increase or decrease the first values on each config page.
+
+        Parameters:
+        ----------
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
         if self.page == 0:
             increment = 1
@@ -127,6 +132,11 @@ class InterrupterConfig(CustomItem):
     def rotary_2(self, direction):
         """
         Respond to encoder 2 rotation to increase or decrease the second values on each config page.
+
+        Parameters:
+        ----------
+        direction : int
+            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
         if self.page == 0:
             increment = 10
