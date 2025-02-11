@@ -42,6 +42,9 @@ class MIDIFilePlay:
         # Read the default output level from the configuration.
         self.config = config.read_config()
 
+        # Add a mutex for thread-safe display updates.
+        self.display_mutex = _thread.allocate_lock()
+
     def draw(self, file_path):
         """
         The main MIDI file playback function.
@@ -138,18 +141,24 @@ class MIDIFilePlay:
         if not self.playback_active:
             return
 
-        self.current_time = time.ticks_us()
-        self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) // 1000000
-        self.minutes = self.elapsed_time // 60
-        self.seconds = self.elapsed_time % 60
+        # Acquire the display mutex to ensure thread-safe updates.
+        self.display_mutex.acquire()
+        try:
+            self.current_time = time.ticks_us()
+            self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) // 1000000
+            self.minutes = self.elapsed_time // 60
+            self.seconds = self.elapsed_time % 60
 
-        # Clear only the area that needs to be updated.
-        self.display.fill_rect(0, 16, 128, 16, 0)
+            # Clear only the area that needs to be updated.
+            self.display.fill_rect(0, 16, 128, 16, 0)
 
-        # Update the time.
-        self.display.header("PLAY MIDI FILE")
-        self.display.text(f"Time: {self.minutes:02}:{self.seconds:02}", 0, 16, 1)
-        self.display.show()
+            # Update the time.
+            self.display.header("PLAY MIDI FILE")
+            self.display.text(f"Time: {self.minutes:02}:{self.seconds:02}", 0, 16, 1)
+            self.display.show()
+        finally:
+            # Release the mutex to allow other threads to update the display.
+            self.display_mutex.release()
 
     def stop_playback(self):
         """
@@ -177,13 +186,19 @@ class MIDIFilePlay:
         """
         Updates the display with the current levels of channels 1 to 4.
         """
-        # Clear only the areas that need to be updated.
-        self.display.fill_rect(0, 32, 128, 32, 0)
+        # Acquire the display mutex to ensure thread-safe updates.
+        self.display_mutex.acquire()
+        try:
+            # Clear only the areas that need to be updated.
+            self.display.fill_rect(0, 32, 128, 32, 0)
 
-        # Update the levels.
-        self.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32, 1)
-        self.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48, 1)
-        self.display.show()
+            # Update the levels.
+            self.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32, 1)
+            self.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48, 1)
+            self.display.show()
+        finally:
+            # Release the mutex to allow other threads to update the display.
+            self.display_mutex.release()
 
     def rotary(self, index, direction):
         """
