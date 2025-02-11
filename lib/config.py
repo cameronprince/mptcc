@@ -14,32 +14,28 @@ class Config:
     """
     A class to provide default configuration values and handle reading and writing
     configuration data for the MicroPython Tesla Coil Controller (MPTCC).
-
-    Attributes:
-    -----------
-    DEF_INTERRUPTER_MIN_ON_TIME : int
-        Default minimum on time for the interrupter in microseconds.
-    DEF_INTERRUPTER_MIN_FREQ : int
-        Default minimum frequency for the interrupter in Hz.
-    DEF_INTERRUPTER_MAX_ON_TIME : int
-        Default maximum on time for the interrupter in microseconds.
-    DEF_INTERRUPTER_MAX_FREQ : int
-        Default maximum frequency for the interrupter in Hz.
-    DEF_INTERRUPTER_MAX_DUTY : float
-        Default maximum duty cycle for the interrupter in percent.
-    DEF_MIDI_FILE_OUTPUT_LEVEL : float
-        Default MIDI file output level in percent.
-    DEF_MIDI_FILE_AUTO_SAVE_LEVELS: bool
-        Automatically save the current levels each time playback ends.
     """
 
-    DEF_INTERRUPTER_MIN_ON_TIME = 20
-    DEF_INTERRUPTER_MIN_FREQ = 100
-    DEF_INTERRUPTER_MAX_ON_TIME = 300
-    DEF_INTERRUPTER_MAX_FREQ = 1000
-    DEF_INTERRUPTER_MAX_DUTY = 5.0
-    DEF_MIDI_FILE_OUTPUT_LEVEL = 20
-    DEF_MIDI_FILE_AUTO_SAVE_LEVELS = False
+    # Interrupter variables.
+    INTERRUPTER_MIN_ON_TIME_MIN = 1
+    INTERRUPTER_MIN_ON_TIME_DEF = 20       # Default minimum on time for the interrupter in microseconds.
+    INTERRUPTER_MIN_ON_TIME_MAX = 100
+    INTERRUPTER_MIN_FREQ_MIN = 100
+    INTERRUPTER_MIN_FREQ_DEF = 100         # Default minimum frequency for the interrupter in Hz.
+    INTERRUPTER_MIN_FREQ_MAX = 1000
+    INTERRUPTER_MAX_ON_TIME_MIN = 1
+    INTERRUPTER_MAX_ON_TIME_DEF = 300      # Default maximum on time for the interrupter in microseconds.
+    INTERRUPTER_MAX_ON_TIME_MAX = 1000
+    INTERRUPTER_MAX_FREQ_MIN = 100
+    INTERRUPTER_MAX_FREQ_DEF = 1000        # Default maximum frequency for the interrupter in Hz.
+    INTERRUPTER_MAX_FREQ_MAX = 2550
+    INTERRUPTER_MAX_DUTY_MIN = 0.25
+    INTERRUPTER_MAX_DUTY_DEF = 5.0         # Default maximum duty cycle for the interrupter in percent.
+    INTERRUPTER_MAX_DUTY_MAX = 25.0
+
+    # MIDI File variables.
+    DEF_MIDI_FILE_OUTPUT_LEVEL = 20         # Default MIDI file output level in percent.
+    DEF_MIDI_FILE_AUTO_SAVE_LEVELS = False  # Automatically save the current levels each time playback ends.
 
     @staticmethod
     def read_config():

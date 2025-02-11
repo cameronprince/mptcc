@@ -54,11 +54,11 @@ class InterrupterConfig(CustomItem):
         self.init = init
         self.display = self.init.display
         self.config = config.read_config()
-        self.min_on_time = self.config.get("interrupter_min_on_time", config.DEF_INTERRUPTER_MIN_ON_TIME)
-        self.min_freq = self.config.get("interrupter_min_freq", config.DEF_INTERRUPTER_MIN_FREQ)
-        self.max_on_time = self.config.get("interrupter_max_on_time", config.DEF_INTERRUPTER_MAX_ON_TIME)
-        self.max_freq = self.config.get("interrupter_max_freq", config.DEF_INTERRUPTER_MAX_FREQ)
-        self.max_duty = self.config.get("interrupter_max_duty", config.DEF_INTERRUPTER_MAX_DUTY)
+        self.min_on_time = self.config.get("interrupter_min_on_time", config.INTERRUPTER_MIN_ON_TIME_DEF)
+        self.min_freq = self.config.get("interrupter_min_freq", config.INTERRUPTER_MIN_FREQ_DEF)
+        self.max_on_time = self.config.get("interrupter_max_on_time", config.INTERRUPTER_MAX_ON_TIME_DEF)
+        self.max_freq = self.config.get("interrupter_max_freq", config.INTERRUPTER_MAX_FREQ_DEF)
+        self.max_duty = self.config.get("interrupter_max_duty", config.INTERRUPTER_MAX_DUTY_DEF)
         self.page = 0
         self.font_width = self.init.display.DISPLAY_FONT_WIDTH
 
@@ -110,22 +110,16 @@ class InterrupterConfig(CustomItem):
     def rotary_1(self, direction):
         """
         Respond to encoder 1 rotation to increase or decrease the first values on each config page.
-
-        Parameters:
-        ----------
-        direction : int
-            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-
         if self.page == 0:
             increment = 1
-            self.min_on_time = max(1, min(100, self.min_on_time + increment * direction))
+            self.min_on_time = max(config.INTERRUPTER_MIN_ON_TIME_MIN, min(config.INTERRUPTER_MIN_ON_TIME_MAX, self.min_on_time + increment * direction))
         elif self.page == 1:
             increment = 10
-            self.max_on_time = max(10, min(5000, self.max_on_time + increment * direction))
+            self.max_on_time = max(config.INTERRUPTER_MAX_ON_TIME_MIN, min(config.INTERRUPTER_MAX_ON_TIME_MAX, self.max_on_time + increment * direction))
         elif self.page == 2:
             increment = 0.1
-            self.max_duty = max(0.0, min(100.0, self.max_duty + increment * direction))
+            self.max_duty = max(config.INTERRUPTER_MAX_DUTY_MIN, min(config.INTERRUPTER_MAX_DUTY_MAX, self.max_duty + increment * direction))
 
         self.save_config()
         self.draw()
@@ -133,19 +127,13 @@ class InterrupterConfig(CustomItem):
     def rotary_2(self, direction):
         """
         Respond to encoder 2 rotation to increase or decrease the second values on each config page.
-
-        Parameters:
-        ----------
-        direction : int
-            The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-
         if self.page == 0:
             increment = 10
-            self.min_freq = max(20, min(1000, self.min_freq + increment * direction))
+            self.min_freq = max(config.INTERRUPTER_MIN_FREQ_MIN, min(config.INTERRUPTER_MIN_FREQ_MAX, self.min_freq + increment * direction))
         elif self.page == 1:
             increment = 10
-            self.max_freq = max(1000, min(2550, self.max_freq + increment * direction))
+            self.max_freq = max(config.INTERRUPTER_MAX_FREQ_MIN, min(config.INTERRUPTER_MAX_FREQ_MAX, self.max_freq + increment * direction))
 
         self.save_config()
         self.draw()
