@@ -18,19 +18,19 @@ class Config:
 
     # Interrupter variables.
     INTERRUPTER_MIN_ON_TIME_MIN = 1
-    INTERRUPTER_MIN_ON_TIME_DEF = 20       # Default minimum on time for the interrupter in microseconds.
+    INTERRUPTER_MIN_ON_TIME_DEF = 20        # Default minimum on time for the interrupter in microseconds.
     INTERRUPTER_MIN_ON_TIME_MAX = 100
     INTERRUPTER_MIN_FREQ_MIN = 100
-    INTERRUPTER_MIN_FREQ_DEF = 100         # Default minimum frequency for the interrupter in Hz.
+    INTERRUPTER_MIN_FREQ_DEF = 100          # Default minimum frequency for the interrupter in Hz.
     INTERRUPTER_MIN_FREQ_MAX = 1000
     INTERRUPTER_MAX_ON_TIME_MIN = 1
-    INTERRUPTER_MAX_ON_TIME_DEF = 300      # Default maximum on time for the interrupter in microseconds.
+    INTERRUPTER_MAX_ON_TIME_DEF = 300       # Default maximum on time for the interrupter in microseconds.
     INTERRUPTER_MAX_ON_TIME_MAX = 1000
     INTERRUPTER_MAX_FREQ_MIN = 100
-    INTERRUPTER_MAX_FREQ_DEF = 1000        # Default maximum frequency for the interrupter in Hz.
+    INTERRUPTER_MAX_FREQ_DEF = 1000         # Default maximum frequency for the interrupter in Hz.
     INTERRUPTER_MAX_FREQ_MAX = 2550
     INTERRUPTER_MAX_DUTY_MIN = 0.25
-    INTERRUPTER_MAX_DUTY_DEF = 5.0         # Default maximum duty cycle for the interrupter in percent.
+    INTERRUPTER_MAX_DUTY_DEF = 5.0          # Default maximum duty cycle for the interrupter in percent.
     INTERRUPTER_MAX_DUTY_MAX = 25.0
 
     # MIDI File variables.
