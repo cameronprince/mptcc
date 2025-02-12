@@ -37,6 +37,29 @@ class Config:
     DEF_MIDI_FILE_OUTPUT_LEVEL = 20         # Default MIDI file output level in percent.
     DEF_MIDI_FILE_AUTO_SAVE_LEVELS = False  # Automatically save the current levels each time playback ends.
 
+    # ASRG variables.
+    ARSG_MIN_LINE_FREQ_MIN = 1
+    ARSG_MIN_LINE_FREQ_DEF = 1
+    ARSG_MIN_LINE_FREQ_MAX = 120
+    ARSG_MIN_ON_TIME_MIN = 1
+    ARSG_MIN_ON_TIME_DEF = 20
+    ARSG_MIN_ON_TIME_MAX = 100
+    ARSG_MIN_FREQ_MIN = 100
+    ARSG_MIN_FREQ_DEF = 100
+    ARSG_MIN_FREQ_MAX = 1000
+    ARSG_MAX_LINE_FREQ_MIN = 1
+    ARSG_MAX_LINE_FREQ_DEF = 120
+    ARSG_MAX_LINE_FREQ_MAX = 400
+    ARSG_MAX_ON_TIME_MIN = 1
+    ARSG_MAX_ON_TIME_DEF = 300
+    ARSG_MAX_ON_TIME_MAX = 1000
+    ARSG_MAX_FREQ_MIN = 100
+    ARSG_MAX_FREQ_DEF = 1000
+    ARSG_MAX_FREQ_MAX = 2550
+    ARSG_MAX_DUTY_MIN = 0.25
+    ARSG_MAX_DUTY_DEF = 5.0
+    ARSG_MAX_DUTY_MAX = 25.0
+
     @staticmethod
     def read_config():
         """

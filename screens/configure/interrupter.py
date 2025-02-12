@@ -73,26 +73,26 @@ class InterrupterConfig(CustomItem):
         if self.page == 0:
             min_on_time_str = f"{self.min_on_time}"
             min_freq_str = f"{self.min_freq}"
-            self.display.text("Min On Time:", 0, 20, 1)
-            self.display.text(min_on_time_str, self.display.width - len(min_on_time_str) * self.font_width, 20, 1)
-            self.display.text("Min Freq:", 0, 30, 1)
-            self.display.text(min_freq_str, self.display.width - len(min_freq_str) * self.font_width, 30, 1)
-            self.display.text("Page 1/3", 0, 50, 1)
+            self.display.text("Min On Time:", 0, 16, 1)
+            self.display.text(min_on_time_str, self.display.width - len(min_on_time_str) * self.font_width, 16, 1)
+            self.display.text("Min Freq:", 0, 28, 1)
+            self.display.text(min_freq_str, self.display.width - len(min_freq_str) * self.font_width, 28, 1)
+            self.display.text("Page 1/3", 0, 56, 1)
         # Display the second page with maximum on time and maximum frequency inputs.
         elif self.page == 1:
             max_on_time_str = f"{self.max_on_time}"
             max_freq_str = f"{self.max_freq}"
-            self.display.text("Max On Time:", 0, 20, 1)
-            self.display.text(max_on_time_str, self.display.width - len(max_on_time_str) * self.font_width, 20, 1)
-            self.display.text("Max Freq:", 0, 30, 1)
-            self.display.text(max_freq_str, self.display.width - len(max_freq_str) * self.font_width, 30, 1)
-            self.display.text("Page 2/3", 0, 50, 1)
+            self.display.text("Max On Time:", 0, 16, 1)
+            self.display.text(max_on_time_str, self.display.width - len(max_on_time_str) * self.font_width, 16, 1)
+            self.display.text("Max Freq:", 0, 28, 1)
+            self.display.text(max_freq_str, self.display.width - len(max_freq_str) * self.font_width, 28, 1)
+            self.display.text("Page 2/3", 0, 56, 1)
         # Display the third page with the max duty cycle inputs.
         elif self.page == 2:
             max_duty_str = f"{self.max_duty:.1f}%"
-            self.display.text("Max Duty:", 0, 20, 1)
-            self.display.text(max_duty_str, self.display.width - len(max_duty_str) * self.font_width, 20, 1)
-            self.display.text("Page 3/3", 0, 50, 1)
+            self.display.text("Max Duty:", 0, 16, 1)
+            self.display.text(max_duty_str, self.display.width - len(max_duty_str) * self.font_width, 16, 1)
+            self.display.text("Page 3/3", 0, 56, 1)
         
         self.display.show()
 

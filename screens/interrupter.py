@@ -82,10 +82,10 @@ class Interrupter(CustomItem):
         self.init_settings()
         self.display.clear()
         self.display.header("Interrupter")
-        self.display.text("On Time:", 0, 20, 1)
-        self.display.text("Freq:", 0, 30, 1)
-        self.display.text("10x", 100, 50, 0)
-        self.display.text("Active", 0, 50, 0)
+        self.display.text("On Time:", 0, 16, 1)
+        self.display.text("Freq:", 0, 28, 1)
+        self.display.text("10x", 100, 56, 0)
+        self.display.text("Active", 0, 56, 0)
         self.update_display(update_on_time=True, update_frequency=True, initial=True)
 
     def update_display(self, update_on_time=True, update_frequency=True, update_ten_x=False, update_active=False, initial=False):
@@ -111,27 +111,27 @@ class Interrupter(CustomItem):
         if update_on_time:
             on_time_str = f"{self.on_time}us"
             if not initial:
-                self.display.fill_rect(self.display.width - rect_width, 20, rect_width, 10, 0)
-            self.display.text(on_time_str, self.display.width - len(on_time_str) * self.font_width, 20, 1)
+                self.display.fill_rect(self.display.width - rect_width, 16, rect_width, 10, 0)
+            self.display.text(on_time_str, self.display.width - len(on_time_str) * self.font_width, 16, 1)
 
         if update_frequency:
             freq_str = f"{self.frequency}Hz"
             if not initial:
-                self.display.fill_rect(self.display.width - (max_chars + 1) * self.font_width, 30, (max_chars + 1) * self.font_width, 10, 0)
-            self.display.text(freq_str, self.display.width - len(freq_str) * self.font_width, 30, 1)
+                self.display.fill_rect(self.display.width - (max_chars + 1) * self.font_width, 28, (max_chars + 1) * self.font_width, 10, 0)
+            self.display.text(freq_str, self.display.width - len(freq_str) * self.font_width, 28, 1)
 
         if update_ten_x:
             ten_x_x = self.display.width - len("10x") * self.font_width
             if self.ten_x:
-                self.display.text("10x", ten_x_x, 50, 1)
+                self.display.text("10x", ten_x_x, 56, 1)
             else:
-                self.display.fill_rect(ten_x_x, 50, 3 * self.font_width, 10, 0)
+                self.display.fill_rect(ten_x_x, 56, 3 * self.font_width, 10, 0)
         
         if update_active:
             if self.active:
-                self.display.text("Active", 0, 50, 1)
+                self.display.text("Active", 0, 56, 1)
             else:
-                self.display.fill_rect(0, 50, 6 * self.font_width, 10, 0)
+                self.display.fill_rect(0, 56, 6 * self.font_width, 10, 0)
         
         self.display.show()
 
