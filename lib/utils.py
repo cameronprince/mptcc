@@ -46,7 +46,7 @@ def calculate_midi_percent(frequency, on_time):
 
     return percent
 
-def calculate_percent(frequency, on_time, triggering_class):
+def calculate_percent(frequency, on_time, max_duty, max_on_time):
     """
     Calculates the percentage value based on frequency, on_time,
     and the provided class instance.
@@ -57,17 +57,12 @@ def calculate_percent(frequency, on_time, triggering_class):
         The frequency of the signal.
     on_time : int
         The on time of the signal in microseconds.
-    triggering_class : object
-        The class instance containing max_duty, min_on_time, and
-        max_on_time attributes.
 
     Returns:
     -------
     int
         The calculated percentage value.
     """
-    max_duty = triggering_class.max_duty
-    max_on_time = triggering_class.max_on_time
 
     # Ensure the on_time does not exceed the maximum allowed on_time.
     on_time = min(on_time, max_on_time)
@@ -116,3 +111,72 @@ def velocity_to_ontime(velocity):
     """
     ontime = int((velocity / 127) * 100)
     return ontime
+
+def calculate_max_on_time(frequency, max_duty, max_on_time):
+    """
+    Calculates the maximum on time based on the frequency, max duty cycle, and max on time.
+
+    Parameters:
+    ----------
+    frequency : int
+        The frequency to use for the calculation.
+    max_duty : float
+        The maximum duty cycle (as a percentage).
+    max_on_time : int
+        The maximum on time in microseconds.
+
+    Returns:
+    -------
+    int
+        The calculated maximum on time in microseconds.
+    """
+    max_on_time_based_on_duty = (max_duty / 100) * (1000000 / frequency)
+    return min(max_on_time, int(max_on_time_based_on_duty))
+
+def calculate_duty_cycle(on_time, frequency):
+    """
+    Calculates the duty cycle based on the on time and frequency.
+
+    Parameters:
+    ----------
+    on_time : int
+        The on time of the signal in microseconds.
+    frequency : int
+        The frequency of the signal in Hz.
+
+    Returns:
+    -------
+    float
+        The calculated duty cycle as a percentage.
+    """
+    period = 1000000 / frequency  # Period in microseconds
+    duty_cycle = (on_time / period) * 100
+    return duty_cycle
+
+def calculate_on_time(on_time, frequency, max_duty, max_on_time):
+    """
+    Calculates the on time to ensure the duty cycle does not exceed the
+    maximum allowed duty cycle.
+
+    Parameters:
+    ----------
+    on_time : int
+        The current on time in microseconds.
+    frequency : int
+        The frequency of the signal in Hz.
+    max_duty : float
+        The maximum allowed duty cycle (as a percentage).
+    max_on_time : int
+        The maximum allowed on time in microseconds.
+
+    Returns:
+    -------
+    int
+        The updated on time in microseconds.
+    """
+    max_on_time_allowed = calculate_max_on_time(frequency, max_duty, max_on_time)
+    current_duty_cycle = calculate_duty_cycle(on_time, frequency)
+    
+    if current_duty_cycle > max_duty:
+        return max_on_time_allowed
+    return on_time

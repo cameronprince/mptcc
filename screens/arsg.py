@@ -27,6 +27,9 @@ class ARSG(CustomItem):
         self.init_settings()
 
     def init_settings(self):
+        """
+        Allows refreshing of settings each time the screen is drawn.
+        """
         self.config = config.read_config()
         self.min_line_freq = self.config.get("arsg_min_line_freq", config.ARSG_MIN_LINE_FREQ_DEF)
         self.min_on_time = self.config.get("arsg_min_on_time", config.ARSG_MIN_ON_TIME_DEF)
@@ -40,10 +43,14 @@ class ARSG(CustomItem):
         self.freq = self.min_freq
         self.ten_x = False
         self.active = False
-        self.enable = False  # New flag to toggle outputs at line frequency
-        self.thread = None
+        # Flag to toggle outputs at line frequency.
+        self.enable = False
         self.settings_changed = True
-        self.enable_task = None  # Asyncio task for toggling the enable flag
+        # Asyncio task for toggling the enable flag.
+        self.enable_task = None
+        # Thread for controlling outputs.
+        self.output_thread = None
+        self.output = self.init.output
 
     def draw(self):
         """
@@ -105,14 +112,8 @@ class ARSG(CustomItem):
         """
         while self.active:
             self.enable = not self.enable
-            await asyncio.sleep(1 / (2 * self.line_freq))  # Toggle at twice the line frequency
-
-    def enable_outputs(self):
-        """
-        Enables the outputs based on the current settings.
-        """
-        for i in range(4):
-            self.init.output.set_output(i, self.enable, self.freq, self.on_time, self)
+            # Toggle at twice the line frequency.
+            await asyncio.sleep(1 / (2 * self.line_freq))
 
     def output_control_thread(self):
         """
@@ -120,31 +121,30 @@ class ARSG(CustomItem):
         """
         while self.active:
             if self.settings_changed:
-                self.enable_outputs()
+                self.set_all_outputs()
                 self.settings_changed = False
             elif self.enable:
-                self.enable_outputs()  # Enable outputs if the enable flag is True
+                # Enable outputs if the enable flag is True.
+                self.set_all_outputs()
             else:
-                self.init.output.disable_outputs()  # Disable outputs if the enable flag is False
-            time.sleep(0.01)  # Small delay to avoid busy-waiting
-        self.init.output.disable_outputs()
+                # Disable outputs if the enable flag is False.
+                self.output.disable_outputs()
+            # Small delay to avoid busy-waiting.
+            time.sleep(0.01)
+        self.output.disable_outputs()
         self.settings_changed = True
 
-    def calculate_max_on_time(self, freq):
+    def set_all_outputs(self):
         """
-        Calculates the maximum on time based on the frequency and max duty cycle.
+        Enables the outputs based on the current settings.
         """
-        max_on_time_based_on_duty = (self.max_duty / 100) * (1000000 / freq)
-        return min(self.max_on_time, int(max_on_time_based_on_duty))
+        self.output.set_all_outputs(self.enable, self.freq, self.on_time, self.max_duty, self.max_on_time)
 
-    def update_duty_cycle(self):
+    def update_on_time(self):
         """
         Updates the duty cycle based on the current on time and frequency.
         """
-        max_on_time = self.calculate_max_on_time(self.freq)
-        current_duty_cycle = (self.on_time / (1000000 / self.freq)) * 100
-        if current_duty_cycle > self.max_duty:
-            self.on_time = max_on_time
+        self.on_time = utils.calculate_on_time(self.on_time, self.freq, self.max_duty, self.max_on_time)
 
     def rotary_1(self, direction):
         """
@@ -164,7 +164,7 @@ class ARSG(CustomItem):
         new_on_time = self.on_time + increment * direction
         max_on_time = self.calculate_max_on_time(self.freq)
         self.on_time = max(self.min_on_time, min(max_on_time, new_on_time))
-        self.update_duty_cycle()
+        self.update_on_time()
         self.update_display(update_on_time=True)
         self.settings_changed = True
 
@@ -175,7 +175,7 @@ class ARSG(CustomItem):
         increment = 1 if not self.ten_x else 10
         new_freq = self.freq + increment * direction
         self.freq = max(self.min_freq, min(self.max_freq, new_freq))
-        self.update_duty_cycle()
+        self.update_on_time()
         self.update_display(update_freq=True)
         self.settings_changed = True
 
@@ -196,17 +196,17 @@ class ARSG(CustomItem):
         """
         self.active = not self.active
         if self.active:
-            if not self.thread:
-                self.thread = _thread.start_new_thread(self.output_control_thread, ())
+            if not self.output_thread:
+                self.output_thread = _thread.start_new_thread(self.output_control_thread, ())
             if not self.enable_task:
                 self.enable_task = asyncio.create_task(self.toggle_enable_flag())
         else:
             if self.enable_task:
-                # Cancel the task from the event loop
-                loop = asyncio.get_event_loop()
-                loop.call_soon_threadsafe(self.enable_task.cancel)
+                self.enable_task.cancel()
                 self.enable_task = None
-            self.thread = None
+            if self.output_thread:
+                self.output_thread = None
+            self.init.output.disable_outputs()
         self.update_display(update_active=True)
 
     def switch_4(self):
