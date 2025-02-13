@@ -62,18 +62,7 @@ class GPIO_PIO(Output):
         for sm in self.output:
             sm.active(0)
 
-    def disable_outputs(self):
-        """
-        Disables all outputs by stopping the state machines and turning off the associated LEDs.
-        """
-        # Stop the state machines.
-        for sm in self.output:
-            sm.active(0)
-        # Extinguish each LED.
-        for led in self.init.rgb_led:
-            led.off()
-
-    def set_output(self, output, active, frequency=None, on_time=None, triggering_class=None):
+    def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
 
@@ -87,8 +76,6 @@ class GPIO_PIO(Output):
             The frequency of the output signal.
         on_time : int, optional
             The on time of the output signal in microseconds.
-        triggering_class : object, optional
-            The class instance containing max_duty, min_on_time, and max_on_time attributes.
 
         Raises:
         -------
@@ -121,13 +108,14 @@ class GPIO_PIO(Output):
             # The triggering class is passed for any screen which allows
             # variable signal constraints. The constraints are then used to
             # determine the output percentage level of the current signal.
-            if triggering_class:
-                percent = utils.calculate_percent(frequency, on_time, triggering_class)
+            if max_duty and max_on_time:
+                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
                 self.init.rgb_led[output].status_color(percent)
             else:
                 # MIDI signal constraints are fixed at 0-127 by the standard.
                 percent = utils.calculate_midi_percent(frequency, on_time)
                 self.init.rgb_led[output].status_color(percent)
         else:
-            sm.active(0)  # Stop the state machine
+            # Stop the state machine.
+            sm.active(0)
             self.init.rgb_led[output].off()

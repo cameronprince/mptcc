@@ -7,6 +7,7 @@ hardware/input/i2cencoder.py
 Input module for I2CEncoder V2.1.
 """
 
+import _thread
 import time
 import struct
 import i2cEncoderLibV2
@@ -24,6 +25,13 @@ class I2CEncoder(Input):
 
         self.init = init
         self.encoders = []
+
+        # Add a mutex for I2C communication to the init object.
+        if not hasattr(self.init, 'i2c_mutex'):
+            self.init.i2c_mutex = _thread.allocate_lock()
+
+        # Flag to track initialization status.
+        self.init_complete = False
 
         # Prepare the I2C bus.
         self.init.init_i2c_2()
@@ -44,6 +52,9 @@ class I2CEncoder(Input):
         for encoder in self.encoders:
             self.init_encoder(encoder)
 
+        # Mark initialization as complete.
+        self.init_complete = True
+
     def init_encoder(self, encoder):
         """
         Initialize a specific encoder.
@@ -63,18 +74,25 @@ class I2CEncoder(Input):
         encoder.writeMax(100)
         encoder.writeMin(0)
         encoder.writeStep(1)
-        encoder.writeAntibouncingPeriod(40)
+        encoder.writeAntibouncingPeriod(20)
         encoder.writeGammaRLED(i2cEncoderLibV2.GAMMA_2)
         encoder.writeGammaGLED(i2cEncoderLibV2.GAMMA_2)
         encoder.writeGammaBLED(i2cEncoderLibV2.GAMMA_2)
 
     def interrupt_handler(self, pin):
+        if not self.init_complete or not pin:
+            return
+
         idx = self.interrupts.index(pin)
-        status = self.encoders[idx].readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
-        # Fire the appropriate callback.
-        if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
-            valBytes = struct.unpack('>i', self.encoders[idx].readCounter32())
-            new_value = valBytes[0]
-            super().rotary_encoder_change(idx, new_value)
-        if status & i2cEncoderLibV2.PUSHP:
-            super().switch_click(idx + 1)
+        self.init.i2c_mutex.acquire()
+        try:
+            status = self.encoders[idx].readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
+            # Fire the appropriate callback.
+            if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
+                valBytes = struct.unpack('>i', self.encoders[idx].readCounter32())
+                new_value = valBytes[0]
+                super().rotary_encoder_change(idx, new_value)
+            if status & i2cEncoderLibV2.PUSHP:
+                super().switch_click(idx + 1)
+        finally:
+            self.init.i2c_mutex.release()

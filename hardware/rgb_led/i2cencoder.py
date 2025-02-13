@@ -36,6 +36,7 @@ class RGB_I2CEncoder(RGB):
     """
     def __init__(self, encoder):
         super().__init__()
+        self.init = init
         self.encoder = encoder
 
     def setColor(self, r, g, b):
@@ -52,4 +53,9 @@ class RGB_I2CEncoder(RGB):
             Blue value (0-255).
         """
         color_code = (r << 16) | (g << 8) | b
-        self.encoder.writeRGBCode(color_code)
+
+        self.init.i2c_mutex.acquire()
+        try:
+            self.encoder.writeRGBCode(color_code)
+        finally:
+            self.init.i2c_mutex.release()

@@ -3,7 +3,7 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-utils.py
+lib/utils.py
 Shared utility functions.
 """
 
@@ -112,51 +112,10 @@ def velocity_to_ontime(velocity):
     ontime = int((velocity / 127) * 100)
     return ontime
 
-def calculate_max_on_time(frequency, max_duty, max_on_time):
-    """
-    Calculates the maximum on time based on the frequency, max duty cycle, and max on time.
-
-    Parameters:
-    ----------
-    frequency : int
-        The frequency to use for the calculation.
-    max_duty : float
-        The maximum duty cycle (as a percentage).
-    max_on_time : int
-        The maximum on time in microseconds.
-
-    Returns:
-    -------
-    int
-        The calculated maximum on time in microseconds.
-    """
-    max_on_time_based_on_duty = (max_duty / 100) * (1000000 / frequency)
-    return min(max_on_time, int(max_on_time_based_on_duty))
-
-def calculate_duty_cycle(on_time, frequency):
-    """
-    Calculates the duty cycle based on the on time and frequency.
-
-    Parameters:
-    ----------
-    on_time : int
-        The on time of the signal in microseconds.
-    frequency : int
-        The frequency of the signal in Hz.
-
-    Returns:
-    -------
-    float
-        The calculated duty cycle as a percentage.
-    """
-    period = 1000000 / frequency  # Period in microseconds
-    duty_cycle = (on_time / period) * 100
-    return duty_cycle
-
 def calculate_on_time(on_time, frequency, max_duty, max_on_time):
     """
     Calculates the on time to ensure the duty cycle does not exceed the
-    maximum allowed duty cycle.
+    maximum allowed duty cycle and on-time.
 
     Parameters:
     ----------
@@ -174,9 +133,14 @@ def calculate_on_time(on_time, frequency, max_duty, max_on_time):
     int
         The updated on time in microseconds.
     """
-    max_on_time_allowed = calculate_max_on_time(frequency, max_duty, max_on_time)
-    current_duty_cycle = calculate_duty_cycle(on_time, frequency)
+    # Calculate the period in microseconds.
+    period = 1_000_000 / frequency
     
-    if current_duty_cycle > max_duty:
-        return max_on_time_allowed
-    return on_time
+    # Calculate the maximum allowed on-time based on the duty cycle.
+    max_on_time_based_on_duty = (max_duty / 100) * period
+    
+    # Constrain the on-time to the smaller of the two limits.
+    max_on_time_allowed = min(max_on_time, max_on_time_based_on_duty)
+    
+    # Ensure the on-time does not exceed the maximum allowed value.
+    return int(min(on_time, max_on_time_allowed))

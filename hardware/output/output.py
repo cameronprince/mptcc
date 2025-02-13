@@ -8,10 +8,12 @@ Parent class for output devices.
 """
 
 from ..hardware import Hardware
+from ..init import init
 
 class Output(Hardware):
     def __init__(self):
         super().__init__()
+        self.init = init
 
     def disable_outputs(self):
         """

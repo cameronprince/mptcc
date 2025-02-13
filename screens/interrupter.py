@@ -110,7 +110,7 @@ class Interrupter(CustomItem):
 
     def update_on_time(self):
         """
-        Updates the duty cycle based on the current on time and frequency.
+        Updates the on time to ensure it does not exceed the maximum allowed duty cycle or on-time.
         """
         self.on_time = utils.calculate_on_time(self.on_time, self.freq, self.max_duty, self.max_on_time)
 
@@ -121,16 +121,7 @@ class Interrupter(CustomItem):
         increment = 10 if self.ten_x else 1
 
         new_on_time = self.on_time + increment * direction
-        max_on_time = utils.calculate_max_on_time(self.freq, self.max_duty, self.max_on_time)
-
-        if new_on_time < self.min_on_time:
-            if self.on_time == self.min_on_time:
-                return
-        elif new_on_time > max_on_time:
-            if self.on_time == max_on_time:
-                return
-
-        self.on_time = max(self.min_on_time, min(max_on_time, int(new_on_time)))
+        self.on_time = max(self.min_on_time, min(new_on_time, self.max_on_time))
         self.update_on_time()
         self.update_display(update_on_time=True, update_frequency=False)
         self.settings_changed = True
@@ -150,7 +141,6 @@ class Interrupter(CustomItem):
             if self.freq == self.max_freq:
                 return
 
-        max_on_time = utils.calculate_max_on_time(new_freq, self.max_duty, self.max_on_time)
         self.freq = max(self.min_freq, min(self.max_freq, new_freq))
         self.update_on_time()
         self.update_display(update_on_time=True, update_frequency=True)
@@ -172,8 +162,6 @@ class Interrupter(CustomItem):
         Handles the third switch input to toggle the active state of the interrupter.
         """
         self.active = not self.active
-        max_on_time = utils.calculate_max_on_time(self.freq, self.max_duty, self.max_on_time)
-        self.on_time = min(self.on_time, max_on_time)
         self.update_on_time()
         self.update_display(update_on_time=True, update_frequency=True, update_active=True)
 

@@ -142,7 +142,7 @@ class ARSG(CustomItem):
 
     def update_on_time(self):
         """
-        Updates the duty cycle based on the current on time and frequency.
+        Updates the on time to ensure it does not exceed the maximum allowed duty cycle or on-time.
         """
         self.on_time = utils.calculate_on_time(self.on_time, self.freq, self.max_duty, self.max_on_time)
 
@@ -162,8 +162,7 @@ class ARSG(CustomItem):
         """
         increment = 1 if not self.ten_x else 10
         new_on_time = self.on_time + increment * direction
-        max_on_time = self.calculate_max_on_time(self.freq)
-        self.on_time = max(self.min_on_time, min(max_on_time, new_on_time))
+        self.on_time = max(self.min_on_time, min(new_on_time, self.max_on_time))
         self.update_on_time()
         self.update_display(update_on_time=True)
         self.settings_changed = True
@@ -184,7 +183,7 @@ class ARSG(CustomItem):
         Handles the second switch input to deactivate the ARSG emulator and return to the parent screen.
         """
         self.active = False
-        self.init.output.disable_outputs()
+        self.output.disable_outputs()
         parent_screen = self.parent
         if parent_screen:
             self.init.menu.set_screen(parent_screen)
@@ -206,7 +205,7 @@ class ARSG(CustomItem):
                 self.enable_task = None
             if self.output_thread:
                 self.output_thread = None
-            self.init.output.disable_outputs()
+            self.output.disable_outputs()
         self.update_display(update_active=True)
 
     def switch_4(self):

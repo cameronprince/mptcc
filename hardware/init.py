@@ -8,6 +8,7 @@ Carries configuration and initialized hardware between classes.
 """
 
 from machine import Pin
+from ..lib.events import events
 
 class Init:
     """
@@ -55,6 +56,7 @@ class Init:
         self.switch_3 = None
         self.switch_4 = None
         self.uart = None
+        self.events = events
 
     def init_i2c_1(self):
         """
