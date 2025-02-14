@@ -8,7 +8,7 @@ Parent class for input devices.
 """
 
 from ..hardware import Hardware
-from ...lib.menu import CustomItem
+from ...lib.menu import Screen
 import time
 
 class Input(Hardware):
@@ -30,7 +30,7 @@ class Input(Hardware):
             return
 
         current_screen = self.init.menu.get_current_screen()
-        if isinstance(current_screen, CustomItem):
+        if isinstance(current_screen, Screen):
             method_name = f'switch_{switch}'
             if hasattr(current_screen, method_name):
                 getattr(current_screen, method_name)()
@@ -65,7 +65,7 @@ class Input(Hardware):
 
             current_screen = self.init.menu.get_current_screen()
             method_name = f'rotary_{idx + 1}'
-            if isinstance(current_screen, CustomItem) and hasattr(current_screen, method_name):
+            if isinstance(current_screen, Screen) and hasattr(current_screen, method_name):
                 getattr(current_screen, method_name)(direction)
             elif idx == 0:
                 self.init.menu.move(direction)

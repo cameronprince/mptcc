@@ -16,22 +16,22 @@ from ..output.output import Output
 @asm_pio(set_init=PIO.OUT_LOW)
 def pwm_program():
     # Rest until a new tone is received.
-    label("resting")
+    label("rest")
     pull(block)                     # Wait for a new delay value, keep it in osr.
     mov(x, osr)                     # Copy the delay into X.
-    jmp(not_x, "resting")           # If new delay is zero, keep resting.
+    jmp(not_x, "rest")              # If new delay is zero, keep resting.
 
     # Play the tone until a new delay is received.
     wrap_target()                   # Start of the main loop.
 
     set(pins, 1)                    # Set the pin to high voltage.
-    label("high_voltage_loop")
-    jmp(x_dec, "high_voltage_loop") # Delay.
+    label("high_loop")
+    jmp(x_dec, "high_loop")         # Delay.
 
     set(pins, 0)                    # Set the pin to low voltage.
     mov(x, osr)                     # Load the half period into X.
-    label("low_voltage_loop")
-    jmp(x_dec, "low_voltage_loop")  # Delay.
+    label("low_loop")
+    jmp(x_dec, "low_loop")          # Delay.
 
     # Read any new delay value. If none, keep the current delay.
     mov(x, osr)                     # Set x, the default value for "pull(noblock)".
@@ -39,7 +39,7 @@ def pwm_program():
 
     # If the new delay is zero, rest. Otherwise, continue playing the tone.
     mov(x, osr)                     # Copy the delay into X.
-    jmp(not_x, "resting")           # If X is zero, rest.
+    jmp(not_x, "rest")           # If X is zero, rest.
     wrap()                          # Continue playing the tone.
 
 class GPIO_PIO(Output):
@@ -62,18 +62,7 @@ class GPIO_PIO(Output):
         for sm in self.output:
             sm.active(0)
 
-    def disable_outputs(self):
-        """
-        Disables all outputs by stopping the state machines and turning off the associated LEDs.
-        """
-        # Stop the state machines.
-        for sm in self.output:
-            sm.active(0)
-        # Extinguish each LED.
-        for led in self.init.rgb_led:
-            led.off()
-
-    def set_output(self, output, active, frequency=None, on_time=None, triggering_class=None):
+    def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
 
@@ -87,8 +76,6 @@ class GPIO_PIO(Output):
             The frequency of the output signal.
         on_time : int, optional
             The on time of the output signal in microseconds.
-        triggering_class : object, optional
-            The class instance containing max_duty, min_on_time, and max_on_time attributes.
 
         Raises:
         -------
@@ -121,13 +108,14 @@ class GPIO_PIO(Output):
             # The triggering class is passed for any screen which allows
             # variable signal constraints. The constraints are then used to
             # determine the output percentage level of the current signal.
-            if triggering_class:
-                percent = utils.calculate_percent(frequency, on_time, triggering_class)
+            if max_duty and max_on_time:
+                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
                 self.init.rgb_led[output].status_color(percent)
             else:
                 # MIDI signal constraints are fixed at 0-127 by the standard.
                 percent = utils.calculate_midi_percent(frequency, on_time)
                 self.init.rgb_led[output].status_color(percent)
         else:
-            sm.active(0)  # Stop the state machine
+            # Stop the state machine.
+            sm.active(0)
             self.init.rgb_led[output].off()

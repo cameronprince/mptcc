@@ -53,7 +53,7 @@ class AsyncIOLoop:
             if task:
                 asyncio.create_task(task)
             # Poll the queue periodically. Adjust as needed for performance.
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(10)
 
     async def _keep_alive(self):
         # Coroutine to keep the asyncio loop running.
@@ -68,8 +68,17 @@ class AsyncIOLoop:
             # Schedule the task processor and keep-alive coroutines.
             asyncio.create_task(self._process_tasks())
             asyncio.create_task(self._keep_alive())
-            # Run the event loop forever.
-            self.loop.run_forever()
+            try:
+                # Run the event loop forever.
+                self.loop.run_forever()
+            except KeyboardInterrupt:
+                pass
+            except Exception as e:
+                pass
+            finally:
+                # Ensure the loop is stopped and cleaned up.
+                self.loop_running = False
+                self.loop.close()
 
 # Create an instance of AsyncIOLoop and put it in the init object.
 init.asyncio_loop = AsyncIOLoop()

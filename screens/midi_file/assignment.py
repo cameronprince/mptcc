@@ -71,7 +71,7 @@ class MIDIFileAssignment:
         else:
             # If the text doesn't require scrolling, display it normally (inactive color).
             self.display.fill_rect(0, track_y, self.display.width, self.midi_file.line_height, 0)  # Clear the line.
-            self.display.text(full_track_name, 0, track_y, 1)  # Display in inactive color (white text on black background).
+            self.display.center_text(full_track_name, track_y)
 
         self.update_output_value()
 

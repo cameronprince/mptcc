@@ -9,10 +9,10 @@ Provides the screen for restoring default settings.
 
 import os
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 import mptcc.lib.config as config
 
-class RestoreDefaults(CustomItem):
+class RestoreDefaults(Screen):
     """
     A class to represent and handle the screen for restoring default settings
     in the MicroPython Tesla Coil Controller (MPTCC).
@@ -35,6 +35,7 @@ class RestoreDefaults(CustomItem):
             The name of the restore defaults screen.
         """
         super().__init__(name)
+        self.name = name
         self.init = init
         self.selection = "No"
 
@@ -43,7 +44,7 @@ class RestoreDefaults(CustomItem):
         Displays the restore defaults screen with options.
         """
         self.init.display.clear()
-        self.init.display.header("Restore Defaults")
+        self.init.display.header(self.name)
 
         # Calculate positions for centering text.
         screen_width = self.init.display.width
