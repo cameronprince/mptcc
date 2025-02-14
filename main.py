@@ -69,9 +69,6 @@ init.UART_BAUD = 31250
 init.SD_MOUNT_POINT = "/sd"
 init.CONFIG_PATH = "/mptcc/config.json"
 
-# Frequencies listed here are filtered from the available choices for the interrupter function.
-init.BANNED_INTERRUPTER_FREQUENCIES = []
-
 # Rotary encoder pin assignments.
 init.PIN_ROTARY_1_CLK = 11
 init.PIN_ROTARY_1_DT = 10
@@ -180,6 +177,14 @@ from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 # GPIO pin outputs with Programmable Input Output (PIO).
 # from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
+# EXPERIMENTAL FEATURE
+# GPIO pin outputs with software PWM (bit banging).
+# from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
+
+# EXPERIMENTAL FEATURE
+# GPIO pin outputs with timers.
+#from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+
 init.output = output()
 
 """
@@ -191,7 +196,7 @@ init.sd_card_reader = sd_card_reader()
 """
 Menu Definition
 """
-from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, CustomItem
+from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, Screen
 import mptcc.screens as screens
 
 # Define and display the menu.

@@ -8,11 +8,11 @@ Provides the screen for configuring interrupter settings.
 """
 
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
 
-class InterrupterConfig(CustomItem):
+class InterrupterConfig(Screen):
     """
     A class to represent and handle the configuration screen for the interrupter settings 
     in the MicroPython Tesla Coil Controller (MPTCC).
@@ -20,7 +20,7 @@ class InterrupterConfig(CustomItem):
     Attributes:
     -----------
     name : str
-        The name of the interrupter configuration screen.
+        The name of the screen.
     display : object
         The display object for rendering the screen.
     config : dict
@@ -51,6 +51,7 @@ class InterrupterConfig(CustomItem):
             The name of the interrupter configuration screen.
         """
         super().__init__(name)
+        self.name = name
         self.init = init
         self.display = self.init.display
         self.config = config.read_config()
@@ -67,7 +68,7 @@ class InterrupterConfig(CustomItem):
         Displays one of three pages which contain interrupter configuration inputs.
         """
         self.display.clear()
-        self.display.header('Interrupter Conf')
+        self.display.header(self.name)
 
         # Display the first page with minimum on time and minimum frequency inputs.
         if self.page == 0:

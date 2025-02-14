@@ -54,8 +54,8 @@ class RGB_I2CEncoder(RGB):
         """
         color_code = (r << 16) | (g << 8) | b
 
-        self.init.i2c_mutex.acquire()
+        self.init.i2cencoder_mutex.acquire()
         try:
             self.encoder.writeRGBCode(color_code)
         finally:
-            self.init.i2c_mutex.release()
+            self.init.i2cencoder_mutex.release()

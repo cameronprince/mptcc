@@ -67,16 +67,16 @@ class SubMenuItem(MenuItem):
         self.menu.reset()
 
 
-class CustomItem(MenuItem):
+class Screen(MenuItem):
     """
-    Represents a custom item in the menu.
+    Represents a screen linked in the menu.
 
     Attributes:
     -----------
     name : str
-        The name of the custom item.
+        The name of the screen.
     display : object
-        The display object associated with the custom item.
+        The display object associated with the screen.
     """
 
     def __init__(self, name):
@@ -84,7 +84,7 @@ class CustomItem(MenuItem):
         self.display = None  # it is set after initialization via Menu._update_display()
 
     def click(self):
-        """Defines the action to take when the custom item is clicked."""
+        """Defines the action to take when the screen menu item is clicked."""
         return self
 
     def up(self):
@@ -235,7 +235,7 @@ class Menu:
         The height of the font used in the menu.
     main_screen : MenuScreen
         The main screen of the menu.
-    current_screen : MenuScreen or CustomItem
+    current_screen : Screen or MenuScreen
         The current screen being displayed.
     """
 
@@ -280,8 +280,8 @@ class Menu:
         if isinstance(self.current_screen, MenuScreen):
             # Call MenuScreen's draw method with the menu argument.
             self.current_screen.draw(self)
-        elif isinstance(self.current_screen, CustomItem):
-            # Call CustomItem's draw method without the menu argument.
+        elif isinstance(self.current_screen, Screen):
+            # Call screen's draw method without the menu argument.
             self.current_screen.draw()
         else:
             raise TypeError("Unsupported screen type")
@@ -309,10 +309,10 @@ class Menu:
 
     def _update_display(self, menu_items):
         """
-        Adds the display object to all CustomItems, as it can be useful there to draw custom screens.
+        Adds the display object to all screens.
         """
         for obj in menu_items:
-            if isinstance(obj, CustomItem):
+            if isinstance(obj, Screen):
                 obj.display = self.display
             if isinstance(obj, SubMenuItem):
                 self._update_display(obj.menu._items)

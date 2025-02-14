@@ -165,7 +165,7 @@ class MIDIFilePlay:
         Stop MIDI playback and return to the file listing.
         """
         self.playback_active = False
-        self.init.output.disable_outputs()
+        self.output.set_all_outputs()
 
         if (self.save_levels or self.config.get("midi_file_save_levels_on_end")):
             # Save the current levels to the .map file

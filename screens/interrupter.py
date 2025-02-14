@@ -9,17 +9,18 @@ Provides functionality for the standard interrupter.
 import _thread
 import time
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
 
-class Interrupter(CustomItem):
+class Interrupter(Screen):
     """
     A class to handle the functionality of the standard interrupter for the MPTCC.
     """
 
     def __init__(self, name):
         super().__init__(name)
+        self.name = name
         self.init = init
         self.display = self.init.display
         self.font_width = self.display.DISPLAY_FONT_WIDTH
@@ -49,7 +50,7 @@ class Interrupter(CustomItem):
         """
         self.init_settings()
         self.display.clear()
-        self.display.header("Interrupter")
+        self.display.header(self.name)
         self.display.text("On Time:", 0, 16, 1)
         self.display.text("Freq:", 0, 28, 1)
         self.display.text("10x", 100, 56, 0)
@@ -105,7 +106,7 @@ class Interrupter(CustomItem):
                 self.set_all_outputs()
                 self.settings_changed = False
             time.sleep(0.1)
-        self.output.disable_outputs()
+        self.output.set_all_outputs()
         self.settings_changed = True
 
     def update_on_time(self):
@@ -151,7 +152,6 @@ class Interrupter(CustomItem):
         Handles the second switch input to deactivate the interrupter and return to the parent screen.
         """
         self.active = False
-        self.output.disable_outputs()
         parent_screen = self.parent
         if parent_screen:
             self.init.menu.set_screen(parent_screen)

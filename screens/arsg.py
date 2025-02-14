@@ -10,17 +10,18 @@ import _thread
 import time
 import uasyncio as asyncio
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
 
-class ARSG(CustomItem):
+class ARSG(Screen):
     """
     A class to handle the functionality of the ARSG emulator for the MPTCC.
     """
 
     def __init__(self, name):
         super().__init__(name)
+        self.name = name
         self.init = init
         self.display = self.init.display
         self.font_width = self.display.DISPLAY_FONT_WIDTH
@@ -58,7 +59,7 @@ class ARSG(CustomItem):
         """
         self.init_settings()
         self.display.clear()
-        self.display.header("ARSG Emulator")
+        self.display.header(self.name)
         self.display.text("Line Freq:", 0, 16, 1)
         self.display.text("On Time:", 0, 28, 1)
         self.display.text("Freq:", 0, 40, 1)
@@ -121,20 +122,20 @@ class ARSG(CustomItem):
         """
         while self.active:
             if self.settings_changed:
-                self.set_all_outputs()
+                self.enable_outputs()
                 self.settings_changed = False
             elif self.enable:
                 # Enable outputs if the enable flag is True.
-                self.set_all_outputs()
+                self.enable_outputs()
             else:
                 # Disable outputs if the enable flag is False.
-                self.output.disable_outputs()
+                self.output.set_all_outputs()
             # Small delay to avoid busy-waiting.
             time.sleep(0.01)
-        self.output.disable_outputs()
+        self.output.set_all_outputs()
         self.settings_changed = True
 
-    def set_all_outputs(self):
+    def enable_outputs(self):
         """
         Enables the outputs based on the current settings.
         """
@@ -183,7 +184,6 @@ class ARSG(CustomItem):
         Handles the second switch input to deactivate the ARSG emulator and return to the parent screen.
         """
         self.active = False
-        self.output.disable_outputs()
         parent_screen = self.parent
         if parent_screen:
             self.init.menu.set_screen(parent_screen)
@@ -205,7 +205,6 @@ class ARSG(CustomItem):
                 self.enable_task = None
             if self.output_thread:
                 self.output_thread = None
-            self.output.disable_outputs()
         self.update_display(update_active=True)
 
     def switch_4(self):

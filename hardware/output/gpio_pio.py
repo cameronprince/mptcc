@@ -16,22 +16,22 @@ from ..output.output import Output
 @asm_pio(set_init=PIO.OUT_LOW)
 def pwm_program():
     # Rest until a new tone is received.
-    label("resting")
+    label("rest")
     pull(block)                     # Wait for a new delay value, keep it in osr.
     mov(x, osr)                     # Copy the delay into X.
-    jmp(not_x, "resting")           # If new delay is zero, keep resting.
+    jmp(not_x, "rest")              # If new delay is zero, keep resting.
 
     # Play the tone until a new delay is received.
     wrap_target()                   # Start of the main loop.
 
     set(pins, 1)                    # Set the pin to high voltage.
-    label("high_voltage_loop")
-    jmp(x_dec, "high_voltage_loop") # Delay.
+    label("high_loop")
+    jmp(x_dec, "high_loop")         # Delay.
 
     set(pins, 0)                    # Set the pin to low voltage.
     mov(x, osr)                     # Load the half period into X.
-    label("low_voltage_loop")
-    jmp(x_dec, "low_voltage_loop")  # Delay.
+    label("low_loop")
+    jmp(x_dec, "low_loop")          # Delay.
 
     # Read any new delay value. If none, keep the current delay.
     mov(x, osr)                     # Set x, the default value for "pull(noblock)".
@@ -39,7 +39,7 @@ def pwm_program():
 
     # If the new delay is zero, rest. Otherwise, continue playing the tone.
     mov(x, osr)                     # Copy the delay into X.
-    jmp(not_x, "resting")           # If X is zero, rest.
+    jmp(not_x, "rest")           # If X is zero, rest.
     wrap()                          # Continue playing the tone.
 
 class GPIO_PIO(Output):

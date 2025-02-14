@@ -8,11 +8,11 @@ Provides the screen for configuring ARSG emulator settings.
 """
 
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 from mptcc.lib.config import Config as config
 import mptcc.lib.utils as utils
 
-class ARSGConfig(CustomItem):
+class ARSGConfig(Screen):
     """
     A class to represent and handle the configuration screen for the ARSG emulator settings 
     in the MicroPython Tesla Coil Controller (MPTCC).
@@ -20,7 +20,7 @@ class ARSGConfig(CustomItem):
     Attributes:
     -----------
     name : str
-        The name of the ARSG emulator configuration screen.
+        The name of the screen.
     display : object
         The display object for rendering the screen.
     config : dict
@@ -47,6 +47,7 @@ class ARSGConfig(CustomItem):
 
     def __init__(self, name):
         super().__init__(name)
+        self.name = name
         self.init = init
         self.display = self.init.display
         self.config = config.read_config()
@@ -65,7 +66,7 @@ class ARSGConfig(CustomItem):
         Displays one of three pages which contain ARSG configuration inputs.
         """
         self.display.clear()
-        self.display.header('ARSG Config')
+        self.display.header(self.name)
 
         # Display the first page with minimum line frequency, on time, and frequency inputs.
         if self.page == 0:

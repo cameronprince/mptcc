@@ -8,10 +8,10 @@ Provides the screen for configuring MIDI file settings.
 """
 
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 from mptcc.lib.config import Config as config
 
-class MIDIFileConfig(CustomItem):
+class MIDIFileConfig(Screen):
     """
     A class to represent and handle the screen for configuring the MIDI
     file playback feature in the MicroPython Tesla Coil Controller (MPTCC).
@@ -19,7 +19,7 @@ class MIDIFileConfig(CustomItem):
     Attributes:
     -----------
     name : str
-        The name of the MIDI File config screen.
+        The name of the screen.
     display : object
         The display object for rendering the screen.
     config : dict
@@ -42,6 +42,7 @@ class MIDIFileConfig(CustomItem):
             The name of the MIDI File config screen.
         """
         super().__init__(name)
+        self.name = name
         self.init = init
         self.display = self.init.display
         self.config = config.read_config()
@@ -54,7 +55,7 @@ class MIDIFileConfig(CustomItem):
         Displays the MIDI file configuration screen with the output level and the save levels on end setting.
         """
         self.display.clear()
-        self.display.header("MIDI File Config")
+        self.display.header(self.name)
 
         # Display output level
         output_level_str = f"{self.output_level}%"

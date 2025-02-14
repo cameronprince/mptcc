@@ -11,11 +11,11 @@ The modules in the midi_file subdirectory provide the primary functionality.
 import json
 import uos
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 import mptcc.lib.utils as utils
 from mptcc.lib.config import Config as config
 
-class MIDIFile(CustomItem):
+class MIDIFile(Screen):
     """
     A class to represent and handle MIDI file playback functionality for
     the MicroPython Tesla Coil Controller (MPTCC).
@@ -67,10 +67,11 @@ class MIDIFile(CustomItem):
         Parameters:
         ----------
         name : str
-            The name of the MIDI file.
+            The name of the screen.
         """
         super().__init__(name)
 
+        self.name = name
         self.init = init
         self.display = self.init.display
 
@@ -173,86 +174,54 @@ class MIDIFile(CustomItem):
             if initsd:
                 self.init.sd_card_reader.deinit_sd()
 
-    def rotary_1(self, val):
+    def rotary(self, encoder_number, val):
         """
-        Respond to rotation of encoder 1.
+        Respond to rotation of a rotary encoder.
 
         Parameters:
         ----------
+        encoder_number : int
+            The number of the rotary encoder (1, 2, 3, or 4).
         val : int
             The value from the rotary encoder.
         """
         handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "rotary_1"):
-            handler.rotary_1(val)
+        if handler and hasattr(handler, f"rotary_{encoder_number}"):
+            getattr(handler, f"rotary_{encoder_number}")(val)
+
+    def switch(self, switch_number):
+        """
+        Respond to presses of a switch.
+
+        Parameters:
+        ----------
+        switch_number : int
+            The number of the switch (1, 2, 3, or 4).
+        """
+        handler = self.handlers.get(self.current_page)
+        if handler and hasattr(handler, f"switch_{switch_number}"):
+            getattr(handler, f"switch_{switch_number}")()
+
+    def rotary_1(self, val):
+        self.rotary(1, val)
 
     def rotary_2(self, val):
-        """
-        Respond to rotation of encoder 2.
-
-        Parameters:
-        ----------
-        val : int
-            The value from the rotary encoder.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "rotary_2"):
-            handler.rotary_2(val)
+        self.rotary(2, val)
 
     def rotary_3(self, val):
-        """
-        Respond to rotation of encoder 3.
-
-        Parameters:
-        ----------
-        val : int
-            The value from the rotary encoder.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "rotary_3"):
-            handler.rotary_3(val)
+        self.rotary(3, val)
 
     def rotary_4(self, val):
-        """
-        Respond to rotation of encoder 4.
-
-        Parameters:
-        ----------
-        val : int
-            The value from the rotary encoder.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "rotary_4"):
-            handler.rotary_4(val)
+        self.rotary(4, val)
 
     def switch_1(self):
-        """
-        Respond to presses of encoder 1.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "switch_1"):
-            handler.switch_1()
+        self.switch(1)
 
     def switch_2(self):
-        """
-        Respond to presses of encoder 2.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "switch_2"):
-            handler.switch_2()
+        self.switch(2)
 
     def switch_3(self):
-        """
-        Respond to presses of encoder 3.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "switch_3"):
-            handler.switch_3()
+        self.switch(3)
 
     def switch_4(self):
-        """
-        Respond to presses of encoder 4.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, "switch_4"):
-            handler.switch_4()
+        self.switch(4)

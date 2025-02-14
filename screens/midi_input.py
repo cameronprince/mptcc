@@ -10,18 +10,18 @@ Provides functionality for the MIDI input feature.
 import _thread
 import SimpleMIDIDecoder
 from mptcc.hardware.init import init
-from mptcc.lib.menu import CustomItem
+from mptcc.lib.menu import Screen
 import mptcc.lib.config as config
 import mptcc.lib.utils as utils
 
-class MIDIInput(CustomItem):
+class MIDIInput(Screen):
     """
     A class to represent and handle the MIDI input feature for the MicroPython Tesla Coil Controller (MPTCC).
 
     Attributes:
     -----------
     name : str
-        The name of the MIDI input screen.
+        The name of the screen.
     uart : machine.UART
         The UART object for MIDI communication.
     display : object
@@ -46,6 +46,7 @@ class MIDIInput(CustomItem):
             The name of the MIDI input screen.
         """
         super().__init__(name)
+        self.name = name
         self.uart = None
         self.display = init.display
         self.md = SimpleMIDIDecoder.SimpleMIDIDecoder()
@@ -64,7 +65,7 @@ class MIDIInput(CustomItem):
         Displays the MIDI input screen.
         """
         self.display.clear()
-        self.display.header(str.upper("MIDI Input"))
+        self.display.header(self.name)
         self.display.center_text("Ready for input", 20)
         self.display.show()
         self.start_midi_input()
@@ -94,6 +95,7 @@ class MIDIInput(CustomItem):
             if self.init.uart.any():
                 data = self.init.uart.read(1)[0]
                 self.md.read(data)
+        self.output.set_all_outputs()
 
     def note_on(self, ch, cmd, note, vel):
         """
@@ -110,12 +112,11 @@ class MIDIInput(CustomItem):
         vel : int
             MIDI note velocity.
         """
-        frequency = utils.midi_to_frequency(note)
+        freq = utils.midi_to_frequency(note)
         on_time = utils.velocity_to_ontime(vel)
 
         # Drive all four outputs equally.
-        for output in range(4):
-            self.init.output.set_output(output, frequency, on_time, True)
+        self.output.set_all_outputs(True, freq, on_time)
 
     def note_off(self, ch, cmd, note, vel):
         """
@@ -133,15 +134,13 @@ class MIDIInput(CustomItem):
             MIDI note velocity.
         """
         # Disable all outputs.
-        for output in range(4):
-            self.init.output.set_output(output, 0, 0, False)
+        self.output.set_all_outputs()
 
     def switch_2(self):
         """
         Responds to encoder 2 presses to return to the main menu.
         """
         self.stop_midi_input()
-        self.init.output.disable_outputs()
         parent_screen = self.parent
         if parent_screen:
             self.init.menu.set_screen(parent_screen)
