@@ -15,7 +15,7 @@ class Output(Hardware):
         super().__init__()
         self.init = init
 
-    def set_all_outputs(self, active, freq, on_time, max_duty, max_on_time):
+    def set_all_outputs(self, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Disables all outputs by setting their duty cycle to 0 and turning off the associated LEDs.
         """

@@ -178,6 +178,11 @@ from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 # from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
 # EXPERIMENTAL FEATURE
+# PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
+# Requires four: https://github.com/kevinmcaleer/pca9685_for_pico
+# from mptcc.hardware.output.pca9685 import PCA9685 as output # Alternate option.
+
+# EXPERIMENTAL FEATURE
 # GPIO pin outputs with software PWM (bit banging).
 # from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
 
