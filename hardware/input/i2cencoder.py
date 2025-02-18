@@ -18,7 +18,8 @@ from ..input.input import Input
 
 class I2CEncoder(Input):
 
-    I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48]
+    I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
+    I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
     PIN_I2CENCODER_INTERRUPTS = [21, 22, 26, 27]
 
     def __init__(self):
@@ -72,9 +73,14 @@ class I2CEncoder(Input):
         encoder.reset()
         time.sleep(0.1)
 
+        if (self.I2CENCODER_TYPE == 'RGB'):
+            type = i2cEncoderLibV2.RGB_ENCODER
+        else:
+            type = i2cEncoderLibV2.STD_ENCODER
+
         encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
                      | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE
-                     | i2cEncoderLibV2.RMOD_X1 | i2cEncoderLibV2.RGB_ENCODER)
+                     | i2cEncoderLibV2.RMOD_X1 | type)
         encoder.begin(encconfig)
 
         reg = (i2cEncoderLibV2.PUSHP | i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC)
@@ -85,9 +91,11 @@ class I2CEncoder(Input):
         encoder.writeMin(0)
         encoder.writeStep(1)
         encoder.writeAntibouncingPeriod(10)
-        encoder.writeGammaRLED(i2cEncoderLibV2.GAMMA_2)
-        encoder.writeGammaGLED(i2cEncoderLibV2.GAMMA_2)
-        encoder.writeGammaBLED(i2cEncoderLibV2.GAMMA_2)
+
+        if (self.I2CENCODER_TYPE == 'RGB'):
+            encoder.writeGammaRLED(i2cEncoderLibV2.GAMMA_2)
+            encoder.writeGammaGLED(i2cEncoderLibV2.GAMMA_2)
+            encoder.writeGammaBLED(i2cEncoderLibV2.GAMMA_2)
 
     def interrupt_handler(self, pin):
         """
