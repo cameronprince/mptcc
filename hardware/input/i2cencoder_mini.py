@@ -35,8 +35,8 @@ class I2CEncoderMini(Input):
         self.interrupts = []
 
         # Add a mutex for I2C communication to the init object.
-        if not hasattr(self.init, 'i2cencoder_mutex'):
-            self.init.i2cencoder_mutex = _thread.allocate_lock()
+        if not hasattr(self.init, 'i2c_mutex'):
+            self.init.i2c_mutex = _thread.allocate_lock()
 
         # Shared variable for asyncio task.
         # -1 means no interrupt, otherwise stores the encoder index.
@@ -108,7 +108,7 @@ class I2CEncoderMini(Input):
                 self.active_interrupt = -1
 
                 # Acquire the I2C mutex to safely read the encoder status.
-                self.init.i2cencoder_mutex.acquire()
+                self.init.i2c_mutex.acquire()
                 try:
                     if self.encoders[idx].updateStatus():
                         status = self.encoders[idx].stat
@@ -118,6 +118,6 @@ class I2CEncoderMini(Input):
                         if status & i2cEncoderMiniLib.PUSHP:
                             super().switch_click(idx + 1)
                 finally:
-                    self.init.i2cencoder_mutex.release()
+                    self.init.i2c_mutex.release()
 
             await asyncio.sleep(0.01)

@@ -7,6 +7,7 @@ hardware/rgb_led/pca9685.py
 RGB LED device utilizing the PCA9685 external PWM board.
 """
 
+import _thread
 import time
 from machine import Pin
 from pca9685 import PCA9685 as driver
@@ -54,27 +55,31 @@ class PCA9685(RGBLED):
         self.init = init
 
         # Prepare the I2C bus.
-        self.init.init_i2c_2()
-        self.driver = driver(self.init.i2c_2, address=self.PCA9685_ADDR)
+        self.driver = driver(self.init.i2c_1, address=self.PCA9685_ADDR)
         self.driver.freq(self.PCA9685_FREQ)
 
+        # Add a mutex for I2C communication to the init object.
+        if not hasattr(self.init, 'i2c_mutex'):
+            self.init.i2c_mutex = _thread.allocate_lock()
+
         self.init.rgb_led = [
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED1_RED, green_channel=self.PCA_LED1_GREEN, blue_channel=self.PCA_LED1_BLUE),
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED2_RED, green_channel=self.PCA_LED2_GREEN, blue_channel=self.PCA_LED2_BLUE),
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE),
-            RGB_PCA9685(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE),
+            RGB_PCA9685(self.driver, red_channel=self.PCA_LED1_RED, green_channel=self.PCA_LED1_GREEN, blue_channel=self.PCA_LED1_BLUE, mutex=self.init.i2c_mutex),
+            RGB_PCA9685(self.driver, red_channel=self.PCA_LED2_RED, green_channel=self.PCA_LED2_GREEN, blue_channel=self.PCA_LED2_BLUE, mutex=self.init.i2c_mutex),
+            RGB_PCA9685(self.driver, red_channel=self.PCA_LED3_RED, green_channel=self.PCA_LED3_GREEN, blue_channel=self.PCA_LED3_BLUE, mutex=self.init.i2c_mutex),
+            RGB_PCA9685(self.driver, red_channel=self.PCA_LED4_RED, green_channel=self.PCA_LED4_GREEN, blue_channel=self.PCA_LED4_BLUE, mutex=self.init.i2c_mutex),
         ]
 
 class RGB_PCA9685(RGB):
     """
     A class for handling RGB LEDs with a PCA9685 driver.
     """
-    def __init__(self, pca, red_channel, green_channel, blue_channel):
+    def __init__(self, pca, red_channel, green_channel, blue_channel, mutex):
         super().__init__()
         self.pca = pca
         self.red_channel = red_channel
         self.green_channel = green_channel
         self.blue_channel = blue_channel
+        self.mutex = mutex
         self.setColor(0, 0, 0)
 
     def setColor(self, r, g, b):
@@ -90,6 +95,10 @@ class RGB_PCA9685(RGB):
         b : int
             Blue value (0-255).
         """
-        self.pca.duty(self.red_channel, r * 16)
-        self.pca.duty(self.green_channel, g * 16)
-        self.pca.duty(self.blue_channel, b * 16)
+        self.mutex.acquire()
+        try:
+            self.pca.duty(self.red_channel, r * 16)
+            self.pca.duty(self.green_channel, g * 16)
+            self.pca.duty(self.blue_channel, b * 16)
+        finally:
+            self.mutex.release()
