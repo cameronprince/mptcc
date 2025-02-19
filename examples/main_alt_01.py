@@ -14,14 +14,12 @@ from mptcc.hardware.init import init
 Hardware Settings
 """
 # I2C bus 1 pin assignments and settings.
-# (used by the I2CEncoders.)
 init.PIN_I2C_1_SCL = 17
 init.PIN_I2C_1_SDA = 16
 init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 
 # I2C bus 2 pin assignments and settings.
-# (used by the display)
 # init.PIN_I2C_2_SCL = 19
 # init.PIN_I2C_2_SDA = 18
 # init.I2C_2_INTERFACE = 1
@@ -40,14 +38,14 @@ init.PIN_SPI_1_CS = 1
 
 # SPI bus 2 pin assignments and settings.
 # (used by the display.)
-init.SPI_2_INTERFACE = 1
-init.SPI_2_BAUD = 16000000
-init.PIN_SPI_2_SCK = 10
-init.PIN_SPI_2_MOSI = 11
-init.PIN_SPI_2_MISO = None
-init.PIN_SPI_2_CS = 13
-init.PIN_SPI_2_DC = 12
-init.PIN_SPI_2_RST = 14
+# init.SPI_2_INTERFACE = 1
+# init.SPI_2_BAUD = 16000000
+# init.PIN_SPI_2_SCK = 10
+# init.PIN_SPI_2_MOSI = 11
+# init.PIN_SPI_2_MISO = None
+# init.PIN_SPI_2_CS = 13
+# init.PIN_SPI_2_DC = 12
+# init.PIN_SPI_2_RST = 14
 
 # Output pin assignments.
 init.PIN_OUTPUT_1 = 9
@@ -68,9 +66,6 @@ init.UART_BAUD = 31250
 # Miscellaneous definitions.
 init.SD_MOUNT_POINT = "/sd"
 init.CONFIG_PATH = "/mptcc/config.json"
-
-# Frequencies listed here are filtered from the available choices for the interrupter function.
-init.BANNED_INTERRUPTER_FREQUENCIES = []
 
 # Rotary encoder pin assignments.
 # init.PIN_ROTARY_1_CLK = 11
@@ -110,7 +105,7 @@ Edit the class for the selected hardware to define configuration.
 # Note: This library only supports standard frame buffer commands.
 # To use with SPI, include an 'spi' argument when instantiating the
 # display object as: init.display = display('spi').
-# from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
+from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
 # Interface: I2C/SPI
@@ -126,7 +121,7 @@ Edit the class for the selected hardware to define configuration.
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands.
-from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
+# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
 
@@ -144,7 +139,11 @@ Edit the class for the selected hardware to define configuration.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+
+# I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
+# Requires: https://github.com/cameronprince/I2CEncoderMini
+from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
 init.inputs = inputs()
 
@@ -158,11 +157,11 @@ Edit the class for the selected hardware to define configuration.
 """
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
-# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 init.rgb_driver = rgb_led()
 
@@ -176,15 +175,13 @@ and removing the comment for the desired, alternate option.
 # from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
-# from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
+from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
 # GPIO pin outputs with software PWM (bit banging).
-# init.ASYNCIO_ENABLED = True # Bit banging requires asyncio.
 # from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
 
 # GPIO pin outputs with timers.
-init.ASYNCIO_ENABLED = True # Timer outputs require asyncio.
-from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+# from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
 
 init.output = output()
 
@@ -197,7 +194,7 @@ init.sd_card_reader = sd_card_reader()
 """
 Menu Definition
 """
-from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, CustomItem
+from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, Screen
 import mptcc.screens as screens
 
 # Define and display the menu.

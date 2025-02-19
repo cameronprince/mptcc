@@ -8,6 +8,8 @@ i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 devices = i2c.scan()
 
 if devices:
-    print("I2C devices found:", devices)
+    print("I2C devices found:")
+    for device in devices:
+        print(f"  Decimal: {device}, Hex: {hex(device)}")
 else:
     print("No I2C devices found")

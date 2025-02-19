@@ -143,6 +143,10 @@ Edit the class for the selected hardware to define configuration.
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
+# I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
+# Requires: https://github.com/cameronprince/I2CEncoderMini
+# from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
+
 init.inputs = inputs()
 
 """
