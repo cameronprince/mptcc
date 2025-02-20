@@ -14,14 +14,12 @@ from mptcc.hardware.init import init
 Hardware Settings
 """
 # I2C bus 1 pin assignments and settings.
-# (used by the I2CEncoders.)
 init.PIN_I2C_1_SCL = 17
 init.PIN_I2C_1_SDA = 16
 init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 
 # I2C bus 2 pin assignments and settings.
-# (used by the display)
 # init.PIN_I2C_2_SCL = 19
 # init.PIN_I2C_2_SDA = 18
 # init.I2C_2_INTERFACE = 1
@@ -68,9 +66,6 @@ init.UART_BAUD = 31250
 # Miscellaneous definitions.
 init.SD_MOUNT_POINT = "/sd"
 init.CONFIG_PATH = "/mptcc/config.json"
-
-# Frequencies listed here are filtered from the available choices for the interrupter function.
-init.BANNED_INTERRUPTER_FREQUENCIES = []
 
 # Rotary encoder pin assignments.
 # init.PIN_ROTARY_1_CLK = 11
@@ -144,7 +139,11 @@ Edit the class for the selected hardware to define configuration.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+
+# I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
+# Requires: https://github.com/cameronprince/I2CEncoderMini
+from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
 init.inputs = inputs()
 
@@ -162,7 +161,11 @@ Edit the class for the selected hardware to define configuration.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+
+# RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
+# Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
+from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
 init.rgb_driver = rgb_led()
 
@@ -178,6 +181,12 @@ and removing the comment for the desired, alternate option.
 # GPIO pin outputs with Programmable Input Output (PIO).
 from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
+# GPIO pin outputs with software PWM (bit banging).
+# from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
+
+# GPIO pin outputs with timers.
+# from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+
 init.output = output()
 
 """
@@ -189,7 +198,7 @@ init.sd_card_reader = sd_card_reader()
 """
 Menu Definition
 """
-from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, CustomItem
+from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, Screen
 import mptcc.screens as screens
 
 # Define and display the menu.
@@ -205,10 +214,12 @@ init.menu.set_screen(MenuScreen('MicroPython TCC')
     .add(screens.Interrupter('Interrupter'))
     .add(screens.MIDIFile('MIDI File'))
     .add(screens.MIDIInput('MIDI Input'))
+    .add(screens.ARSG('ARSG Emulator'))
     .add(screens.BatteryStatus('Battery Status'))
     .add(SubMenuItem('Configure')
-        .add(screens.InterrupterConfig('Interrupter'))
-        .add(screens.MIDIFileConfig('MIDI File'))
+        .add(screens.InterrupterConfig('Interrupter Config'))
+        .add(screens.MIDIFileConfig('MIDI File Config'))
+        .add(screens.ARSGConfig('ARSG Config'))
         .add(screens.RestoreDefaults('Restore Defaults'))
     )
 )

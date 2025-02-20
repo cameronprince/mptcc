@@ -15,6 +15,9 @@ from ..output.output import Output
 
 @asm_pio(set_init=PIO.OUT_LOW)
 def pwm_program():
+    # Ensure the pin is low when the state machine starts or stops.
+    set(pins, 0)                    # Set the pin to low voltage.
+
     # Rest until a new tone is received.
     label("rest")
     pull(block)                     # Wait for a new delay value, keep it in osr.
@@ -39,7 +42,7 @@ def pwm_program():
 
     # If the new delay is zero, rest. Otherwise, continue playing the tone.
     mov(x, osr)                     # Copy the delay into X.
-    jmp(not_x, "rest")           # If X is zero, rest.
+    jmp(not_x, "rest")              # If X is zero, rest.
     wrap()                          # Continue playing the tone.
 
 class GPIO_PIO(Output):
@@ -118,4 +121,9 @@ class GPIO_PIO(Output):
         else:
             # Stop the state machine.
             sm.active(0)
+
+            # Explicitly set the pin low.
+            sm.exec("set(pins, 0)")
+
+            # Turn off the RGB LED.
             self.init.rgb_led[output].off()

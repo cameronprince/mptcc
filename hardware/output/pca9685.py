@@ -8,21 +8,24 @@ Class for driving outputs with PCA9685 external PWM.
 """
 
 from machine import Pin
+from pca9685 import PCA9685 as driver
 from ...lib import utils
 from ...hardware.init import init
 from ..output.output import Output
+import time  # Import the time module for delays
 
 class PCA9685(Output):
 
-    I2C_BUS    = 2
-    PCA_1_ADDR = 0x40
+    I2C_BUS    = 1
+    PCA_1_ADDR = 0x60
     PCA_1_CHAN = 0
-    PCA_2_ADDR = 0x41
+    PCA_2_ADDR = 0x50
     PCA_2_CHAN = 0
-    PCA_3_ADDR = 0x42
+    PCA_3_ADDR = 0x48
     PCA_3_CHAN = 0
-    PCA_4_ADDR = 0x43
+    PCA_4_ADDR = 0x44
     PCA_4_CHAN = 0
+    INIT_DELAY = 0.2
 
     def __init__(self):
         """
@@ -39,14 +42,16 @@ class PCA9685(Output):
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
 
-        self.driver = driver(self.i2c, address=self.PCA_1_ADDR)
-
-        self.output = [
-            Output_PCA9685(driver(self.i2c, address=self.PCA_1_ADDR), channel=self.PCA_1_CHAN),
-            Output_PCA9685(driver(self.i2c, address=self.PCA_2_ADDR), channel=self.PCA_2_CHAN),
-            Output_PCA9685(driver(self.i2c, address=self.PCA_3_ADDR), channel=self.PCA_3_CHAN),
-            Output_PCA9685(driver(self.i2c, address=self.PCA_4_ADDR), channel=self.PCA_4_CHAN),
-        ]
+        # Instantiate each Output_PCA9685 with a delay between each one
+        self.output = []
+        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_1_ADDR), channel=self.PCA_1_CHAN))
+        time.sleep(self.INIT_DELAY)
+        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_2_ADDR), channel=self.PCA_2_CHAN))
+        time.sleep(self.INIT_DELAY)
+        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_3_ADDR), channel=self.PCA_3_CHAN))
+        time.sleep(self.INIT_DELAY)
+        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_4_ADDR), channel=self.PCA_4_CHAN))
+        time.sleep(self.INIT_DELAY)
 
     def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """

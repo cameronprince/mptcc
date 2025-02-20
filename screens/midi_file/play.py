@@ -38,6 +38,7 @@ class MIDIFilePlay:
         self.seconds = 0
         self.start_time = 0
         self.last_display_update = 0
+        self.output = self.init.output
 
         # Read the default output level from the configuration.
         self.config = config.read_config()

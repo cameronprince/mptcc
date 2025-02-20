@@ -3,24 +3,23 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-hardware/input/i2cencoder.py
-Input module for I2CEncoder V2.1.
+hardware/input/i2cencoder_mini.py
+Input module for I2CEncoderMini V1.2.
 """
 
 import _thread
 import time
 import uasyncio as asyncio
 import struct
-import i2cEncoderLibV2
+import i2cEncoderMiniLib
 from machine import Pin, I2C
 from ...hardware.init import init
 from ..input.input import Input
 
-class I2CEncoder(Input):
+class I2CEncoderMini(Input):
 
-    I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
-    I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
-    PIN_I2CENCODER_INTERRUPTS = [21, 22, 26, 27]
+    I2CENCODER_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
+    PIN_I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
 
     def __init__(self):
         super().__init__()
@@ -32,8 +31,7 @@ class I2CEncoder(Input):
         self.init_complete = False
 
         # Prepare the I2C bus.
-        self.init.init_i2c_2()
-        self.i2c = self.init.i2c_2
+        self.i2c = self.init.i2c_1
         self.interrupts = []
 
         # Add a mutex for I2C communication to the init object.
@@ -49,12 +47,12 @@ class I2CEncoder(Input):
 
         # Set up interrupt pins.
         for int_pin in self.PIN_I2CENCODER_INTERRUPTS:
-            ip = Pin(int_pin, Pin.IN)
+            ip = Pin(int_pin, Pin.IN, Pin.PULL_UP)
             ip.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
             self.interrupts.append(ip)
 
         # Instantiate the encoder objects.
-        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.i2c, addr) for addr in self.I2CENCODER_ADDRESSES]
+        self.encoders = [i2cEncoderMiniLib.i2cEncoderMiniLib(self.i2c, addr) for addr in self.I2CENCODER_ADDRESSES]
 
         # Initialize each encoder.
         for encoder in self.encoders:
@@ -73,29 +71,18 @@ class I2CEncoder(Input):
         encoder.reset()
         time.sleep(0.1)
 
-        if (self.I2CENCODER_TYPE == 'RGB'):
-            type = i2cEncoderLibV2.RGB_ENCODER
-        else:
-            type = i2cEncoderLibV2.STD_ENCODER
-
-        encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
-                     | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE
-                     | i2cEncoderLibV2.RMOD_X1 | type)
+        encconfig = (i2cEncoderMiniLib.WRAP_ENABLE | i2cEncoderMiniLib.DIRE_LEFT
+                     | i2cEncoderMiniLib.RMOD_X1)
         encoder.begin(encconfig)
 
-        reg = (i2cEncoderLibV2.PUSHP | i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC)
-        encoder.writeEncoder8(i2cEncoderLibV2.REG_INTCONF, reg)
+        reg = (i2cEncoderMiniLib.PUSHP | i2cEncoderMiniLib.RINC | i2cEncoderMiniLib.RDEC)
+        encoder.writeInterruptConfig(reg)
 
         encoder.writeCounter(0)
         encoder.writeMax(100)
         encoder.writeMin(0)
         encoder.writeStep(1)
-        encoder.writeAntibouncingPeriod(10)
-
-        if (self.I2CENCODER_TYPE == 'RGB'):
-            encoder.writeGammaRLED(i2cEncoderLibV2.GAMMA_2)
-            encoder.writeGammaGLED(i2cEncoderLibV2.GAMMA_2)
-            encoder.writeGammaBLED(i2cEncoderLibV2.GAMMA_2)
+        encoder.writeDoublePushPeriod(10)
 
     def interrupt_handler(self, pin):
         """
@@ -122,13 +109,13 @@ class I2CEncoder(Input):
                 # Acquire the I2C mutex to safely read the encoder status.
                 self.init.i2cencoder_mutex.acquire()
                 try:
-                    status = self.encoders[idx].readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
-                    if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
-                        valBytes = struct.unpack('>i', self.encoders[idx].readCounter32())
-                        new_value = valBytes[0]
-                        super().rotary_encoder_change(idx, new_value)
-                    if status & i2cEncoderLibV2.PUSHP:
-                        super().switch_click(idx + 1)
+                    if self.encoders[idx].updateStatus():
+                        status = self.encoders[idx].stat
+                        if status & (i2cEncoderMiniLib.RINC | i2cEncoderMiniLib.RDEC):
+                            new_value = self.encoders[idx].readCounter32()
+                            super().rotary_encoder_change(idx, new_value)
+                        if status & i2cEncoderMiniLib.PUSHP:
+                            super().switch_click(idx + 1)
                 finally:
                     self.init.i2cencoder_mutex.release()
 
