@@ -5,10 +5,10 @@ import i2cEncoderMiniLib
 
 # Setup the Interrupt Pins from the encoders.
 INT_pins = [
-    Pin(21, Pin.IN, Pin.PULL_UP),  # Enable internal pull-up
-    Pin(22, Pin.IN, Pin.PULL_UP),
-    Pin(26, Pin.IN, Pin.PULL_UP),
-    Pin(27, Pin.IN, Pin.PULL_UP)
+    Pin(18, Pin.IN, Pin.PULL_UP),  # Enable internal pull-up
+    Pin(19, Pin.IN, Pin.PULL_UP),
+    Pin(20, Pin.IN, Pin.PULL_UP),
+    Pin(21, Pin.IN, Pin.PULL_UP)
 ]
 
 INT_pin = INT_pins[0]
@@ -46,8 +46,7 @@ print("Encoder reset")
 time.sleep(0.1)
 
 # Configuration
-encconfig = (i2cEncoderMiniLib.WRAP_ENABLE
-             | i2cEncoderMiniLib.DIRE_RIGHT | i2cEncoderMiniLib.IPUP_ENABLE
+encconfig = (i2cEncoderMiniLib.WRAP_ENABLE| i2cEncoderMiniLib.DIRE_RIGHT
              | i2cEncoderMiniLib.RMOD_X1)
 encoder.begin(encconfig)
 print("Encoder begin with config:", encconfig)

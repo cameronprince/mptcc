@@ -55,6 +55,7 @@ class PCA9685(RGBLED):
         self.init = init
 
         # Prepare the I2C bus.
+        self.init.init_i2c_1()
         self.driver = driver(self.init.i2c_1, address=self.PCA9685_ADDR)
         self.driver.freq(self.PCA9685_FREQ)
 

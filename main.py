@@ -167,6 +167,10 @@ from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 # from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
+# RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
+# Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
+# from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
+
 init.rgb_driver = rgb_led()
 
 """
