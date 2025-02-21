@@ -20,7 +20,7 @@ class I2CEncoder(Input):
 
     I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
     I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
-    PIN_I2CENCODER_INTERRUPTS = [21, 22, 26, 27]
+    PIN_I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
 
     def __init__(self):
         super().__init__()
@@ -32,8 +32,8 @@ class I2CEncoder(Input):
         self.init_complete = False
 
         # Prepare the I2C bus.
-        self.init.init_i2c_2()
-        self.i2c = self.init.i2c_2
+        self.init.init_i2c_1()
+        self.i2c = self.init.i2c_1
         self.interrupts = []
 
         # Add a mutex for I2C communication to the init object.

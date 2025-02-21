@@ -32,7 +32,7 @@ init.SPI_1_BAUD = 1000000
 init.PIN_SPI_1_SCK = 2
 init.PIN_SPI_1_MOSI = 3
 init.PIN_SPI_1_MISO = 4
-init.PIN_SPI_1_CS = 1
+init.PIN_SPI_1_CS = 5
 # init.PIN_SPI_1_DC = 0
 # init.PIN_SPI_1_RST = 0
 
@@ -105,7 +105,7 @@ Edit the class for the selected hardware to define configuration.
 # Note: This library only supports standard frame buffer commands.
 # To use with SPI, include an 'spi' argument when instantiating the
 # display object as: init.display = display('spi').
-# from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
+from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
 # Interface: I2C/SPI
@@ -121,7 +121,7 @@ Edit the class for the selected hardware to define configuration.
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands.
-from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
+# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
 
@@ -157,7 +157,7 @@ Edit the class for the selected hardware to define configuration.
 """
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
-# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
@@ -165,7 +165,7 @@ Edit the class for the selected hardware to define configuration.
 
 # RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
-from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
 init.rgb_driver = rgb_led()
 

@@ -56,7 +56,9 @@ class PCA9685(RGBLED):
 
         # Prepare the I2C bus.
         self.init.init_i2c_1()
-        self.driver = driver(self.init.i2c_1, address=self.PCA9685_ADDR)
+        self.i2c = self.init.i2c_1
+        
+        self.driver = driver(self.i2c, address=self.PCA9685_ADDR)
         self.driver.freq(self.PCA9685_FREQ)
 
         # Add a mutex for I2C communication to the init object.

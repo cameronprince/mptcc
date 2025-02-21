@@ -22,10 +22,10 @@ init.I2C_1_FREQ = 400000
 
 # I2C bus 2 pin assignments and settings.
 # (used by the I2CEncoders.)
-init.PIN_I2C_2_SCL = 19
-init.PIN_I2C_2_SDA = 18
-init.I2C_2_INTERFACE = 1
-init.I2C_2_FREQ = 400000
+# init.PIN_I2C_2_SCL = 19
+# init.PIN_I2C_2_SDA = 18
+# init.I2C_2_INTERFACE = 1
+# init.I2C_2_FREQ = 400000
 
 # SPI bus 1 pin assignments and settings.
 # (used by the SD card reader)
@@ -34,7 +34,7 @@ init.SPI_1_BAUD = 1000000
 init.PIN_SPI_1_SCK = 2
 init.PIN_SPI_1_MOSI = 3
 init.PIN_SPI_1_MISO = 4
-init.PIN_SPI_1_CS = 1
+init.PIN_SPI_1_CS = 5
 # init.PIN_SPI_1_DC = 0
 # init.PIN_SPI_1_RST = 0
 
@@ -51,7 +51,7 @@ init.PIN_SPI_1_CS = 1
 
 # Output pin assignments.
 init.PIN_OUTPUT_1 = 9
-init.PIN_OUTPUT_2 = 10
+init.PIN_OUTPUT_2 = 8
 init.PIN_OUTPUT_3 = 7
 init.PIN_OUTPUT_4 = 6
 
@@ -61,7 +61,7 @@ init.PIN_BATT_STATUS_ADC = 28
 init.VOLTAGE_DROP_FACTOR = 848.5
 
 # MIDI input pin assignment and UART settings.
-init.PIN_MIDI_INPUT = 13
+init.PIN_MIDI_INPUT = 1
 init.UART_INTERFACE = 0
 init.UART_BAUD = 31250
 
@@ -181,12 +181,12 @@ and removing the comment for the desired, alternate option.
 # from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
-# from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
+from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
 # EXPERIMENTAL FEATURE
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires four: https://github.com/kevinmcaleer/pca9685_for_pico
-from mptcc.hardware.output.pca9685 import PCA9685 as output # Alternate option.
+# from mptcc.hardware.output.pca9685 import PCA9685 as output # Alternate option.
 
 # EXPERIMENTAL FEATURE
 # GPIO pin outputs with software PWM (bit banging).

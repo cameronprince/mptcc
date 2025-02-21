@@ -49,17 +49,9 @@ class GPIO_BitBang(Output):
 
         while self.running[output]:
             self.output[output].value(1)  # Set pin high.
-            await self._sleep_us(on_time)
+            await asyncio.sleep_us(on_time)  # Use asyncio.sleep_us for better precision.
             self.output[output].value(0)  # Set pin low.
-            await self._sleep_us(off_time)
-
-    async def _sleep_us(self, us):
-        """
-        Busy-wait for the specified number of microseconds.
-        """
-        start = time.ticks_us()
-        while time.ticks_diff(time.ticks_us(), start) < us:
-            await asyncio.sleep_ms(0)  # Yield to other tasks.
+            await asyncio.sleep_us(off_time)
 
     def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
         """
@@ -95,6 +87,7 @@ class GPIO_BitBang(Output):
             # Stop any existing task for this output.
             if self.tasks[output] is not None:
                 self.tasks[output].cancel()
+                self.tasks[output] = None
 
             # Start a new task for the PWM generation.
             self.running[output] = True

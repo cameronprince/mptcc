@@ -3,7 +3,7 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-hardware/output/pca9685.py
+hardware/output/pca9685_bitbang.py
 Class for driving outputs with PCA9685 external PWM.
 """
 
@@ -14,7 +14,7 @@ from ...hardware.init import init
 from ..output.output import Output
 import time  # Import the time module for delays
 
-class PCA9685(Output):
+class PCA9685_Bitbang(Output):
 
     I2C_BUS    = 1
     PCA_1_ADDR = 0x60
@@ -44,13 +44,13 @@ class PCA9685(Output):
 
         # Instantiate each Output_PCA9685 with a delay between each one
         self.output = []
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_1_ADDR), channel=self.PCA_1_CHAN))
+        self.output.append(Output_PCA9685_Bitbang(driver(self.i2c, address=self.PCA_1_ADDR), channel=self.PCA_1_CHAN))
         time.sleep(self.INIT_DELAY)
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_2_ADDR), channel=self.PCA_2_CHAN))
+        self.output.append(Output_PCA9685_Bitbang(driver(self.i2c, address=self.PCA_2_ADDR), channel=self.PCA_2_CHAN))
         time.sleep(self.INIT_DELAY)
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_3_ADDR), channel=self.PCA_3_CHAN))
+        self.output.append(Output_PCA9685_Bitbang(driver(self.i2c, address=self.PCA_3_ADDR), channel=self.PCA_3_CHAN))
         time.sleep(self.INIT_DELAY)
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_4_ADDR), channel=self.PCA_4_CHAN))
+        self.output.append(Output_PCA9685_Bitbang(driver(self.i2c, address=self.PCA_4_ADDR), channel=self.PCA_4_CHAN))
         time.sleep(self.INIT_DELAY)
 
     def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
@@ -96,7 +96,7 @@ class PCA9685(Output):
             self.init.rgb_led[output].off()
 
 
-class Output_PCA9685():
+class Output_PCA9685_Bitbang():
     """
     A class for handling outputs with a PCA9685 driver.
     """

@@ -31,6 +31,7 @@ class I2CEncoderMini(Input):
         self.init_complete = False
 
         # Prepare the I2C bus.
+        self.init.init_i2c_1()
         self.i2c = self.init.i2c_1
         self.interrupts = []
 
