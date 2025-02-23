@@ -63,6 +63,9 @@ class Input(Hardware):
             else:
                 direction = 1 if new_value > self.last_rotations[idx] else -1
 
+            # Update the timestamp for the last rotary input.
+            self.init.last_rotary_input = time.ticks_ms()
+
             current_screen = self.init.menu.get_current_screen()
             method_name = f'rotary_{idx + 1}'
             if isinstance(current_screen, Screen) and hasattr(current_screen, method_name):

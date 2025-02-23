@@ -65,17 +65,7 @@ class GPIO_PWM(Output):
             duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
             self.output[output].duty_u16(duty_cycle)
 
-            # The triggering class is passed for any screen which allows
-            # variable signal constraints. The constraints are then used to
-            # determine the output percentage level of the current signal.
-            if max_duty and max_on_time:
-                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
-                self.init.rgb_led[output].status_color(percent)
-            else:
-                # MIDI signal constraints are fixed at 0-127 by the standard.
-                percent = utils.calculate_midi_percent(frequency, on_time)
-                # print('CH: ', output, ' %:', percent)
-                self.init.rgb_led[output].status_color(percent)
+            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
         else:
             self.output[output].duty_u16(0)
             self.init.rgb_led[output].off()

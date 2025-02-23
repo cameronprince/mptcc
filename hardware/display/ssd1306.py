@@ -44,16 +44,35 @@ class SSD1306(Display):
     DISPLAY_HEADER_HEIGHT = 10
     DISPLAY_ITEMS_PER_PAGE = 4
 
-    def __init__(self, interface=None):
+    def __init__(self):
         """
         Constructs all the necessary attributes for the SSD1306 object.
         """
-        self.interface = interface
-
         super().__init__()
         self.init = init
-        
-        if interface == 'spi':
+
+        if self.init.DISPLAY_INTERFACE == "i2c_2":
+            self.init.init_i2c_2()
+            from ssd1306 import SSD1306_I2C as driver
+            self.driver = driver(
+                self.DISPLAY_WIDTH,
+                self.DISPLAY_HEIGHT,
+                i2c=self.init.i2c_2,
+                addr=self.init.DISPLAY_I2C_ADDR,
+            )
+        elif self.init.DISPLAY_INTERFACE == "spi_1":
+            self.init.init_spi_1()
+            from ssd1306 import SSD1306_SPI as driver
+            self.driver = driver(
+                self.DISPLAY_WIDTH,
+                self.DISPLAY_HEIGHT,
+                spi = self.init.spi_1,
+                dc = Pin(self.init.PIN_SPI_1_DC),
+                res = Pin(self.init.PIN_SPI_1_RST),
+                cs = Pin(self.init.PIN_SPI_1_CS),
+            )
+        elif self.init.DISPLAY_INTERFACE == "spi_2":
+            self.init.init_spi_2()
             from ssd1306 import SSD1306_SPI as driver
             self.driver = driver(
                 self.DISPLAY_WIDTH,
@@ -64,8 +83,15 @@ class SSD1306(Display):
                 cs = Pin(self.init.PIN_SPI_2_CS),
             )
         else:
+            self.init.init_i2c_1()
             from ssd1306 import SSD1306_I2C as driver
-            self.driver = driver(self.DISPLAY_WIDTH, self.DISPLAY_HEIGHT, i2c=self.init.i2c_1)
+            self.driver = driver(
+                self.DISPLAY_WIDTH,
+                self.DISPLAY_HEIGHT,
+                i2c=self.init.i2c_1,
+                addr=self.init.DISPLAY_I2C_ADDR,
+            )
+
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 

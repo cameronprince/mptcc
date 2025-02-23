@@ -90,7 +90,7 @@ class MIDIFileTracks:
         """
         self.midi_file.track_list = []
 
-        file_path = self.init.SD_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
+        file_path = self.init.SD_CARD_READER_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
 
         # We're unable to share sd_init actions due to try/catch on load_map which
         # needed for "No tracks mapped" error during playback.

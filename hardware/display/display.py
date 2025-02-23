@@ -18,11 +18,6 @@ class Display(Hardware):
         super().__init__()
         self.init = init
 
-        if self.interface == 'spi':
-            self.init.init_spi_2()
-        else:
-            self.init.init_i2c_1()
-
         self.scroll_task = None        # Holds the asyncio task for scrolling.
         self.scroll_flag = None        # Stores the unique identifier of the currently scrolling item.
         self.scroll_text = None        # The text to be scrolled.

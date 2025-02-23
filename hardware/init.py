@@ -7,13 +7,14 @@ init.py
 Carries configuration and initialized hardware between classes.
 """
 
+import _thread
 from machine import Pin
 from ..lib.events import events
 
 class Init:
     """
-    A class to carry configuration and initialized hardware between classes 
-    for the MicroPython Tesla Coil Controller (MPTCC).
+    A class to carry configuration and initialized hardware between
+    classes for the MicroPython Tesla Coil Controller (MPTCC).
 
     Attributes:
     -----------
@@ -70,6 +71,9 @@ class Init:
                 sda=Pin(self.PIN_I2C_1_SDA),
                 freq=self.I2C_1_FREQ
             )
+        # Add a mutex for I2C communication to the init object.
+        if not hasattr(self, 'i2c_1_mutex'):
+            self.i2c_1_mutex = _thread.allocate_lock()
 
     def init_i2c_2(self):
         """
@@ -83,6 +87,9 @@ class Init:
                 sda=Pin(self.PIN_I2C_2_SDA),
                 freq=self.I2C_2_FREQ
             )
+        # Add a mutex for I2C communication to the init object.
+        if not hasattr(self, 'i2c_2_mutex'):
+            self.i2c_2_mutex = _thread.allocate_lock()
 
     def init_spi_1(self):
         """
@@ -91,6 +98,9 @@ class Init:
         from machine import SPI
         if isinstance(self.spi_1, SPI):
             self.spi_1.deinit()
+        miso = None
+        if self.PIN_SPI_1_MISO is not None:
+            miso = Pin(self.PIN_SPI_1_MISO)
         self.spi_1 = SPI(
             self.SPI_1_INTERFACE,
             baudrate=self.SPI_1_BAUD,
@@ -98,7 +108,7 @@ class Init:
             phase=0,
             sck=Pin(self.PIN_SPI_1_SCK),
             mosi=Pin(self.PIN_SPI_1_MOSI),
-            miso=Pin(self.PIN_SPI_1_MISO)
+            miso=miso,
         )
 
     def init_spi_2(self):
@@ -129,7 +139,7 @@ class Init:
         self.uart = UART(
             self.UART_INTERFACE,
             baudrate=self.UART_BAUD,
-            rx=Pin(self.PIN_MIDI_INPUT)
+            rx=Pin(self.PIN_MIDI_INPUT),
         )
 
 init = Init()

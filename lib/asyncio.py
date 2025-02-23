@@ -40,29 +40,44 @@ class ThreadSafeQueue:
         with self.lock:
             self.queue.clear()
 
+
 class AsyncIOLoop:
     def __init__(self):
         self.loop_running = False
-        # Get the event loop.
         self.loop = asyncio.get_event_loop()
 
     async def _process_tasks(self):
-        # Coroutine to process tasks from the thread-safe queue.
+        """
+        Coroutine to process tasks from the thread-safe queue.
+        """
         while True:
             task = init.task_queue.get()
             if task:
-                asyncio.create_task(task)
-            # Poll the queue periodically. Adjust as needed for performance.
-            await asyncio.sleep(10)
+                task_type, *rest = task
+                if task_type == "coro":
+                    # If the task is a coroutine, await it.
+                    coro = rest[0]
+                    await coro
+                elif task_type == "func":
+                    # If the task is a function, call it directly.
+                    func, args = rest
+                    if args:
+                        func(*args)
+                    else:
+                        func()
+            await asyncio.sleep(0.1)  # Poll the queue periodically.
 
     async def _keep_alive(self):
-        # Coroutine to keep the asyncio loop running.
+        """
+        Coroutine to keep the asyncio loop running.
+        """
         while True:
-            # Sleep for a long time to keep the loop alive.
             await asyncio.sleep(3600)
 
     def start_loop(self):
-        # Start the asyncio event loop and keep it running.
+        """
+        Start the asyncio event loop and keep it running.
+        """
         if not self.loop_running:
             self.loop_running = True
             # Schedule the task processor and keep-alive coroutines.
@@ -73,12 +88,11 @@ class AsyncIOLoop:
                 self.loop.run_forever()
             except KeyboardInterrupt:
                 pass
-            except Exception as e:
-                pass
             finally:
                 # Ensure the loop is stopped and cleaned up.
                 self.loop_running = False
                 self.loop.close()
+
 
 # Create an instance of AsyncIOLoop and put it in the init object.
 init.asyncio_loop = AsyncIOLoop()

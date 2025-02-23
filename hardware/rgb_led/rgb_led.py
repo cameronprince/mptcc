@@ -7,7 +7,9 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
+import time
 from ..hardware import Hardware
+from ...lib import utils
 
 class RGBLED(Hardware):
     """
@@ -81,32 +83,32 @@ class RGB:
         """
         self.setColor(0, 0, 0)
 
-    def status_color(self, value, mode="percent"):
+    def status_color(self, frequency, on_time, max_duty, max_on_time):
         """
         Sets the color of the LED based on a value and mode.
-
-        Parameters:
-        ----------
-        value : int
-            The value to determine the color (1-100 for percent, 0-127 for velocity).
-        mode : str
-            The mode to interpret the value ("percent" or "velocity").
         """
-        # Convert velocity to percentage if in velocity mode
-        if mode == "velocity":
-            value = int(value * 100 / 127)
+        try:
+            if max_duty and max_on_time:
+                value = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
+            else:
+                # MIDI signal constraints are fixed at 0-127 by the standard.
+                value = utils.calculate_midi_percent(frequency, on_time)
+                value = int(value * 100 / 127)
 
-        # Ensure value is between 1 and 100.
-        value = self.constrain(value, 1, 100)
+            # Ensure value is between 1 and 100.
+            value = self.constrain(value, 1, 100)
 
-        # Map value to a range of 0 to 1.
-        normalized_value = value / 100.0
+            # Map value to a range of 0 to 1.
+            normalized_value = value / 100.0
 
-        # Get color based on the normalized value.
-        red, green, blue = self.make_color(normalized_value)
+            # Get color based on the normalized value.
+            red, green, blue = self.make_color(normalized_value)
 
-        red = self.constrain(red, 0, 255)
-        green = self.constrain(green, 0, 255)
-        blue = self.constrain(blue, 0, 255)
+            red = self.constrain(red, 0, 255)
+            green = self.constrain(green, 0, 255)
+            blue = self.constrain(blue, 0, 255)
 
-        self.setColor(red, green, blue)
+            self.setColor(red, green, blue)
+        except OSError as e:
+            print(f"Error updating RGB LED: {e}")
+            # Optionally, log the error or take other corrective actions
