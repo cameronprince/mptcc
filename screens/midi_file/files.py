@@ -94,7 +94,7 @@ class MIDIFileFiles:
         try:
             self.midi_file.file_list = [
                 f[0] if isinstance(f, tuple) else f 
-                for f in uos.listdir(self.init.SD_MOUNT_POINT)
+                for f in uos.listdir(self.init.SD_CARD_READER_MOUNT_POINT)
                 if (isinstance(f, str) or isinstance(f, tuple)) and 
                     ((isinstance(f, str) and (f.endswith(".mid") or f.endswith(".midi")) and not f.startswith("._")) or
                     (isinstance(f, tuple) and f[0].endswith((".mid", ".midi")) and not f[0].startswith("._")))
@@ -180,5 +180,5 @@ class MIDIFileFiles:
         """
         self.display.stop_scroll_task()
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
-        file_path = self.init.SD_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
+        file_path = self.init.SD_CARD_READER_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
         self.midi_file.handlers["play"].draw(file_path)

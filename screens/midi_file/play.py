@@ -39,12 +39,15 @@ class MIDIFilePlay:
         self.start_time = 0
         self.last_display_update = 0
         self.output = self.init.output
+        self.mutex = None
 
         # Read the default output level from the configuration.
         self.config = config.read_config()
 
-        # Add a mutex for thread-safe display updates.
-        self.display_mutex = _thread.allocate_lock()
+        if self.init.DISPLAY_INTERFACE == "i2c_1":
+            self.mutex = self.init.i2c_1_mutex
+        if self.init.DISPLAY_INTERFACE == "i2c_2":
+            self.mutex = self.init.i2c_2_mutex
 
     def draw(self, file_path):
         """
@@ -143,7 +146,8 @@ class MIDIFilePlay:
             return
 
         # Acquire the display mutex to ensure thread-safe updates.
-        self.display_mutex.acquire()
+        if self.mutex:
+            self.mutex.acquire()
         try:
             self.current_time = time.ticks_us()
             self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) // 1000000
@@ -159,7 +163,8 @@ class MIDIFilePlay:
             self.display.show()
         finally:
             # Release the mutex to allow other threads to update the display.
-            self.display_mutex.release()
+            if self.mutex:
+                self.mutex.release()
 
     def stop_playback(self):
         """
@@ -188,7 +193,8 @@ class MIDIFilePlay:
         Updates the display with the current levels of channels 1 to 4.
         """
         # Acquire the display mutex to ensure thread-safe updates.
-        self.display_mutex.acquire()
+        if self.mutex:
+            self.mutex.acquire()
         try:
             # Clear only the areas that need to be updated.
             self.display.fill_rect(0, 32, 128, 32, 0)
@@ -199,7 +205,8 @@ class MIDIFilePlay:
             self.display.show()
         finally:
             # Release the mutex to allow other threads to update the display.
-            self.display_mutex.release()
+            if self.mutex:
+                self.mutex.release()
 
     def rotary(self, index, direction):
         """

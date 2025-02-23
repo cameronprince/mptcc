@@ -97,12 +97,7 @@ class GPIO_Timer(Output):
             output['running'] = True
 
             # Handle LED updates.
-            if max_duty and max_on_time:
-                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
-                self.init.rgb_led[output_index].status_color(percent)
-            else:
-                percent = utils.calculate_midi_percent(frequency, on_time)
-                self.init.rgb_led[output_index].status_color(percent)
+            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
         else:
             # Stop the timer and deactivate the output.
             output['running'] = False

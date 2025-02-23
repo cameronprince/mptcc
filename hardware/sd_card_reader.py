@@ -31,18 +31,25 @@ class SDCardReader(Hardware):
         self.init = init
 
         # Prepare the SPI bus.
-        self.init.init_spi_1()
+        if self.init.SD_CARD_READER_SPI_INSTANCE == 2:
+            self.init.init_spi_2()
+            self.spi = self.init.spi_2
+            self.cs = self.init.PIN_SPI_2_CS
+        else:
+            self.init.init_spi_1()
+            self.spi = self.init.spi_1
+            self.cs = self.init.PIN_SPI_1_CS
 
     def init_sd(self):
         """
         Initializes and mounts the SD card.
         """
         try:
-            sd = sdcard.SDCard(self.init.spi_1, Pin(self.init.PIN_SPI_1_CS, Pin.OUT))
+            sd = sdcard.SDCard(self.spi, Pin(self.cs, Pin.OUT))
             # Mount the disk.
-            uos.mount(sd, self.init.SD_MOUNT_POINT)
+            uos.mount(sd, self.init.SD_CARD_READER_MOUNT_POINT)
         except OSError as e:
-            print(f"Error initializing SD card: {e}")
+            pass
 
     def deinit_sd(self):
         """

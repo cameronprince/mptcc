@@ -93,12 +93,7 @@ class MCP23017_Timer(Output):
             self.output[output].enable(frequency, on_time)
 
             # Handle LED updates.
-            if max_duty and max_on_time:
-                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
-                self.init.rgb_led[output].status_color(percent)
-            else:
-                percent = utils.calculate_midi_percent(frequency, on_time)
-                self.init.rgb_led[output].status_color(percent)
+            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
         else:
             # Disable the output.
             self.output[output].off()
