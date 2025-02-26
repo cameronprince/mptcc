@@ -46,15 +46,9 @@ class Input(Hardware):
     def rotary_encoder_change(self, idx, new_value):
         """
         The primary rotary encoder callback function.
-
-        Parameters:
-        ----------
-        idx : int
-            Index of the encoder.
-        new_value : int
-            The new value of the encoder.
         """
-        if self.last_rotations[idx] != new_value:
+        # print(f"rotary_encoder_change: Encoder {idx} value changed to {new_value}")  # Debugging
+        if not self.init.ignore_input and self.last_rotations[idx] != new_value:
             # Handle wrap-around cases.
             if self.last_rotations[idx] == 0 and new_value == 100:
                 direction = -1
@@ -66,11 +60,27 @@ class Input(Hardware):
             # Update the timestamp for the last rotary input.
             self.init.last_rotary_input = time.ticks_ms()
 
+            # Get the current screen.
             current_screen = self.init.menu.get_current_screen()
-            method_name = f'rotary_{idx + 1}'
-            if isinstance(current_screen, Screen) and hasattr(current_screen, method_name):
-                getattr(current_screen, method_name)(direction)
-            elif idx == 0:
-                self.init.menu.move(direction)
+            # print(f"rotary_encoder_change: Current screen is {current_screen}")  # Debugging
+
+            if current_screen:
+                method_name = f'rotary_{idx + 1}'
+                # print(f"rotary_encoder_change: Looking for method {method_name} on current screen")  # Debugging
+                # print("direction: ", direction)
+
+                if hasattr(current_screen, method_name):
+                    # print(f"rotary_encoder_change: Calling {method_name} on current screen")  # Debugging
+                    getattr(current_screen, method_name)(direction)
+                else:
+                    # print(f"rotary_encoder_change: Method {method_name} not found on current screen")  # Debugging
+                    if idx == 0:
+                        # print("rotary_encoder_change: Falling back to menu.move")  # Debugging
+                        self.init.menu.move(direction)
+            else:
+                pass
+                # print("rotary_encoder_change: No current screen found")  # Debugging
+
+            # Update the last rotation value.
             self.last_rotations[idx] = new_value
             time.sleep_ms(50)

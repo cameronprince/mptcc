@@ -8,7 +8,7 @@ Class for driving outputs with hardware PWM.
 """
 
 from machine import Pin, PWM
-from ...lib import utils
+from mptcc.lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -64,8 +64,7 @@ class GPIO_PWM(Output):
             self.output[output].freq(frequency)
             duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
             self.output[output].duty_u16(duty_cycle)
-
-            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
+            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
         else:
             self.output[output].duty_u16(0)
-            self.init.rgb_led[output].off()
+            self.init.rgb_led[output].off(output)

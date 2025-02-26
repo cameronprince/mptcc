@@ -51,6 +51,7 @@ class MIDIFileFiles:
             else:
                 self.midi_file.current_page = "files"
                 self.update_display()
+        self.init.ignore_input = False
 
     def update_display(self):
         """

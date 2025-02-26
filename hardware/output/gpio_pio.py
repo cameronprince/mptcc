@@ -103,7 +103,7 @@ class GPIO_PIO(Output):
             # Start the state machine.
             sm.active(1)
 
-            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
+            # self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
         else:
             # Stop the state machine.
             sm.active(0)
@@ -112,4 +112,4 @@ class GPIO_PIO(Output):
             sm.exec("set(pins, 0)")
 
             # Turn off the RGB LED.
-            self.init.rgb_led[output].off()
+            self.init.rgb_led[output].off(output)

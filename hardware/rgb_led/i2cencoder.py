@@ -1,12 +1,3 @@
-"""
-MicroPython Tesla Coil Controller (MPTCC)
-by Cameron Prince
-teslauniverse.com
-
-hardware/rgb_led/i2cencoder.py
-I2CEncoder V2.1 RGB LED device.
-"""
-
 import time
 from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init
@@ -62,5 +53,7 @@ class RGB_I2CEncoder(RGB):
         self.mutex.acquire()
         try:
             self.encoder.writeRGBCode(color_code)
+        except OSError as e:
+            print(f"I2CEncoder error: {e}")
         finally:
             self.mutex.release()
