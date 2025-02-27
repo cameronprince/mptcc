@@ -137,7 +137,7 @@ init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
 init.I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
 
-from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 
 # I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
@@ -147,7 +147,7 @@ init.I2CENCODER_MINI_I2C_INSTANCE = 1
 init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
 init.I2CENCODER_MINI_INTERRUPTS = [15, 14, 13, 12]
 
-# from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
+from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
 init.inputs = inputs()
 
@@ -166,28 +166,29 @@ init.RGB_PCA9685_I2C_INSTANCE = 1
 init.RGB_PCA9685_ADDR = 0x40
 init.RGB_PCA9685_FREQ = 1000
 
-init.RGB_PCA9685_LED1_RED = 0
-init.RGB_PCA9685_LED1_GREEN = 1
-init.RGB_PCA9685_LED1_BLUE = 2
+init.RGB_PCA9685_LED1_RED = 9
+init.RGB_PCA9685_LED1_GREEN = 10
+init.RGB_PCA9685_LED1_BLUE = 11
 
-init.RGB_PCA9685_LED2_RED = 3
-init.RGB_PCA9685_LED2_GREEN = 4
-init.RGB_PCA9685_LED2_BLUE = 5
+init.RGB_PCA9685_LED2_RED = 6
+init.RGB_PCA9685_LED2_GREEN = 7
+init.RGB_PCA9685_LED2_BLUE = 8
 
-init.RGB_PCA9685_LED3_RED = 6
-init.RGB_PCA9685_LED3_GREEN = 7
-init.RGB_PCA9685_LED3_BLUE = 8
+init.RGB_PCA9685_LED3_RED = 3
+init.RGB_PCA9685_LED3_GREEN = 4
+init.RGB_PCA9685_LED3_BLUE = 5
 
-init.RGB_PCA9685_LED4_RED = 9
-init.RGB_PCA9685_LED4_GREEN = 10
-init.RGB_PCA9685_LED4_BLUE = 11
+init.RGB_PCA9685_LED4_RED = 0
+init.RGB_PCA9685_LED4_GREEN = 1
+init.RGB_PCA9685_LED4_BLUE = 2
 
-# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+
+from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 
 # RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small

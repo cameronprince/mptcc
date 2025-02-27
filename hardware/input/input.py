@@ -38,26 +38,13 @@ class Input(Hardware):
                     self.init.menu.set_screen(parent_screen)
                     self.init.menu.draw()
 
-    def rotary_encoder_change(self, idx, new_value=None, direction=None):
+    def rotary_encoder_change(self, idx, direction):
         """
         The primary rotary encoder callback function.
         """
         # Get the current screen.
         current_screen = self.init.menu.get_current_screen()
 
-        if direction is None:
-            if new_value is None:
-                return
-            if self.last_rotations[idx] != new_value:
-                # Handle wrap-around cases.
-                if self.last_rotations[idx] == 0 and new_value == 100:
-                    direction = -1
-                elif self.last_rotations[idx] == 100 and new_value == 0:
-                    direction = 1
-                else:
-                    direction = 1 if new_value > self.last_rotations[idx] else -1
-            else:
-                return
         if current_screen:
             method_name = f'rotary_{idx + 1}'
 
@@ -66,8 +53,5 @@ class Input(Hardware):
             else:
                 if idx == 0:
                     self.init.menu.move(direction)
-
-        if new_value is not None:
-            self.last_rotations[idx] = new_value
 
         time.sleep_ms(50)

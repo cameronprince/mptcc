@@ -13,7 +13,7 @@ import uasyncio as asyncio
 import struct
 import i2cEncoderMiniLib
 from machine import Pin, I2C
-# from ...hardware.init import init
+from ...hardware.init import init
 from ..input.input import Input
 
 class I2CEncoderMini(Input):
@@ -69,6 +69,9 @@ class I2CEncoderMini(Input):
         """
         Initialize a specific encoder.
         """
+        self.init.mutex_acquire(self.mutex, "i2cencoder_mini:init_encoder")
+        # self.mutex.acquire()
+
         encoder.reset()
         time.sleep(0.1)
 
@@ -84,6 +87,9 @@ class I2CEncoderMini(Input):
         encoder.writeMin(0)
         encoder.writeStep(1)
         encoder.writeDoublePushPeriod(10)
+
+        self.init.mutex_release(self.mutex, "i2cencoder:init_encoder")
+        # self.mutex.release()
 
     def interrupt_handler(self, pin):
         """
@@ -107,17 +113,18 @@ class I2CEncoderMini(Input):
                 # Reset the active interrupt.
                 self.active_interrupt = -1
 
-                # Acquire the I2C mutex to safely read the encoder status.
-                self.mutex.acquire()
-                try:
-                    if self.encoders[idx].updateStatus():
-                        status = self.encoders[idx].stat
-                        if status & (i2cEncoderMiniLib.RINC | i2cEncoderMiniLib.RDEC):
-                            new_value = self.encoders[idx].readCounter32()
-                            super().rotary_encoder_change(idx, new_value)
-                        if status & i2cEncoderMiniLib.PUSHP:
-                            super().switch_click(idx + 1)
-                finally:
-                    self.mutex.release()
+                self.init.mutex_acquire(self.mutex, "i2cencoder_mini:process_interrupt:read_status")
+                check_status = self.encoders[idx].updateStatus()
+                self.init.mutex_release(self.mutex, "i2cencoder_mini:process_interrupt:read_status")
+
+                if check_status:
+                    status = self.encoders[idx].stat
+
+                    if status & (i2cEncoderMiniLib.RINC | i2cEncoderMiniLib.RDEC):
+                        direction = 1 if status & i2cEncoderMiniLib.RINC else -1
+                        super().rotary_encoder_change(idx, direction)
+
+                    if status & i2cEncoderMiniLib.PUSHP:
+                        super().switch_click(idx + 1)
 
             await asyncio.sleep(0.01)

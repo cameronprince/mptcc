@@ -8,7 +8,6 @@ RGB LED device utilizing the PCA9685 external PWM board.
 """
 
 import _thread
-import time
 from machine import Pin
 from pca9685 import PCA9685 as driver
 from ..rgb_led.rgb_led import RGBLED, RGB
@@ -85,6 +84,7 @@ class RGB_PCA9685(RGB):
     """
     def __init__(self, pca, red_channel, green_channel, blue_channel, mutex):
         super().__init__()
+        self.init = init
         self.pca = pca
         self.red_channel = red_channel
         self.green_channel = green_channel
@@ -105,10 +105,12 @@ class RGB_PCA9685(RGB):
         b : int
             Blue value (0-255).
         """
-        self.mutex.acquire()
+        self.init.mutex_acquire(self.mutex, "pca9685:set_color")
+        # self.mutex.acquire()
         try:
             self.pca.duty(self.red_channel, r * 16)
             self.pca.duty(self.green_channel, g * 16)
             self.pca.duty(self.blue_channel, b * 16)
         finally:
-            self.mutex.release()
+            self.init.mutex_release(self.mutex, "pca9685:set_color")
+            # self.mutex.release()

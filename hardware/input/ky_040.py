@@ -53,6 +53,27 @@ class KY040(Input):
     def create_listener(self, idx):
         def listener():
             new_value = self.rotary_encoders[idx].value()
+
+        if direction is None:
+            if new_value is None:
+                return
+            if self.last_rotations[idx] != new_value:
+                # Handle wrap-around cases.
+                if self.last_rotations[idx] == 0 and new_value == 100:
+                    direction = -1
+                elif self.last_rotations[idx] == 100 and new_value == 0:
+                    direction = 1
+                else:
+                    direction = 1 if new_value > self.last_rotations[idx] else -1
+            else:
+                return
+
+
+        if new_value is not None:
+            self.last_rotations[idx] = new_value
+
+
+
             self.rotary_encoder_change(idx, new_value)
         return listener
 

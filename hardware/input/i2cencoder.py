@@ -101,14 +101,15 @@ class I2CEncoder(Input):
                 self.active_interrupt = -1
 
                 self.init.mutex_acquire(self.mutex, "i2cencoder:process_interrupt:read_status")
+                # self.mutex.acquire()
+
                 status = self.encoders[idx].readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
                 self.init.mutex_release(self.mutex, "i2cencoder:process_interrupt:read_status")
+                # self.mutex.release()
 
                 if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
                     direction = 1 if status & i2cEncoderLibV2.RINC else -1
-                    valBytes = struct.unpack('>i', self.encoders[idx].readCounter32())
-                    new_value = valBytes[0]
-                    super().rotary_encoder_change(idx, new_value, direction)
+                    super().rotary_encoder_change(idx, direction)
                 if status & i2cEncoderLibV2.PUSHP:
                     super().switch_click(idx + 1)
 
