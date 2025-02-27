@@ -133,10 +133,6 @@ class MIDIFilePlay:
         self.minutes = self.elapsed_time // 60
         self.seconds = self.elapsed_time % 60
 
-        if self.display.mutex:
-            self.init.mutex_acquire(self.display.mutex, "midi_file_play:update_display")
-            # self.display.mutex.acquire()
-
         # Clear both time and levels area.
         self.display.fill_rect(0, 16, 128, 48, 0)
 
@@ -150,10 +146,6 @@ class MIDIFilePlay:
 
         # Refresh the display.
         self.display.show()
-
-        if self.display.mutex:
-            self.init.mutex_release(self.display.mutex, "midi_file_play:update_display")
-            # self.display.mutex.release()
 
     async def _update_display_task(self):
         """

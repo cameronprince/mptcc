@@ -101,7 +101,13 @@ class SSD1306(Display):
         """
         Clears the display.
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:clear")
+            # self.display.mutex.acquire()
         self.driver.fill(0)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:clear")
+            # self.display.mutex.release()
 
     def text(self, text, w, h, f):
         """
@@ -118,7 +124,13 @@ class SSD1306(Display):
         f : int
             The font color (0 or 1).
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:text")
+            # self.display.mutex.acquire()
         self.driver.text(text, w, h, f)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:text")
+            # self.display.mutex.release()
 
     def hline(self, x, y, w, c):
         """
@@ -135,7 +147,13 @@ class SSD1306(Display):
         c : int
             The color of the line (0 or 1).
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:hline")
+            # self.display.mutex.acquire()
         self.driver.hline(x, y, w, c)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:hline")
+            # self.display.mutex.release()
 
     def fill_rect(self, x, y, w, h, c):
         """
@@ -154,10 +172,22 @@ class SSD1306(Display):
         c : int
             The color of the rectangle (0 or 1).
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:fill_rect")
+            # self.display.mutex.acquire()
         self.driver.fill_rect(x, y, w, h, c)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:fill_rect")
+            # self.display.mutex.release()
 
     def show(self):
         """
         Updates the display with the current frame buffer content.
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:show")
+            # self.display.mutex.acquire()
         self.driver.show()
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:show")
+            # self.display.mutex.release()

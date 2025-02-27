@@ -151,14 +151,16 @@ class Init:
         """
         Acquires a mutex and provides a common function for debugging.
         """
-        print("mutex_acquire: ", src)
+        if self.MUTEX_DEBUGGING:
+            print("mutex_acquire: ", src)
         mutex.acquire()
 
     def mutex_release(self, mutex, src):
         """
         Releases a mutex and provides a common function for debugging.
         """
-        print("mutex_release: ", src)
+        if self.MUTEX_DEBUGGING:
+            print("mutex_release: ", src)
         mutex.release()
 
 init = Init()
