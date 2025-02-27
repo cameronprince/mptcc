@@ -72,7 +72,8 @@ class Init:
                 self.I2C_1_INTERFACE,
                 scl=Pin(self.PIN_I2C_1_SCL),
                 sda=Pin(self.PIN_I2C_1_SDA),
-                freq=self.I2C_1_FREQ
+                freq=self.I2C_1_FREQ,
+                timeout=self.I2C_1_TIMEOUT,
             )
         # Add a mutex for I2C communication to the init object.
         if not hasattr(self, 'i2c_1_mutex'):
@@ -88,7 +89,8 @@ class Init:
                 self.I2C_2_INTERFACE,
                 scl=Pin(self.PIN_I2C_2_SCL),
                 sda=Pin(self.PIN_I2C_2_SDA),
-                freq=self.I2C_2_FREQ
+                freq=self.I2C_2_FREQ,
+                timeout=self.I2C_2_TIMEOUT,
             )
         # Add a mutex for I2C communication to the init object.
         if not hasattr(self, 'i2c_2_mutex'):
@@ -144,5 +146,19 @@ class Init:
             baudrate=self.UART_BAUD,
             rx=Pin(self.PIN_MIDI_INPUT),
         )
+
+    def mutex_acquire(self, mutex, src):
+        """
+        Acquires a mutex and provides a common function for debugging.
+        """
+        # print("mutex_acquire: ", src)
+        mutex.acquire()
+
+    def mutex_release(self, mutex, src):
+        """
+        Releases a mutex and provides a common function for debugging.
+        """
+        # print("mutex_release: ", src)
+        mutex.release()
 
 init = Init()

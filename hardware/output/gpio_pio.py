@@ -9,7 +9,7 @@ Class for driving outputs with PIO PWM.
 
 from machine import Pin, freq
 from rp2 import PIO, StateMachine, asm_pio
-from ...lib import utils
+from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -20,36 +20,29 @@ def pwm_program():
 
     # Rest until a new tone is received.
     label("rest")
-    pull(block)                     # Wait for a new high duration, keep it in osr.
-    mov(x, osr)                     # Copy the high duration into X.
-    jmp(not_x, "rest")              # If high duration is zero, keep resting.
-
-    pull(block)                     # Wait for a new low duration, keep it in osr.
-    mov(y, osr)                     # Copy the low duration into Y.
+    pull(block)                     # Wait for a new delay value, keep it in osr.
+    mov(x, osr)                     # Copy the delay into X.
+    jmp(not_x, "rest")              # If new delay is zero, keep resting.
 
     # Play the tone until a new delay is received.
     wrap_target()                   # Start of the main loop.
 
     set(pins, 1)                    # Set the pin to high voltage.
     label("high_loop")
-    jmp(x_dec, "high_loop")         # Delay for the high state.
+    jmp(x_dec, "high_loop")         # Delay.
 
     set(pins, 0)                    # Set the pin to low voltage.
+    mov(x, osr)                     # Load the half period into X.
     label("low_loop")
-    jmp(y_dec, "low_loop")          # Delay for the low state.
+    jmp(x_dec, "low_loop")          # Delay.
 
-    # Read any new high duration. If none, keep the current duration.
+    # Read any new delay value. If none, keep the current delay.
     mov(x, osr)                     # Set x, the default value for "pull(noblock)".
-    pull(noblock)                   # Read a new high duration or use the default.
+    pull(noblock)                   # Read a new delay value or use the default.
 
-    # If the new high duration is zero, rest. Otherwise, continue playing the tone.
-    mov(x, osr)                     # Copy the high duration into X.
+    # If the new delay is zero, rest. Otherwise, continue playing the tone.
+    mov(x, osr)                     # Copy the delay into X.
     jmp(not_x, "rest")              # If X is zero, rest.
-
-    # Read any new low duration. If none, keep the current duration.
-    mov(y, osr)                     # Set y, the default value for "pull(noblock)".
-    pull(noblock)                   # Read a new low duration or use the default.
-
     wrap()                          # Continue playing the tone.
 
 class GPIO_PIO(Output):
@@ -57,7 +50,7 @@ class GPIO_PIO(Output):
         super().__init__()
         self.init = init
 
-        # PIO state machine clock frequency (determined dynamically using freq()).
+        # PIO state machine clock frequency (125 MHz).
         self.state_machine_frequency = freq()
 
         # Set up PIO and state machines for each output pin.
@@ -75,6 +68,22 @@ class GPIO_PIO(Output):
     def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
+
+        Parameters:
+        ----------
+        output : int
+            The index of the output to be set.
+        active : bool
+            Whether the output should be active.
+        frequency : int, optional
+            The frequency of the output signal.
+        on_time : int, optional
+            The on time of the output signal in microseconds.
+
+        Raises:
+        -------
+        ValueError
+            If frequency or on_time is not provided when activating the output.
         """
         # Get the state machine for the current output.
         sm = self.output[output]
@@ -86,24 +95,19 @@ class GPIO_PIO(Output):
             frequency = int(frequency)
             on_time = int(on_time)
 
-            # Calculate the total period and low state duration.
+            # Calculate the half period.
             state_machine_frequency = self.state_machine_frequency
-
-            period_cycles = int(state_machine_frequency / frequency)  # Total cycles per period.
-            high_cycles = int(state_machine_frequency * on_time / 1_000_000)  # Convert on_time to cycles.
-            low_cycles = period_cycles - high_cycles  # Remaining cycles for low state.
+            half_period = int(state_machine_frequency / frequency / 2)
 
             # Deactivate the state machine to change configuration.
             sm.active(0)
 
-            # Load the high and low state durations into the PIO state machine.
-            sm.put(high_cycles)  # High state duration.
-            sm.put(low_cycles)   # Low state duration.
+            # Load the half period into the PIO state machine.
+            sm.put(half_period)
 
             # Start the state machine.
             sm.active(1)
-
-            # self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
+            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)     
         else:
             # Stop the state machine.
             sm.active(0)

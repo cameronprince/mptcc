@@ -60,6 +60,7 @@ class SSD1306(Display):
                 i2c=self.init.i2c_2,
                 addr=self.init.DISPLAY_I2C_ADDR,
             )
+            self.mutex = self.init.i2c_2_mutex
         elif self.init.DISPLAY_INTERFACE == "spi_1":
             self.init.init_spi_1()
             from ssd1306 import SSD1306_SPI as driver
@@ -91,6 +92,7 @@ class SSD1306(Display):
                 i2c=self.init.i2c_1,
                 addr=self.init.DISPLAY_I2C_ADDR,
             )
+            self.mutex = self.init.i2c_1_mutex
 
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT

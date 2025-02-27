@@ -17,13 +17,15 @@ Hardware Settings
 init.PIN_I2C_1_SCL = 17
 init.PIN_I2C_1_SDA = 16
 init.I2C_1_INTERFACE = 0
-init.I2C_1_FREQ = 300000
+init.I2C_1_FREQ = 400000
+init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
 # init.PIN_I2C_2_SCL = 19
 # init.PIN_I2C_2_SDA = 18
 # init.I2C_2_INTERFACE = 1
 # init.I2C_2_FREQ = 400000
+# init.I2C_2_TIMEOUT = 50000
 
 # SPI bus 1 pin assignments and settings.
 init.SPI_1_INTERFACE = 0
@@ -190,6 +192,10 @@ from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate
 
 # RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
+
+init.RGB_LED_RING_SMALL_I2C_INSTANCE = 1
+init.RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
+
 # from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
 # Must be True when using I2C RGB LED drivers on the same bus as encoders and display.
@@ -211,10 +217,10 @@ init.PIN_OUTPUT_3 = 7
 init.PIN_OUTPUT_4 = 6
 
 # GPIO pin outputs with hardware PWM.
-# from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
+from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
-from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
+# from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
 # EXPERIMENTAL FEATURE
 # GPIO pin outputs with software PWM (bit banging).
@@ -222,7 +228,7 @@ from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option
 
 # EXPERIMENTAL FEATURE
 # GPIO pin outputs with timers.
-#from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+# from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
 
 # EXPERIMENTAL FEATURE
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J

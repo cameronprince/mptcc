@@ -29,7 +29,7 @@ class RGB:
         if self.init.RGB_LED_ASYNCIO_POLLING:
             self.init.rgb_led_color[output] = (color)
         else:
-            self.setColor(color)
+            self.setColor(*color)
 
     def set_status(self, output, frequency, on_time, max_duty=None, max_on_time=None):
         """
@@ -52,4 +52,4 @@ class RGB:
         if self.init.RGB_LED_ASYNCIO_POLLING:
             self.init.rgb_led_color[output] = color
         else:
-            self.setColor(color)
+            self.setColor(*color)

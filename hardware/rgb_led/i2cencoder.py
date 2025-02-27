@@ -50,10 +50,12 @@ class RGB_I2CEncoder(RGB):
         """
         color_code = (r << 16) | (g << 8) | b
 
-        self.mutex.acquire()
+        self.init.mutex_acquire(self.mutex, "i2cencoder:set_color")
+        # self.mutex.acquire()
         try:
             self.encoder.writeRGBCode(color_code)
         except OSError as e:
             print(f"I2CEncoder error: {e}")
         finally:
-            self.mutex.release()
+            self.init.mutex_release(self.mutex, "i2cencoder:set_color")
+            # self.mutex.release()

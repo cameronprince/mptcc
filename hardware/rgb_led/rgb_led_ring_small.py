@@ -23,9 +23,6 @@ class RGBLEDRingSmall(RGBLED):
         The initialization object containing configuration and hardware settings.
     """
 
-    # I2C addresses for the four RGB LED Ring Small devices
-    RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
-
     def __init__(self):
         """
         Constructs all the necessary attributes for the RGBLEDRingSmall object.

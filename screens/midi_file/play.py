@@ -33,16 +33,10 @@ class MIDIFilePlay:
         self.start_time = 0
         self.last_display_update = 0
         self.output = self.init.output
-        self.mutex = None
         self.levels_updated = False
 
         # Read the default output level from the configuration.
         self.config = config.read_config()
-
-        if self.init.DISPLAY_INTERFACE == "i2c_1":
-            self.mutex = self.init.i2c_1_mutex
-        if self.init.DISPLAY_INTERFACE == "i2c_2":
-            self.mutex = self.init.i2c_2_mutex
 
     def draw(self, file_path):
         """
@@ -133,33 +127,33 @@ class MIDIFilePlay:
         if not self.playback_active:
             return
 
-        # Acquire the display mutex to ensure thread-safe updates.
-        if self.mutex:
-            self.mutex.acquire()
-        try:
-            # Update the elapsed time.
-            self.current_time = time.ticks_us()
-            self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) // 1000000
-            self.minutes = self.elapsed_time // 60
-            self.seconds = self.elapsed_time % 60
+        # Update the elapsed time.
+        self.current_time = time.ticks_us()
+        self.elapsed_time = time.ticks_diff(self.current_time, self.start_time) // 1000000
+        self.minutes = self.elapsed_time // 60
+        self.seconds = self.elapsed_time % 60
 
-            # Clear both time and levels area.
-            self.display.fill_rect(0, 16, 128, 48, 0)
+        if self.display.mutex:
+            self.init.mutex_acquire(self.display.mutex, "midi_file_play:update_display")
+            # self.display.mutex.acquire()
 
-            # Update the time.
-            self.display.header("PLAY MIDI FILE")
-            self.display.text(f"Time: {self.minutes:02}:{self.seconds:02}", 0, 16, 1)
+        # Clear both time and levels area.
+        self.display.fill_rect(0, 16, 128, 48, 0)
 
-            # Update the levels.
-            self.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32, 1)
-            self.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48, 1)
+        # Update the time.
+        self.display.header("PLAY MIDI FILE")
+        self.display.text(f"Time: {self.minutes:02}:{self.seconds:02}", 0, 16, 1)
 
-            # Refresh the display.
-            self.display.show()
-        finally:
-            # Release the mutex.
-            if self.mutex:
-                self.mutex.release()
+        # Update the levels.
+        self.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32, 1)
+        self.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48, 1)
+
+        # Refresh the display.
+        self.display.show()
+
+        if self.display.mutex:
+            self.init.mutex_release(self.display.mutex, "midi_file_play:update_display")
+            # self.display.mutex.release()
 
     async def _update_display_task(self):
         """

@@ -13,7 +13,7 @@ import uasyncio as asyncio
 import struct
 import i2cEncoderMiniLib
 from machine import Pin, I2C
-from ...hardware.init import init
+# from ...hardware.init import init
 from ..input.input import Input
 
 class I2CEncoderMini(Input):

@@ -8,7 +8,7 @@ Class for driving outputs with hardware PWM.
 """
 
 from machine import Pin, PWM
-from mptcc.lib.utils import status_color
+from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 

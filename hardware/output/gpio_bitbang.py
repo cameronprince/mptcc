@@ -73,14 +73,14 @@ class GPIO_BitBang(Output):
             self.init.task_queue.put(("coro", self._start_task(output, frequency, on_time)))
 
             # Handle LED updates.
-            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
+            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
         else:
             # Stop the PWM generation for this output.
             self.running[output] = False
             if self.tasks[output] is not None:
                 self.init.task_queue.put(("func", self._cancel_task, (output,)))
             self.output[output].value(0)  # Set the pin low.
-            self.init.rgb_led[output].off()  # Extinguish the LED.
+            self.init.rgb_led[output].off(output)  # Extinguish the LED.
 
     async def _start_task(self, output, frequency, on_time):
         """
