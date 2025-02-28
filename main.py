@@ -13,7 +13,7 @@ from mptcc.hardware.init import init
 """
 Debugging
 """
-init.MUTEX_DEBUGGING = True
+init.MUTEX_DEBUGGING = False
 
 
 """
@@ -32,11 +32,11 @@ init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-init.PIN_I2C_2_SCL = 19
-init.PIN_I2C_2_SDA = 18
-init.I2C_2_INTERFACE = 1
-init.I2C_2_FREQ = 400000
-init.I2C_2_TIMEOUT = 50000
+# init.PIN_I2C_2_SCL = 19
+# init.PIN_I2C_2_SDA = 18
+# init.I2C_2_INTERFACE = 1
+# init.I2C_2_FREQ = 400000
+# init.I2C_2_TIMEOUT = 50000
 
 # SPI bus 1 pin assignments and settings.
 init.SPI_1_INTERFACE = 0
@@ -135,19 +135,19 @@ from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 
-init.I2CENCODER_I2C_INSTANCE = 1
-init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
-init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
-init.I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
+# init.I2CENCODER_I2C_INSTANCE = 1
+# init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
+# init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
+# init.I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
 
 # from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
 # Requires: https://github.com/cameronprince/I2CEncoderMini
 
-init.I2CENCODER_MINI_I2C_INSTANCE = 1
-init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
-init.I2CENCODER_MINI_INTERRUPTS = [15, 14, 13, 12]
+# init.I2CENCODER_MINI_I2C_INSTANCE = 1
+# init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
+# init.I2CENCODER_MINI_INTERRUPTS = [15, 14, 13, 12]
 
 # from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
@@ -169,30 +169,30 @@ need for current limiting resistors for the LEDs.
 # Asyncio RGB LED updates are available in cases where both threads update
 # I2C devices on the same bus. This setting causes LED colors to be stored
 # instead of calling the hardware directly.
-init.RGB_LED_ASYNCIO_POLLING = False
+init.RGB_LED_ASYNCIO_POLLING = True
 
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
 
-init.RGB_PCA9685_I2C_INSTANCE = 2
+init.RGB_PCA9685_I2C_INSTANCE = 1
 init.RGB_PCA9685_ADDR = 0x40
 init.RGB_PCA9685_FREQ = 1000
 
-init.RGB_PCA9685_LED1_RED = 9
-init.RGB_PCA9685_LED1_GREEN = 10
-init.RGB_PCA9685_LED1_BLUE = 11
+init.RGB_PCA9685_LED1_RED = 0
+init.RGB_PCA9685_LED1_GREEN = 1
+init.RGB_PCA9685_LED1_BLUE = 2
 
-init.RGB_PCA9685_LED2_RED = 6
-init.RGB_PCA9685_LED2_GREEN = 7
-init.RGB_PCA9685_LED2_BLUE = 8
+init.RGB_PCA9685_LED2_RED = 3
+init.RGB_PCA9685_LED2_GREEN = 4
+init.RGB_PCA9685_LED2_BLUE = 5
 
-init.RGB_PCA9685_LED3_RED = 3
-init.RGB_PCA9685_LED3_GREEN = 4
-init.RGB_PCA9685_LED3_BLUE = 5
+init.RGB_PCA9685_LED3_RED = 6
+init.RGB_PCA9685_LED3_GREEN = 7
+init.RGB_PCA9685_LED3_BLUE = 8
 
-init.RGB_PCA9685_LED4_RED = 0
-init.RGB_PCA9685_LED4_GREEN = 1
-init.RGB_PCA9685_LED4_BLUE = 2
+init.RGB_PCA9685_LED4_RED = 9
+init.RGB_PCA9685_LED4_GREEN = 10
+init.RGB_PCA9685_LED4_BLUE = 11
 
 from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
@@ -203,10 +203,35 @@ from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 # RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
 
-init.RGB_LED_RING_SMALL_I2C_INSTANCE = 1
-init.RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
+# init.RGB_LED_RING_SMALL_I2C_INSTANCE = 1
+# init.RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
 
 # from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
+
+# Serial Wombat 18AB - https://amzn.to/4ih0i0X
+# Requires: https://github.com/BroadwellConsultingInc/SerialWombat/tree/main/SerialWombat18A_18B
+
+# init.RGB_WOMBAT_18AB_I2C_INSTANCE = 2
+# init.RGB_WOMBAT_18AB_INIT_DELAY = 0.2
+# init.RGB_WOMBAT_18AB_ADDR = 0x6B
+
+# init.RGB_WOMBAT_18AB_LED1_RED = 12
+# init.RGB_WOMBAT_18AB_LED1_GREEN = 11
+# init.RGB_WOMBAT_18AB_LED1_BLUE = 10
+
+# init.RGB_WOMBAT_18AB_LED2_RED = 15
+# init.RGB_WOMBAT_18AB_LED2_GREEN = 14
+# init.RGB_WOMBAT_18AB_LED2_BLUE = 13
+
+# init.RGB_WOMBAT_18AB_LED3_RED = 0
+# init.RGB_WOMBAT_18AB_LED3_GREEN = 5
+# init.RGB_WOMBAT_18AB_LED3_BLUE = 6
+
+# init.RGB_WOMBAT_18AB_LED4_RED = 7
+# init.RGB_WOMBAT_18AB_LED4_GREEN = 8 
+# init.RGB_WOMBAT_18AB_LED4_BLUE = 9
+
+# from mptcc.hardware.rgb_led.wombat_18ab import Wombat_18AB as rgb_led # Alternate option.
 
 init.rgb_driver = rgb_led()
 
@@ -239,25 +264,31 @@ from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 # from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
 
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
+# Requires: https://github.com/kevinmcaleer/pca9685_for_pico
 
-init.OUTPUT_PCA9685_I2C_INSTANCE = 1
-init.OUTPUT_PCA9685_INIT_DELAY = 0.2
-init.OUTPUT_PCA9685_1_ADDR = 0x60
-init.OUTPUT_PCA9685_1_CHAN = 0
-init.OUTPUT_PCA9685_2_ADDR = 0x50
-init.OUTPUT_PCA9685_2_CHAN = 0
-init.OUTPUT_PCA9685_3_ADDR = 0x48
-init.OUTPUT_PCA9685_3_CHAN = 0
-init.OUTPUT_PCA9685_4_ADDR = 0x44
-init.OUTPUT_PCA9685_4_CHAN = 0
+# init.OUTPUT_PCA9685_I2C_INSTANCE = 1
+# init.OUTPUT_PCA9685_INIT_DELAY = 0.2
+# init.OUTPUT_PCA9685_1_ADDR = 0x50
+# init.OUTPUT_PCA9685_1_CHAN = 0
+# init.OUTPUT_PCA9685_2_ADDR = 0x48
+# init.OUTPUT_PCA9685_2_CHAN = 0
+# init.OUTPUT_PCA9685_3_ADDR = 0x44
+# init.OUTPUT_PCA9685_3_CHAN = 0
+# init.OUTPUT_PCA9685_4_ADDR = 0x42
+# init.OUTPUT_PCA9685_4_CHAN = 0
 
 # from mptcc.hardware.output.pca9685 import PCA9685 as output # Alternate option.
 
 # Serial Wombat 18AB - https://amzn.to/4ih0i0X
+# Requires: https://github.com/BroadwellConsultingInc/SerialWombat/tree/main/SerialWombat18A_18B
 
-init.OUTPUT_WOMBAT_18AB_I2C_INSTANCE = 2
-init.OUTPUT_WOMBAT_18AB_INIT_DELAY = 0.2
-init.OUTPUT_WOMBAT_18AB_ADDR = 0x60
+# init.OUTPUT_WOMBAT_18AB_I2C_INSTANCE = 2
+# init.OUTPUT_WOMBAT_18AB_INIT_DELAY = 0.2
+# init.OUTPUT_WOMBAT_18AB_ADDR = 0x6B
+# init.OUTPUT_WOMBAT_18AB_1_PIN = 16
+# init.OUTPUT_WOMBAT_18AB_2_PIN = 17
+# init.OUTPUT_WOMBAT_18AB_3_PIN = 18
+# init.OUTPUT_WOMBAT_18AB_4_PIN = 19
 
 # from mptcc.hardware.output.wombat_18ab import Wombat_18AB as output # Alternate option.
 

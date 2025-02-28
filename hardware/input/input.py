@@ -14,6 +14,7 @@ import time
 class Input(Hardware):
     def __init__(self):
         super().__init__()
+        self.switch_disabled = False
 
     def switch_click(self, switch):
         """
@@ -24,6 +25,12 @@ class Input(Hardware):
         switch : int
             The switch number corresponding to the encoder (1 to 4).
         """
+        # Allows screens to skip the next switch click.
+        # Used by restore defaults to return to main menu.
+        if self.switch_disabled:
+            self.switch_disabled = False
+            return
+
         current_screen = self.init.menu.get_current_screen()
         if isinstance(current_screen, Screen):
             method_name = f'switch_{switch}'

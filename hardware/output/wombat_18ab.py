@@ -13,6 +13,8 @@ from machine import Pin, I2C
 from ...lib import utils
 from ...hardware.init import init
 from ..output.output import Output
+from SerialWombat_mp_i2c import SerialWombatChip_mp_i2c as driver
+from SerialWombatPWM import SerialWombatPWM_18AB as swpwm
 
 class Wombat_18AB(Output):
 
@@ -22,6 +24,7 @@ class Wombat_18AB(Output):
         """
         super().__init__()
         self.init = init
+        self.init_delay = self.init.OUTPUT_WOMBAT_18AB_INIT_DELAY
 
         # Prepare the I2C bus.
         if self.init.OUTPUT_WOMBAT_18AB_I2C_INSTANCE == 2:
@@ -33,20 +36,34 @@ class Wombat_18AB(Output):
             self.i2c = self.init.i2c_1
             self.mutex = self.init.i2c_1_mutex
 
-        # Instantiate each Output_PCA9685 with a delay between each one.
+        self.driver = driver(self.i2c, self.init.OUTPUT_WOMBAT_18AB_ADDR)
+
+        # Instantiate drivers for each output with a delay between each one.
         self.output = []
-        self.output.append(Wombat_18AB(
+        self.output.append(Output_Wombat_18AB(
+            self.driver,
+            self.init.OUTPUT_WOMBAT_18AB_1_PIN,
+            self.mutex,
         ))
-        time.sleep(self.init.OUTPUT_WOMBAT_18AB_INIT_DELAY)
-        self.output.append(Wombat_18AB(
+        time.sleep(self.init_delay)
+        self.output.append(Output_Wombat_18AB(
+            self.driver,
+            self.init.OUTPUT_WOMBAT_18AB_2_PIN,
+            self.mutex,
         ))
-        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
-        self.output.append(Wombat_18AB(
+        time.sleep(self.init_delay)
+        self.output.append(Output_Wombat_18AB(
+            self.driver,
+            self.init.OUTPUT_WOMBAT_18AB_3_PIN,
+            self.mutex,
         ))
-        time.sleep(self.init.OUTPUT_WOMBAT_18AB_INIT_DELAY)
-        self.output.append(Wombat_18AB(
+        time.sleep(self.init_delay)
+        self.output.append(Output_Wombat_18AB(
+            self.driver,
+            self.init.OUTPUT_WOMBAT_18AB_4_PIN,
+            self.mutex,
         ))
-        time.sleep(self.init.OUTPUT_WOMBAT_18AB_INIT_DELAY)
+        time.sleep(self.init_delay)
 
     def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
@@ -68,7 +85,7 @@ class Wombat_18AB(Output):
         ValueError
             If frequency or on_time is not provided when activating the output.
         """
-        output = self.output[output]
+        out = self.output[output]
 
         if active:
             if freq is None or on_time is None:
@@ -77,20 +94,40 @@ class Wombat_18AB(Output):
             freq = int(freq)
             on_time = int(on_time)
 
-            output.enable(freq, on_time)
+            out.enable(freq, on_time)
 
-            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
+            self.init.rgb_led[output].set_status(output, freq, on_time, max_duty, max_on_time)
         else:
-            output.off()
-            self.init.rgb_led[output].off()
+            out.off()
+            self.init.rgb_led[output].off(output)
 
 
 class Output_Wombat_18AB:
     """
-    A class for handling outputs with a PCA9685 driver.
+    A class for handling outputs with a Serial Wombat 18AB driver.
     """
-    def __init__(self):
+    def __init__(self, driver, pin, mutex):
+        """
+        Constructs all the necessary attributes for the Output_Wombat_18AB object.
+
+        Parameters:
+        ----------
+        driver : SerialWombatChip_mp_i2c
+            The Serial Wombat driver instance.
+        pin : int
+            The pin number on the Serial Wombat chip where the output is connected.
+        """
         super().__init__()
+        self.driver = driver
+        self.pin = pin
+        self.mutex = mutex
+        self.init = init
+
+        # Initialize the PWM output on the specified pin with a duty cycle of 0 (off).
+        self.pwm = swpwm(self.driver)
+        self.init.mutex_acquire(self.mutex, "wombat_18ab:begin")
+        self.pwm.begin(self.pin, 0)
+        self.init.mutex_release(self.mutex, "wombat_18ab:begin")
 
     def enable(self, freq, on_time):
         """
@@ -103,7 +140,29 @@ class Output_Wombat_18AB:
         on_time : int
             The on time of the PWM signal in microseconds.
         """
-        pass
+        # Calculate the duty cycle based on the on_time and frequency.
+        period = 1.0 / freq  # Period in seconds.
+        period_us = period * 1e6  # Period in microseconds.
+        duty_cycle = int((on_time / period_us) * 0xFFFF)  # Convert to 16-bit duty cycle value.
+
+        # Acquire the mutex for both operations.
+        self.init.mutex_acquire(self.mutex, "wombat_18ab:enable")
+
+        try:
+            # Set the frequency of the PWM signal.
+            self.pwm.writeFrequency_Hz(freq)
+
+            # Set the duty cycle.
+            self.pwm.writeDutyCycle(duty_cycle)
+        finally:
+            # Release the mutex.
+            self.init.mutex_release(self.mutex, "wombat_18ab:enable")
 
     def off(self):
-        pass
+        """
+        Turn off the channel's PWM.
+        """
+        # Set the duty cycle to 0 to turn off the output.
+        self.init.mutex_acquire(self.mutex, "wombat_18ab:writeDutyCycle")
+        self.pwm.writeDutyCycle(0)
+        self.init.mutex_release(self.mutex, "wombat_18ab:writeDutyCycle")

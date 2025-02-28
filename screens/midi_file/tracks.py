@@ -163,6 +163,7 @@ class MIDIFileTracks:
         """
         Responds to presses of encoder 1 to select tracks.
         """
+        print("switch_1")
         self.display.stop_scroll_task()
         selected_track_info = self.midi_file.track_list[self.midi_file.current_track_index + self.midi_file.track_cursor_position]
         self.midi_file.selected_track = selected_track_info["original_index"]

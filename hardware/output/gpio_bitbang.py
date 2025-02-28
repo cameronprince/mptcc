@@ -24,7 +24,7 @@ class GPIO_BitBang(Output):
             Pin(self.init.PIN_OUTPUT_1, Pin.OUT),
             Pin(self.init.PIN_OUTPUT_2, Pin.OUT),
             Pin(self.init.PIN_OUTPUT_3, Pin.OUT),
-            Pin(self.init.PIN_OUTPUT_4, Pin.OUT)
+            Pin(self.init.PIN_OUTPUT_4, Pin.OUT),
         ]
 
         # Initialize flags and tasks for each output.

@@ -74,7 +74,6 @@ class KY040(Input):
         return listener
 
     def switch_click(self, switch):
-        print("switch_click")
         current_time = time.ticks_ms()
         if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 500:
             self.last_switch_click_time[switch - 1] = current_time

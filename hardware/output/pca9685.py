@@ -38,22 +38,26 @@ class PCA9685(Output):
         self.output = []
         self.output.append(Output_PCA9685(
             driver(self.i2c, address=self.init.OUTPUT_PCA9685_1_ADDR),
-            channel=self.init.OUTPUT_PCA9685_1_CHAN,
+            self.init.OUTPUT_PCA9685_1_CHAN,
+            self.mutex,
         ))
         time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
         self.output.append(Output_PCA9685(
             driver(self.i2c, address=self.init.OUTPUT_PCA9685_2_ADDR),
-            channel=self.init.OUTPUT_PCA9685_2_CHAN,
+            self.init.OUTPUT_PCA9685_2_CHAN,
+            self.mutex,
         ))
         time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
         self.output.append(Output_PCA9685(
             driver(self.i2c, address=self.init.OUTPUT_PCA9685_3_ADDR),
-            channel=self.init.OUTPUT_PCA9685_3_CHAN,
+            self.init.OUTPUT_PCA9685_3_CHAN,
+            self.mutex,
         ))
         time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
         self.output.append(Output_PCA9685(
             driver(self.i2c, address=self.init.OUTPUT_PCA9685_4_ADDR),
-            channel=self.init.OUTPUT_PCA9685_4_CHAN,
+            self.init.OUTPUT_PCA9685_4_CHAN,
+            self.mutex,
         ))
         time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
 
@@ -88,7 +92,7 @@ class PCA9685(Output):
 
             output.enable(freq, on_time)
 
-            self.init.rgb_led[output].status_color(frequency, on_time, max_duty, max_on_time)
+            self.init.rgb_led[output].status_color(freq, on_time, max_duty, max_on_time)
         else:
             output.off()
             self.init.rgb_led[output].off()
@@ -98,10 +102,11 @@ class Output_PCA9685:
     """
     A class for handling outputs with a PCA9685 driver.
     """
-    def __init__(self, driver, channel):
+    def __init__(self, driver, channel, mutex):
         super().__init__()
         self.driver = driver
         self.channel = channel
+        self.mutex = mutex
 
     def enable(self, freq, on_time):
         """
