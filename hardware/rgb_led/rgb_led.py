@@ -7,11 +7,12 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
+from mptcc.lib.utils import status_color
 from ..hardware import Hardware
 
 class RGBLED(Hardware):
     """
-    Parent class for RGB LEDs.
+    Parent class for RGB LED hardware.
     """
     def __init__(self):
         super().__init__()
@@ -20,93 +21,35 @@ class RGB:
     """
     A base class for RGB LED functionality.
     """
-
-    def make_color(self, value):
-        """
-        Return RGB color from scalar value.
-
-        Parameters:
-        ----------
-        value : float
-            Scalar value between 0 and 1
-
-        Returns:
-        -------
-        tuple
-            RGB values.
-        """
-        # value must be between [0, 510].
-        value = max(0, min(1, value)) * 510
-
-        if value < 255:
-            red_value = int((value / 255) ** 2 * 255)
-            green_value = 255
-        else:
-            green_value = 256 - int((value - 255) ** 2 / 255)
-            red_value = 255
-
-        return red_value, green_value, 0
-
-    def constrain(self, x, out_min, out_max):
-        """
-        Constrains a value to be within a specified range.
-
-        Parameters:
-        ----------
-        x : int
-            The value to be constrained.
-        out_min : int
-            The minimum value of the range.
-        out_max : int
-            The maximum value of the range.
-
-        Returns:
-        -------
-        int
-            The constrained value.
-        """
-        return max(out_min, min(x, out_max))
-
-    def show(self):
-        """
-        Displays the current LED status by printing the channel numbers and their respective values.
-        """
-        print("LED channels ({}, {}, {}), Current values ({}, {}, {})".format(
-            self.red_channel, self.green_channel, self.blue_channel,
-            self.red_val, self.green_val, self.blue_val))
-
-    def off(self):
+    def off(self, output):
         """
         Turns off the LED by setting its color to (0, 0, 0).
         """
-        self.setColor(0, 0, 0)
+        color = (0, 0, 0)
+        if self.init.RGB_LED_ASYNCIO_POLLING:
+            self.init.rgb_led_color[output] = (color)
+        else:
+            self.setColor(*color)
 
-    def status_color(self, value, mode="percent"):
+    def set_status(self, output, frequency, on_time, max_duty=None, max_on_time=None):
         """
-        Sets the color of the LED based on a value and mode.
+        Calculates the RGB color based on frequency, on_time, and optional constraints.
 
         Parameters:
         ----------
-        value : int
-            The value to determine the color (1-100 for percent, 0-127 for velocity).
-        mode : str
-            The mode to interpret the value ("percent" or "velocity").
+        output: int
+            The index of the output for which the LED should be updated.
+        frequency : int
+            The frequency of the signal.
+        on_time : int
+            The on time of the signal in microseconds.
+        max_duty : int, optional
+            The maximum duty cycle.
+        max_on_time : int, optional
+            The maximum on time.
         """
-        # Convert velocity to percentage if in velocity mode
-        if mode == "velocity":
-            value = int(value * 100 / 127)
-
-        # Ensure value is between 1 and 100.
-        value = self.constrain(value, 1, 100)
-
-        # Map value to a range of 0 to 1.
-        normalized_value = value / 100.0
-
-        # Get color based on the normalized value.
-        red, green, blue = self.make_color(normalized_value)
-
-        red = self.constrain(red, 0, 255)
-        green = self.constrain(green, 0, 255)
-        blue = self.constrain(blue, 0, 255)
-
-        self.setColor(red, green, blue)
+        color = status_color(frequency, on_time, max_duty, max_on_time)
+        if self.init.RGB_LED_ASYNCIO_POLLING:
+            self.init.rgb_led_color[output] = color
+        else:
+            self.setColor(*color)

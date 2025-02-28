@@ -7,25 +7,15 @@ hardware/output/pca9685.py
 Class for driving outputs with PCA9685 external PWM.
 """
 
-from machine import Pin
+import _thread
+import time
+from machine import Pin, I2C
 from pca9685 import PCA9685 as driver
 from ...lib import utils
 from ...hardware.init import init
 from ..output.output import Output
-import time  # Import the time module for delays
 
 class PCA9685(Output):
-
-    I2C_BUS    = 1
-    PCA_1_ADDR = 0x60
-    PCA_1_CHAN = 0
-    PCA_2_ADDR = 0x50
-    PCA_2_CHAN = 0
-    PCA_3_ADDR = 0x48
-    PCA_3_CHAN = 0
-    PCA_4_ADDR = 0x44
-    PCA_4_CHAN = 0
-    INIT_DELAY = 0.2
 
     def __init__(self):
         """
@@ -35,23 +25,41 @@ class PCA9685(Output):
         self.init = init
 
         # Prepare the I2C bus.
-        if (self.I2C_BUS == 1):
-            self.init.init_i2c_1()
-            self.i2c = self.init.i2c_1
-        else:
+        if self.init.OUTPUT_PCA9685_I2C_INSTANCE == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
+            self.mutex = self.init.i2c_2_mutex
+        else:
+            self.init.init_i2c_1()
+            self.i2c = self.init.i2c_1
+            self.mutex = self.init.i2c_1_mutex
 
-        # Instantiate each Output_PCA9685 with a delay between each one
+        # Instantiate each Output_PCA9685 with a delay between each one.
         self.output = []
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_1_ADDR), channel=self.PCA_1_CHAN))
-        time.sleep(self.INIT_DELAY)
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_2_ADDR), channel=self.PCA_2_CHAN))
-        time.sleep(self.INIT_DELAY)
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_3_ADDR), channel=self.PCA_3_CHAN))
-        time.sleep(self.INIT_DELAY)
-        self.output.append(Output_PCA9685(driver(self.i2c, address=self.PCA_4_ADDR), channel=self.PCA_4_CHAN))
-        time.sleep(self.INIT_DELAY)
+        self.output.append(Output_PCA9685(
+            driver(self.i2c, address=self.init.OUTPUT_PCA9685_1_ADDR),
+            self.init.OUTPUT_PCA9685_1_CHAN,
+            self.mutex,
+        ))
+        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
+        self.output.append(Output_PCA9685(
+            driver(self.i2c, address=self.init.OUTPUT_PCA9685_2_ADDR),
+            self.init.OUTPUT_PCA9685_2_CHAN,
+            self.mutex,
+        ))
+        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
+        self.output.append(Output_PCA9685(
+            driver(self.i2c, address=self.init.OUTPUT_PCA9685_3_ADDR),
+            self.init.OUTPUT_PCA9685_3_CHAN,
+            self.mutex,
+        ))
+        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
+        self.output.append(Output_PCA9685(
+            driver(self.i2c, address=self.init.OUTPUT_PCA9685_4_ADDR),
+            self.init.OUTPUT_PCA9685_4_CHAN,
+            self.mutex,
+        ))
+        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
 
     def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
@@ -73,8 +81,7 @@ class PCA9685(Output):
         ValueError
             If frequency or on_time is not provided when activating the output.
         """
-        # Get the state machine for the current output.
-        driver = self.output[output]
+        output = self.output[output]
 
         if active:
             if freq is None or on_time is None:
@@ -83,33 +90,23 @@ class PCA9685(Output):
             freq = int(freq)
             on_time = int(on_time)
 
-            driver.enable(freq, on_time)
+            output.enable(freq, on_time)
 
-            if max_duty and max_on_time:
-                percent = utils.calculate_percent(freq, on_time, max_duty, max_on_time)
-                self.init.rgb_led[output].status_color(percent)
-            else:
-                percent = utils.calculate_midi_percent(freq, on_time)
-                self.init.rgb_led[output].status_color(percent)
+            self.init.rgb_led[output].status_color(freq, on_time, max_duty, max_on_time)
         else:
-            driver.off()
+            output.off()
             self.init.rgb_led[output].off()
 
 
-class Output_PCA9685():
+class Output_PCA9685:
     """
     A class for handling outputs with a PCA9685 driver.
     """
-    def __init__(self, pca, channel):
+    def __init__(self, driver, channel, mutex):
         super().__init__()
-        self.pca = pca
+        self.driver = driver
         self.channel = channel
-
-    def off(self):
-        """
-        Turn off the channel's PWM.
-        """
-        self.pca.duty(self.channel, 0)
+        self.mutex = mutex
 
     def enable(self, freq, on_time):
         """
@@ -122,17 +119,8 @@ class Output_PCA9685():
         on_time : int
             The on time of the PWM signal in microseconds.
         """
-        # Calculate the period in microseconds.
-        period = 1_000_000 / freq
-        
-        # Calculate the duty cycle as a percentage.
-        duty_cycle = (on_time / period) * 100
-        
-        # Convert the duty cycle to a 12-bit value (0-4095).
-        duty_value = int((duty_cycle / 100) * 4095)
-        
-        # Set the frequency (this affects all channels on the PCA9685).
-        self.pca.freq(freq)
-        
-        # Set the duty cycle for the specific channel.
-        self.pca.duty(self.channel, duty_value)
+        self.driver.freq(freq)
+        pass
+
+    def off(self):
+        pass

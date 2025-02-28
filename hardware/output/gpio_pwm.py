@@ -8,7 +8,7 @@ Class for driving outputs with hardware PWM.
 """
 
 from machine import Pin, PWM
-from ...lib import utils
+from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -64,18 +64,7 @@ class GPIO_PWM(Output):
             self.output[output].freq(frequency)
             duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
             self.output[output].duty_u16(duty_cycle)
-
-            # The triggering class is passed for any screen which allows
-            # variable signal constraints. The constraints are then used to
-            # determine the output percentage level of the current signal.
-            if max_duty and max_on_time:
-                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
-                self.init.rgb_led[output].status_color(percent)
-            else:
-                # MIDI signal constraints are fixed at 0-127 by the standard.
-                percent = utils.calculate_midi_percent(frequency, on_time)
-                # print('CH: ', output, ' %:', percent)
-                self.init.rgb_led[output].status_color(percent)
+            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
         else:
             self.output[output].duty_u16(0)
-            self.init.rgb_led[output].off()
+            self.init.rgb_led[output].off(output)

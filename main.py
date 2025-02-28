@@ -11,102 +11,72 @@ Defines and initializes the hardware and menu.
 from mptcc.hardware.init import init
 
 """
-Hardware Settings
+Debugging
+"""
+init.MUTEX_DEBUGGING = False
+
+
+"""
+Interface Settings
+
+Defaults to a single I2C interface shared with the SSD1306 display and PCA9685
+RGB LED driver, along with a single SPI interface dedicated to the SD card
+reader. The SD card is read incrementally during MIDI playback. It must have a
+dedicated bus.
 """
 # I2C bus 1 pin assignments and settings.
-# (used by the default SSD1306 display.)
 init.PIN_I2C_1_SCL = 17
 init.PIN_I2C_1_SDA = 16
 init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
+init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-# (used by the default PCA9685 RGB LED hardware)
-init.PIN_I2C_2_SCL = 19
-init.PIN_I2C_2_SDA = 18
-init.I2C_2_INTERFACE = 1
-init.I2C_2_FREQ = 400000
+# init.PIN_I2C_2_SCL = 19
+# init.PIN_I2C_2_SDA = 18
+# init.I2C_2_INTERFACE = 1
+# init.I2C_2_FREQ = 400000
+# init.I2C_2_TIMEOUT = 50000
 
 # SPI bus 1 pin assignments and settings.
-# (used by SD card reader)
 init.SPI_1_INTERFACE = 0
 init.SPI_1_BAUD = 1000000
 init.PIN_SPI_1_SCK = 2
 init.PIN_SPI_1_MOSI = 3
 init.PIN_SPI_1_MISO = 4
-init.PIN_SPI_1_CS = 1
-init.PIN_SPI_1_DC = 4
-init.PIN_SPI_1_RST = 16
+init.PIN_SPI_1_CS = 5
+# init.PIN_SPI_1_DC = None
+# init.PIN_SPI_1_RST = None
 
 # SPI bus 2 pin assignments and settings.
-# (optionally used by a display)
 # init.SPI_2_INTERFACE = 1
-# init.SPI_2_BAUD = 1000000
-# init.PIN_SPI_2_SCK = 0
-# init.PIN_SPI_2_MOSI = 0
-# init.PIN_SPI_2_MISO = 0
-# init.PIN_SPI_2_CS = 0
-# init.PIN_SPI_2_DC = 0
-# init.PIN_SPI_2_RST = 0
+# init.SPI_2_BAUD = 16000000
+# init.PIN_SPI_2_SCK = 10
+# init.PIN_SPI_2_MOSI = 11
+# init.PIN_SPI_2_MISO = None
+# init.PIN_SPI_2_CS = 13
+# init.PIN_SPI_2_DC = 12
+# init.PIN_SPI_2_RST = 14
 
-# Output pin assignments.
-init.PIN_OUTPUT_1 = 22
-init.PIN_OUTPUT_2 = 6
-init.PIN_OUTPUT_3 = 7
-init.PIN_OUTPUT_4 = 8
-
-# Battery status ADC pin assignment and settings.
-init.PIN_BATT_STATUS_ADC = 28
-# Adjust for specific supply voltage used.
-init.VOLTAGE_DROP_FACTOR = 5 # Default value for 5V supply.
-
-# MIDI input pin assignment and UART settings.
-init.PIN_MIDI_INPUT = 13
-init.UART_INTERFACE = 0
-init.UART_BAUD = 31250
-
-# Miscellaneous definitions.
-init.SD_MOUNT_POINT = "/sd"
-init.CONFIG_PATH = "/mptcc/config.json"
-
-# Rotary encoder pin assignments.
-init.PIN_ROTARY_1_CLK = 11
-init.PIN_ROTARY_1_DT = 10
-init.PIN_ROTARY_1_SW = 12
-
-init.PIN_ROTARY_2_CLK = 14
-init.PIN_ROTARY_2_DT = 9
-init.PIN_ROTARY_2_SW = 15
-
-init.PIN_ROTARY_3_CLK = 26
-init.PIN_ROTARY_3_DT = 27
-init.PIN_ROTARY_3_SW = 0
-
-init.PIN_ROTARY_4_CLK = 20
-init.PIN_ROTARY_4_DT = 21
-init.PIN_ROTARY_4_SW = 5
-
-# Enable/disable encoder pin pull-up resistors.
-# Most of the PCB-mounted encoders have pull-ups on the boards.
-init.ROTARY_PULL_UP = False
 
 """
 Display
 
-Select one of the display options below by commenting out the default option
-and removing the comment for the desired, alternate option.
+Select one of the display options below by commenting out the default
+option and removing the comment for the desired, alternate option.
 
 The display needs to be initialized first as it needs a large block of
 contiguous memory.
-
-Edit the class for the selected hardware to define configuration.
 """
+
+# Shared display settings.
+init.DISPLAY_INTERFACE = "I2C_1" # Either I2C_1, I2C_2, SPI_1 or SPI_2.
+init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
+
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
 # Interface: I2C/SPI
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
-# To use with SPI, include an 'spi' argument when instantiating the
-# display object as: init.display = display('spi').
 from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
@@ -114,8 +84,6 @@ from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 # Requires: https://github.com/rdagger/micropython-ssd1309
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands. This driver also works with SSD1306 displays.
-# To use with SPI, include an 'spi' argument when instantiating the
-# display object as: init.display = display('spi').
 # from mptcc.hardware.display.ssd1309 import SSD1309 as display  # Alternate option.
 
 # SSD1322 3.12" 256x64 OLED LCD Display (https://amzn.to/4jupi6c)
@@ -123,11 +91,10 @@ from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands.
-# To use with SPI, include an 'spi' argument when instantiating the
-# display object as: init.display = display('spi').
 # from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
+
 
 """
 Input Devices
@@ -135,21 +102,57 @@ Input Devices
 Select one of the input device options below by commenting out the default option
 and removing the comment for the desired, alternate option.
 
-Edit the class for the selected hardware to define configuration.
+Defaults to generic KY-040 quadrature encoders with switches. This is the most
+reliable input method, but consumes twelve GPIO pins.
 """
+
 # KY-040 Rotary Encoder - https://amzn.to/42E63l1 or https://amzn.to/3CdzIqi
 # Requires: https://github.com/miketeachman/micropython-rotary
+
+# Rotary encoder pin assignments.
+init.PIN_ROTARY_1_CLK = 27
+init.PIN_ROTARY_1_DT = 28
+init.PIN_ROTARY_1_SW = 26
+
+init.PIN_ROTARY_2_CLK = 21
+init.PIN_ROTARY_2_DT = 22
+init.PIN_ROTARY_2_SW = 20
+
+init.PIN_ROTARY_3_CLK = 11
+init.PIN_ROTARY_3_DT = 10
+init.PIN_ROTARY_3_SW = 12
+
+init.PIN_ROTARY_4_CLK = 14
+init.PIN_ROTARY_4_DT = 13
+init.PIN_ROTARY_4_SW = 15
+
+# Enable/disable encoder pin pull-up resistors.
+# Most of the PCB-mounted encoders have pull-ups on the boards.
+init.ROTARY_PULL_UP = False
+
 from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# from mptcc.hardware.input.i2cencoder import I2CEncoderInput as inputs  # Alternate option.
+
+# init.I2CENCODER_I2C_INSTANCE = 1
+# init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
+# init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
+# init.I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
+
+# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
 # Requires: https://github.com/cameronprince/I2CEncoderMini
+
+# init.I2CENCODER_MINI_I2C_INSTANCE = 1
+# init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
+# init.I2CENCODER_MINI_INTERRUPTS = [15, 14, 13, 12]
+
 # from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
 init.inputs = inputs()
+
 
 """
 RGB LEDs
@@ -157,10 +160,40 @@ RGB LEDs
 Select one of the RGB LED options below by commenting out the default option
 and removing the comment for the desired, alternate option.
 
-Edit the class for the selected hardware to define configuration.
+Default is the PCA9685 external PWM. It provides a low-cost method of interfacing
+RGB LEDs with the I2C bus, saving at least six GPIO pins. It also negates the
+need for current limiting resistors for the LEDs.
 """
+
+# Shared RGB LED settings.
+# Asyncio RGB LED updates are available in cases where both threads update
+# I2C devices on the same bus. This setting causes LED colors to be stored
+# instead of calling the hardware directly.
+init.RGB_LED_ASYNCIO_POLLING = True
+
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
+
+init.RGB_PCA9685_I2C_INSTANCE = 1
+init.RGB_PCA9685_ADDR = 0x40
+init.RGB_PCA9685_FREQ = 1000
+
+init.RGB_PCA9685_LED1_RED = 0
+init.RGB_PCA9685_LED1_GREEN = 1
+init.RGB_PCA9685_LED1_BLUE = 2
+
+init.RGB_PCA9685_LED2_RED = 3
+init.RGB_PCA9685_LED2_GREEN = 4
+init.RGB_PCA9685_LED2_BLUE = 5
+
+init.RGB_PCA9685_LED3_RED = 6
+init.RGB_PCA9685_LED3_GREEN = 7
+init.RGB_PCA9685_LED3_BLUE = 8
+
+init.RGB_PCA9685_LED4_RED = 9
+init.RGB_PCA9685_LED4_GREEN = 10
+init.RGB_PCA9685_LED4_BLUE = 11
+
 from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
@@ -169,42 +202,129 @@ from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
+
+# init.RGB_LED_RING_SMALL_I2C_INSTANCE = 1
+# init.RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
+
 # from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
+# Serial Wombat 18AB - https://amzn.to/4ih0i0X
+# Requires: https://github.com/BroadwellConsultingInc/SerialWombat/tree/main/SerialWombat18A_18B
+
+# init.RGB_WOMBAT_18AB_I2C_INSTANCE = 2
+# init.RGB_WOMBAT_18AB_INIT_DELAY = 0.2
+# init.RGB_WOMBAT_18AB_ADDR = 0x6B
+
+# init.RGB_WOMBAT_18AB_LED1_RED = 12
+# init.RGB_WOMBAT_18AB_LED1_GREEN = 11
+# init.RGB_WOMBAT_18AB_LED1_BLUE = 10
+
+# init.RGB_WOMBAT_18AB_LED2_RED = 15
+# init.RGB_WOMBAT_18AB_LED2_GREEN = 14
+# init.RGB_WOMBAT_18AB_LED2_BLUE = 13
+
+# init.RGB_WOMBAT_18AB_LED3_RED = 0
+# init.RGB_WOMBAT_18AB_LED3_GREEN = 5
+# init.RGB_WOMBAT_18AB_LED3_BLUE = 6
+
+# init.RGB_WOMBAT_18AB_LED4_RED = 7
+# init.RGB_WOMBAT_18AB_LED4_GREEN = 8 
+# init.RGB_WOMBAT_18AB_LED4_BLUE = 9
+
+# from mptcc.hardware.rgb_led.wombat_18ab import Wombat_18AB as rgb_led # Alternate option.
+
 init.rgb_driver = rgb_led()
+
 
 """
 Outputs
 
 Select one of the output options below by commenting out the default option
 and removing the comment for the desired, alternate option.
+
+Default is the hardware PWM, for now. More testing is required.
 """
+
+# Output pin assignments.
+init.PIN_OUTPUT_1 = 9
+init.PIN_OUTPUT_2 = 8
+init.PIN_OUTPUT_3 = 7
+init.PIN_OUTPUT_4 = 6
+
 # GPIO pin outputs with hardware PWM.
 from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
 # from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
 
-# EXPERIMENTAL FEATURE
-# PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
-# Requires four: https://github.com/kevinmcaleer/pca9685_for_pico
-# from mptcc.hardware.output.pca9685 import PCA9685 as output # Alternate option.
-
-# EXPERIMENTAL FEATURE
 # GPIO pin outputs with software PWM (bit banging).
 # from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
 
-# EXPERIMENTAL FEATURE
 # GPIO pin outputs with timers.
-#from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+# from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+
+# PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
+# Requires: https://github.com/kevinmcaleer/pca9685_for_pico
+
+# init.OUTPUT_PCA9685_I2C_INSTANCE = 1
+# init.OUTPUT_PCA9685_INIT_DELAY = 0.2
+# init.OUTPUT_PCA9685_1_ADDR = 0x50
+# init.OUTPUT_PCA9685_1_CHAN = 0
+# init.OUTPUT_PCA9685_2_ADDR = 0x48
+# init.OUTPUT_PCA9685_2_CHAN = 0
+# init.OUTPUT_PCA9685_3_ADDR = 0x44
+# init.OUTPUT_PCA9685_3_CHAN = 0
+# init.OUTPUT_PCA9685_4_ADDR = 0x42
+# init.OUTPUT_PCA9685_4_CHAN = 0
+
+# from mptcc.hardware.output.pca9685 import PCA9685 as output # Alternate option.
+
+# Serial Wombat 18AB - https://amzn.to/4ih0i0X
+# Requires: https://github.com/BroadwellConsultingInc/SerialWombat/tree/main/SerialWombat18A_18B
+
+# init.OUTPUT_WOMBAT_18AB_I2C_INSTANCE = 2
+# init.OUTPUT_WOMBAT_18AB_INIT_DELAY = 0.2
+# init.OUTPUT_WOMBAT_18AB_ADDR = 0x6B
+# init.OUTPUT_WOMBAT_18AB_1_PIN = 16
+# init.OUTPUT_WOMBAT_18AB_2_PIN = 17
+# init.OUTPUT_WOMBAT_18AB_3_PIN = 18
+# init.OUTPUT_WOMBAT_18AB_4_PIN = 19
+
+# from mptcc.hardware.output.wombat_18ab import Wombat_18AB as output # Alternate option.
 
 init.output = output()
+
 
 """
 SD Card Reader
 """
+init.SD_CARD_READER_SPI_INSTANCE = 1
+init.SD_CARD_READER_MOUNT_POINT = "/sd"
+
 from mptcc.hardware.sd_card_reader import SDCardReader as sd_card_reader
 init.sd_card_reader = sd_card_reader()
+
+
+"""
+Battery Status
+"""
+init.PIN_BATT_STATUS_ADC = 28
+init.VOLTAGE_DROP_FACTOR = 848.5 # Adjust for your supply voltage.
+
+
+"""
+MIDI Input
+"""
+init.PIN_MIDI_INPUT = 1
+init.UART_INTERFACE = 0
+init.UART_BAUD = 31250
+
+
+"""
+User Configuration
+"""
+init.CONFIG_PATH = "/mptcc/config.json"
+
 
 """
 Menu Definition
@@ -237,6 +357,12 @@ init.menu.set_screen(MenuScreen('MicroPython TCC')
 
 init.menu.draw()
 
-# Start the asyncio loop.
+
+"""
+Asyncio Loop
+
+This starts the loop for handling asynchronous tasks, such as; long file/track
+name scrolling, input monitoring and RGB LED updates.
+"""
 import mptcc.lib.asyncio
 init.asyncio_loop.start_loop()

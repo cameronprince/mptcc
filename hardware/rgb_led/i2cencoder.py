@@ -1,12 +1,3 @@
-"""
-MicroPython Tesla Coil Controller (MPTCC)
-by Cameron Prince
-teslauniverse.com
-
-hardware/rgb_led/i2cencoder.py
-I2CEncoder V2.1 RGB LED device.
-"""
-
 import time
 from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init
@@ -39,6 +30,11 @@ class RGB_I2CEncoder(RGB):
         self.init = init
         self.encoder = encoder
 
+        if self.init.I2CENCODER_I2C_INSTANCE == 2:
+            self.mutex = self.init.i2c_2_mutex
+        else:
+            self.mutex = self.init.i2c_1_mutex
+
     def setColor(self, r, g, b):
         """
         Sets the color of the RGB LED using the I2C Encoder.
@@ -54,8 +50,12 @@ class RGB_I2CEncoder(RGB):
         """
         color_code = (r << 16) | (g << 8) | b
 
-        self.init.i2cencoder_mutex.acquire()
+        self.init.mutex_acquire(self.mutex, "i2cencoder:set_color")
+        # self.mutex.acquire()
         try:
             self.encoder.writeRGBCode(color_code)
+        except OSError as e:
+            print(f"I2CEncoder error: {e}")
         finally:
-            self.init.i2cencoder_mutex.release()
+            self.init.mutex_release(self.mutex, "i2cencoder:set_color")
+            # self.mutex.release()

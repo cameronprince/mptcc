@@ -44,16 +44,36 @@ class SSD1306(Display):
     DISPLAY_HEADER_HEIGHT = 10
     DISPLAY_ITEMS_PER_PAGE = 4
 
-    def __init__(self, interface=None):
+    def __init__(self):
         """
         Constructs all the necessary attributes for the SSD1306 object.
         """
-        self.interface = interface
-
         super().__init__()
         self.init = init
-        
-        if interface == 'spi':
+
+        if self.init.DISPLAY_INTERFACE == "i2c_2":
+            self.init.init_i2c_2()
+            from ssd1306 import SSD1306_I2C as driver
+            self.driver = driver(
+                self.DISPLAY_WIDTH,
+                self.DISPLAY_HEIGHT,
+                i2c=self.init.i2c_2,
+                addr=self.init.DISPLAY_I2C_ADDR,
+            )
+            self.mutex = self.init.i2c_2_mutex
+        elif self.init.DISPLAY_INTERFACE == "spi_1":
+            self.init.init_spi_1()
+            from ssd1306 import SSD1306_SPI as driver
+            self.driver = driver(
+                self.DISPLAY_WIDTH,
+                self.DISPLAY_HEIGHT,
+                spi = self.init.spi_1,
+                dc = Pin(self.init.PIN_SPI_1_DC),
+                res = Pin(self.init.PIN_SPI_1_RST),
+                cs = Pin(self.init.PIN_SPI_1_CS),
+            )
+        elif self.init.DISPLAY_INTERFACE == "spi_2":
+            self.init.init_spi_2()
             from ssd1306 import SSD1306_SPI as driver
             self.driver = driver(
                 self.DISPLAY_WIDTH,
@@ -64,8 +84,16 @@ class SSD1306(Display):
                 cs = Pin(self.init.PIN_SPI_2_CS),
             )
         else:
+            self.init.init_i2c_1()
             from ssd1306 import SSD1306_I2C as driver
-            self.driver = driver(self.DISPLAY_WIDTH, self.DISPLAY_HEIGHT, i2c=self.init.i2c_1)
+            self.driver = driver(
+                self.DISPLAY_WIDTH,
+                self.DISPLAY_HEIGHT,
+                i2c=self.init.i2c_1,
+                addr=self.init.DISPLAY_I2C_ADDR,
+            )
+            self.mutex = self.init.i2c_1_mutex
+
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 
@@ -73,7 +101,13 @@ class SSD1306(Display):
         """
         Clears the display.
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:clear")
+            # self.display.mutex.acquire()
         self.driver.fill(0)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:clear")
+            # self.display.mutex.release()
 
     def text(self, text, w, h, f):
         """
@@ -90,7 +124,13 @@ class SSD1306(Display):
         f : int
             The font color (0 or 1).
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:text")
+            # self.display.mutex.acquire()
         self.driver.text(text, w, h, f)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:text")
+            # self.display.mutex.release()
 
     def hline(self, x, y, w, c):
         """
@@ -107,7 +147,13 @@ class SSD1306(Display):
         c : int
             The color of the line (0 or 1).
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:hline")
+            # self.display.mutex.acquire()
         self.driver.hline(x, y, w, c)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:hline")
+            # self.display.mutex.release()
 
     def fill_rect(self, x, y, w, h, c):
         """
@@ -126,10 +172,22 @@ class SSD1306(Display):
         c : int
             The color of the rectangle (0 or 1).
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:fill_rect")
+            # self.display.mutex.acquire()
         self.driver.fill_rect(x, y, w, h, c)
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:fill_rect")
+            # self.display.mutex.release()
 
     def show(self):
         """
         Updates the display with the current frame buffer content.
         """
+        if self.mutex:
+            self.init.mutex_acquire(self.mutex, "ssd1306:show")
+            # self.display.mutex.acquire()
         self.driver.show()
+        if self.mutex:
+            self.init.mutex_release(self.mutex, "ssd1306:show")
+            # self.display.mutex.release()

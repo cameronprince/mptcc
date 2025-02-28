@@ -9,7 +9,7 @@ Class for driving outputs with PIO PWM.
 
 from machine import Pin, freq
 from rp2 import PIO, StateMachine, asm_pio
-from ...lib import utils
+from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -51,7 +51,7 @@ class GPIO_PIO(Output):
         self.init = init
 
         # PIO state machine clock frequency (125 MHz).
-        self.state_machine_frequency = freq()
+        self.smf = freq()
 
         # Set up PIO and state machines for each output pin.
         self.output = [
@@ -65,7 +65,7 @@ class GPIO_PIO(Output):
         for sm in self.output:
             sm.active(0)
 
-    def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
 
@@ -75,7 +75,7 @@ class GPIO_PIO(Output):
             The index of the output to be set.
         active : bool
             Whether the output should be active.
-        frequency : int, optional
+        freq : int, optional
             The frequency of the output signal.
         on_time : int, optional
             The on time of the output signal in microseconds.
@@ -83,21 +83,21 @@ class GPIO_PIO(Output):
         Raises:
         -------
         ValueError
-            If frequency or on_time is not provided when activating the output.
+            If freq or on_time is not provided when activating the output.
         """
         # Get the state machine for the current output.
         sm = self.output[output]
 
         if active:
-            if frequency is None or on_time is None:
+            if freq is None or on_time is None:
                 raise ValueError("Frequency and on_time must be provided when activating the output.")
 
-            frequency = int(frequency)
+            freq = int(freq)
             on_time = int(on_time)
 
             # Calculate the half period.
-            state_machine_frequency = self.state_machine_frequency
-            half_period = int(state_machine_frequency / frequency / 2)
+            smf = self.smf
+            half_period = int(smf / freq / 2)
 
             # Deactivate the state machine to change configuration.
             sm.active(0)
@@ -107,17 +107,7 @@ class GPIO_PIO(Output):
 
             # Start the state machine.
             sm.active(1)
-
-            # The triggering class is passed for any screen which allows
-            # variable signal constraints. The constraints are then used to
-            # determine the output percentage level of the current signal.
-            if max_duty and max_on_time:
-                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
-                self.init.rgb_led[output].status_color(percent)
-            else:
-                # MIDI signal constraints are fixed at 0-127 by the standard.
-                percent = utils.calculate_midi_percent(frequency, on_time)
-                self.init.rgb_led[output].status_color(percent)
+            self.init.rgb_led[output].set_status(output, freq, on_time, max_duty, max_on_time)     
         else:
             # Stop the state machine.
             sm.active(0)
@@ -126,4 +116,4 @@ class GPIO_PIO(Output):
             sm.exec("set(pins, 0)")
 
             # Turn off the RGB LED.
-            self.init.rgb_led[output].off()
+            self.init.rgb_led[output].off(output)

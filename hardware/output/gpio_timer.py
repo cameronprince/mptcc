@@ -8,7 +8,7 @@ Class for driving outputs with timers.
 """
 
 from machine import Pin, Timer
-from ...lib import utils
+from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -55,13 +55,13 @@ class GPIO_Timer(Output):
             callback=toggle_pin  # Callback to toggle the pin.
         )
 
-    def set_output(self, output_index, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
 
         Parameters:
         ----------
-        output_index : int
+        output : int
             The index of the output to be set.
         active : bool
             Whether the output should be active.
@@ -79,7 +79,7 @@ class GPIO_Timer(Output):
         ValueError
             If frequency or on_time is not provided when activating the output.
         """
-        output = self.output[output_index]
+        out = self.output[output]
 
         if active:
             if frequency is None or on_time is None:
@@ -89,25 +89,20 @@ class GPIO_Timer(Output):
             on_time = int(on_time)
 
             # Stop the timer if it's already running.
-            if output['running']:
-                output['timer'].deinit()
+            if out['running']:
+                out['timer'].deinit()
 
             # Configure the timer for PWM generation.
-            self._set_output_timer(output, frequency, on_time)
-            output['running'] = True
+            self._set_output_timer(out, frequency, on_time)
+            out['running'] = True
 
             # Handle LED updates.
-            if max_duty and max_on_time:
-                percent = utils.calculate_percent(frequency, on_time, max_duty, max_on_time)
-                self.init.rgb_led[output_index].status_color(percent)
-            else:
-                percent = utils.calculate_midi_percent(frequency, on_time)
-                self.init.rgb_led[output_index].status_color(percent)
+            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
         else:
             # Stop the timer and deactivate the output.
-            output['running'] = False
-            output['timer'].deinit()
+            out['running'] = False
+            out['timer'].deinit()
             # Set the pin low.
-            output['pin'].value(0)
+            out['pin'].value(0)
             # Extinguish the LED.
-            self.init.rgb_led[output_index].off()
+            self.init.rgb_led[output].off(output)

@@ -12,7 +12,7 @@ from machine import Pin
 from rotary_irq_rp2 import RotaryIRQ
 from ...hardware.init import init
 from ..input.input import Input
-from ...lib.menu import CustomItem
+from ...lib.menu import Screen
 
 class KY040(Input):
     def __init__(self):
@@ -52,12 +52,29 @@ class KY040(Input):
 
     def create_listener(self, idx):
         def listener():
+            direction = None
             new_value = self.rotary_encoders[idx].value()
-            self.rotary_encoder_change(idx, new_value)
+
+            if new_value is None:
+                return
+            
+            if self.last_rotations[idx] != new_value:
+                # Handle wrap-around cases.
+                if self.last_rotations[idx] == 0 and new_value == 100:
+                    direction = -1
+                elif self.last_rotations[idx] == 100 and new_value == 0:
+                    direction = 1
+                else:
+                    direction = 1 if new_value > self.last_rotations[idx] else -1
+            else:
+                return
+
+            self.last_rotations[idx] = new_value
+            self.rotary_encoder_change(idx, direction)
         return listener
 
     def switch_click(self, switch):
         current_time = time.ticks_ms()
-        if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 1000:
+        if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 500:
             self.last_switch_click_time[switch - 1] = current_time
             super().switch_click(switch)

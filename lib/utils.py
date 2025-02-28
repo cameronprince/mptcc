@@ -144,3 +144,74 @@ def calculate_on_time(on_time, frequency, max_duty, max_on_time):
     
     # Ensure the on-time does not exceed the maximum allowed value.
     return int(min(on_time, max_on_time_allowed))
+
+def constrain(x, out_min, out_max):
+    """
+    Constrains a value to be within a specified range.
+
+    Parameters:
+    ----------
+    x : int
+        The value to be constrained.
+    out_min : int
+        The minimum value of the range.
+    out_max : int
+        The maximum value of the range.
+
+    Returns:
+    -------
+    int
+        The constrained value.
+    """
+    return max(out_min, min(x, out_max))
+
+def status_color(frequency, on_time, max_duty=None, max_on_time=None):
+    """
+    Calculates the RGB color based on frequency, on_time, and optional constraints.
+
+    Parameters:
+    ----------
+    frequency : int
+        The frequency of the signal.
+    on_time : int
+        The on time of the signal in microseconds.
+    max_duty : int, optional
+        The maximum duty cycle.
+    max_on_time : int, optional
+        The maximum on time.
+
+    Returns:
+    -------
+    tuple
+        RGB values (red, green, blue).
+    """
+    if max_duty and max_on_time:
+        value = calculate_percent(frequency, on_time, max_duty, max_on_time)
+    else:
+        # MIDI signal constraints are fixed at 0-127 by the standard.
+        value = calculate_midi_percent(frequency, on_time)
+        value = int(value * 100 / 127)
+
+    # Ensure value is between 1 and 100.
+    value = constrain(value, 1, 100)
+
+    # Map value to a range of 0 to 1.
+    normalized_value = value / 100.0
+
+    # Generate RGB color based on the normalized value.
+    # value must be between [0, 510].
+    value = max(0, min(1, normalized_value)) * 510
+
+    if value < 255:
+        red_value = int((value / 255) ** 2 * 255)
+        green_value = 255
+    else:
+        green_value = 256 - int((value - 255) ** 2 / 255)
+        red_value = 255
+
+    # Constrain the RGB values to be within 0-255.
+    red = constrain(red_value, 0, 255)
+    green = constrain(green_value, 0, 255)
+    blue = 0
+
+    return red, green, blue

@@ -18,9 +18,6 @@ from ..input.input import Input
 
 class I2CEncoderMini(Input):
 
-    I2CENCODER_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
-    PIN_I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
-
     def __init__(self):
         super().__init__()
 
@@ -31,28 +28,32 @@ class I2CEncoderMini(Input):
         self.init_complete = False
 
         # Prepare the I2C bus.
-        self.i2c = self.init.i2c_1
-        self.interrupts = []
+        if self.init.I2CENCODER_MINI_I2C_INSTANCE == 2:
+            self.init.init_i2c_2()
+            self.i2c = self.init.i2c_2
+            self.mutex = self.init.i2c_2_mutex
+        else:
+            self.init.init_i2c_1()
+            self.i2c = self.init.i2c_1
+            self.mutex = self.init.i2c_1_mutex
 
-        # Add a mutex for I2C communication to the init object.
-        if not hasattr(self.init, 'i2cencoder_mutex'):
-            self.init.i2cencoder_mutex = _thread.allocate_lock()
+        self.interrupts = []
 
         # Shared variable for asyncio task.
         # -1 means no interrupt, otherwise stores the encoder index.
         self.active_interrupt = -1
 
         # Initialize last_rotations to track previous encoder values
-        self.last_rotations = [0] * len(self.I2CENCODER_ADDRESSES)
+        self.last_rotations = [0] * len(self.init.I2CENCODER_MINI_ADDRESSES)
 
         # Set up interrupt pins.
-        for int_pin in self.PIN_I2CENCODER_INTERRUPTS:
+        for int_pin in self.init.I2CENCODER_MINI_INTERRUPTS:
             ip = Pin(int_pin, Pin.IN, Pin.PULL_UP)
             ip.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
             self.interrupts.append(ip)
 
         # Instantiate the encoder objects.
-        self.encoders = [i2cEncoderMiniLib.i2cEncoderMiniLib(self.i2c, addr) for addr in self.I2CENCODER_ADDRESSES]
+        self.encoders = [i2cEncoderMiniLib.i2cEncoderMiniLib(self.i2c, addr) for addr in self.init.I2CENCODER_MINI_ADDRESSES]
 
         # Initialize each encoder.
         for encoder in self.encoders:
@@ -68,6 +69,9 @@ class I2CEncoderMini(Input):
         """
         Initialize a specific encoder.
         """
+        self.init.mutex_acquire(self.mutex, "i2cencoder_mini:init_encoder")
+        # self.mutex.acquire()
+
         encoder.reset()
         time.sleep(0.1)
 
@@ -83,6 +87,9 @@ class I2CEncoderMini(Input):
         encoder.writeMin(0)
         encoder.writeStep(1)
         encoder.writeDoublePushPeriod(10)
+
+        self.init.mutex_release(self.mutex, "i2cencoder:init_encoder")
+        # self.mutex.release()
 
     def interrupt_handler(self, pin):
         """
@@ -106,17 +113,18 @@ class I2CEncoderMini(Input):
                 # Reset the active interrupt.
                 self.active_interrupt = -1
 
-                # Acquire the I2C mutex to safely read the encoder status.
-                self.init.i2cencoder_mutex.acquire()
-                try:
-                    if self.encoders[idx].updateStatus():
-                        status = self.encoders[idx].stat
-                        if status & (i2cEncoderMiniLib.RINC | i2cEncoderMiniLib.RDEC):
-                            new_value = self.encoders[idx].readCounter32()
-                            super().rotary_encoder_change(idx, new_value)
-                        if status & i2cEncoderMiniLib.PUSHP:
-                            super().switch_click(idx + 1)
-                finally:
-                    self.init.i2cencoder_mutex.release()
+                self.init.mutex_acquire(self.mutex, "i2cencoder_mini:process_interrupt:read_status")
+                check_status = self.encoders[idx].updateStatus()
+                self.init.mutex_release(self.mutex, "i2cencoder_mini:process_interrupt:read_status")
+
+                if check_status:
+                    status = self.encoders[idx].stat
+
+                    if status & (i2cEncoderMiniLib.RINC | i2cEncoderMiniLib.RDEC):
+                        direction = 1 if status & i2cEncoderMiniLib.RINC else -1
+                        super().rotary_encoder_change(idx, direction)
+
+                    if status & i2cEncoderMiniLib.PUSHP:
+                        super().switch_click(idx + 1)
 
             await asyncio.sleep(0.01)

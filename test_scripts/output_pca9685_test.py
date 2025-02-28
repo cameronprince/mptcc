@@ -6,7 +6,7 @@ import time
 i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 
 # Initialize PCA9685
-pca = PCA9685(i2c, address=0x60)
+pca = PCA9685(i2c, address=0x50)
 
 # Set PWM frequency to 200Hz
 pca.freq(200)

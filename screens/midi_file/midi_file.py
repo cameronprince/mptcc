@@ -174,7 +174,7 @@ class MIDIFile(Screen):
             if initsd:
                 self.init.sd_card_reader.deinit_sd()
 
-    def rotary(self, encoder_number, val):
+    def rotary(self, encoder_number, direction):
         """
         Respond to rotation of a rotary encoder.
 
@@ -182,12 +182,22 @@ class MIDIFile(Screen):
         ----------
         encoder_number : int
             The number of the rotary encoder (1, 2, 3, or 4).
-        val : int
-            The value from the rotary encoder.
+        direction : int
+            The rotary encoder direction.
         """
+        # print(f"MIDIFile.rotary: Routing input for encoder {encoder_number}")  # Debugging
         handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, f"rotary_{encoder_number}"):
-            getattr(handler, f"rotary_{encoder_number}")(val)
+        if handler:
+            # print(f"MIDIFile.rotary: Found handler for page {self.current_page}")  # Debugging
+            if hasattr(handler, f"rotary_{encoder_number}"):
+                # print(f"MIDIFile.rotary: Calling rotary_{encoder_number} on handler")  # Debugging
+                getattr(handler, f"rotary_{encoder_number}")(direction)
+            else:
+                pass
+                # print(f"MIDIFile.rotary: Handler does not have rotary_{encoder_number} method")  # Debugging
+        else:
+            pass
+            # print(f"MIDIFile.rotary: No handler found for page {self.current_page}")  # Debugging
 
     def switch(self, switch_number):
         """
@@ -202,17 +212,17 @@ class MIDIFile(Screen):
         if handler and hasattr(handler, f"switch_{switch_number}"):
             getattr(handler, f"switch_{switch_number}")()
 
-    def rotary_1(self, val):
-        self.rotary(1, val)
+    def rotary_1(self, direction):
+        self.rotary(1, direction)
 
-    def rotary_2(self, val):
-        self.rotary(2, val)
+    def rotary_2(self, direction):
+        self.rotary(2, direction)
 
-    def rotary_3(self, val):
-        self.rotary(3, val)
+    def rotary_3(self, direction):
+        self.rotary(3, direction)
 
-    def rotary_4(self, val):
-        self.rotary(4, val)
+    def rotary_4(self, direction):
+        self.rotary(4, direction)
 
     def switch_1(self):
         self.switch(1)

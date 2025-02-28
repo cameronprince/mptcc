@@ -23,6 +23,9 @@ class RGBLEDRingSmall(RGBLED):
         The initialization object containing configuration and hardware settings.
     """
 
+    # I2C addresses for the four RGB LED Ring Small devices
+    RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
+
     def __init__(self):
         """
         Constructs all the necessary attributes for the RGBLEDRingSmall object.
@@ -50,7 +53,7 @@ class RGB_RGBLEDRingSmall(RGB):
         self.address = address
         self.mutex = mutex
         self.num_leds = 24
-        self.threshold_brightness = 0x10  # Adjusted to a slightly higher brightness (0x03 out of 0xFF)
+        self.threshold_brightness = 0x03  # Adjusted to a slightly higher brightness (0x05 out of 0xFF)
         self.full_brightness = 0x20  # Further reduced full brightness to a lower value
         self.vu_colors = self._generate_vu_colors()
         self.led_indexes = self._generate_led_indexes()
@@ -135,7 +138,7 @@ class RGB_RGBLEDRingSmall(RGB):
             # Initialize the LEDRingSmall instance
             self.led_ring = LEDRingSmall(self.i2c, self.address)
             self.led_ring.reset()
-            time.sleep(0.01)
+            time.sleep(0.02)
             self.led_ring.configuration(0x01)  # Normal operation
             self.led_ring.pwm_frequency_enable(1)
             self.led_ring.spread_spectrum(0b0010110)
@@ -177,9 +180,8 @@ class RGB_RGBLEDRingSmall(RGB):
         """
         Set all LEDs to the threshold brightness (default off state) with mutex.
         """
-        dark_green = (45, 100, 0)  # Dark green color
         for i in self.led_indexes:
-            self._set_rgb(i, dark_green, self.threshold_brightness)
+            self._set_rgb(i, self.vu_colors[i], self.threshold_brightness)
 
     def status_color(self, value, mode="percent"):
         """
@@ -208,13 +210,10 @@ class RGB_RGBLEDRingSmall(RGB):
             self._set_rgb(index, self.vu_colors[index], self.full_brightness)  # Further reduced full brightness
         for i in range(num_bright_leds, self.num_leds):
             index = self.led_indexes[i]
-            dark_green = (60, 100, 0)  # Dark green color
-            self._set_rgb(index, dark_green, self.threshold_brightness)  # Threshold brightness
+            self._set_rgb(index, self.vu_colors[index], self.threshold_brightness)  # Threshold brightness
 
     def off(self):
         """
         Set all LEDs to the threshold brightness (default off state).
         """
-        dark_green = (60, 100, 0)  # Dark green color
-        for i in self.led_indexes:
-            self._set_rgb(i, dark_green, self.threshold_brightness)
+        self._set_all_to_threshold_brightness()
