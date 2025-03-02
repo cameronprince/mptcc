@@ -16,24 +16,23 @@ from ...hardware.init import init
 from ..input.input import Input
 
 class I2CEncoder(Input):
-
     def __init__(self):
         super().__init__()
 
         self.init = init
         self.encoders = []
 
+        # Flag to track initialization status.
         self.init_complete = False
 
-        # Validate that the number of encoders and interrupts matches NUMBER_OF_COILS
-        if len(self.init.I2CENCODER_ADDRESSES) != self.init.NUMBER_OF_COILS or \
-           len(self.init.I2CENCODER_INTERRUPTS) != self.init.NUMBER_OF_COILS:
+        # Validate that the number of encoders matches NUMBER_OF_COILS.
+        if len(self.init.I2CENCODER_ADDRESSES) != self.init.NUMBER_OF_COILS:
             raise ValueError(
                 f"The number of I2C encoder addresses ({len(self.init.I2CENCODER_ADDRESSES)}) "
-                f"and interrupt pins ({len(self.init.I2CENCODER_INTERRUPTS)}) must match "
-                f"NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS}). The program will now exit."
+                f"must match NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS}). The program will now exit."
             )
 
+        # Prepare the I2C bus.
         if self.init.I2CENCODER_I2C_INSTANCE == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
@@ -43,35 +42,44 @@ class I2CEncoder(Input):
             self.i2c = self.init.i2c_1
             self.mutex = self.init.i2c_1_mutex
 
-        self.interrupts = []
-        self.active_interrupt = -1
+        # Shared variable for asyncio task.
+        self.active_interrupt = False
+
+        # Initialize last_rotations to track previous encoder values.
         self.last_rotations = [0] * self.init.NUMBER_OF_COILS
 
-        # Single loop to handle both interrupt pins and encoder addresses
-        for i in range(self.init.NUMBER_OF_COILS):
-            # Set up interrupt pins
-            int_pin = self.init.I2CENCODER_INTERRUPTS[i]
-            ip = Pin(int_pin, Pin.IN)
-            ip.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
-            self.interrupts.append(ip)
+        # Set up the shared interrupt pin.
+        if not hasattr(self.init, 'I2CENCODER_SHARED_INTERRUPT_PIN'):
+            raise ValueError(
+                "I2CENCODER_SHARED_INTERRUPT_PIN must be defined in the init object."
+            )
 
-            # Initialize encoders
+        self.interrupt_pin = Pin(self.init.I2CENCODER_SHARED_INTERRUPT_PIN, Pin.IN, Pin.PULL_UP)
+        self.interrupt_pin.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
+
+        # Initialize encoders.
+        for i in range(self.init.NUMBER_OF_COILS):
             addr = self.init.I2CENCODER_ADDRESSES[i]
             encoder = i2cEncoderLibV2.i2cEncoderLibV2(self.i2c, addr)
             self.encoders.append(encoder)
             self.init_encoder(encoder)
 
+        # Mark initialization as complete.
         self.init_complete = True
 
+        # Start the asyncio task to process interrupts.
         asyncio.create_task(self.process_interrupt())
 
     def init_encoder(self, encoder):
+        """
+        Initialize a specific encoder.
+        """
         self.init.mutex_acquire(self.mutex, "i2cencoder:init_encoder")
-        # self.mutex.acquire()
+
         encoder.reset()
         time.sleep(0.1)
 
-        if (self.init.I2CENCODER_TYPE == 'RGB'):
+        if self.init.I2CENCODER_TYPE == 'RGB':
             type = i2cEncoderLibV2.RGB_ENCODER
         else:
             type = i2cEncoderLibV2.STD_ENCODER
@@ -95,36 +103,70 @@ class I2CEncoder(Input):
         new_gconf2 = current_gconf2 | (i2cEncoderLibV2.CLK_STRECH_ENABLE >> 8)
         encoder.writeEncoder8(i2cEncoderLibV2.REG_GCONF2, new_gconf2)
 
-        if (self.init.I2CENCODER_TYPE == 'RGB'):
+        if self.init.I2CENCODER_TYPE == 'RGB':
             encoder.writeGammaRLED(i2cEncoderLibV2.GAMMA_2)
             encoder.writeGammaGLED(i2cEncoderLibV2.GAMMA_2)
             encoder.writeGammaBLED(i2cEncoderLibV2.GAMMA_2)
             encoder.writeGammaBLED(i2cEncoderLibV2.GAMMA_2)
+
         self.init.mutex_release(self.mutex, "i2cencoder:init_encoder")
-        # self.mutex.release()
 
     def interrupt_handler(self, pin):
-        if not self.init_complete or not pin:
+        """
+        Minimal interrupt handler. Sets the active_interrupt flag.
+        """
+        if not self.init_complete:
             return
-        self.active_interrupt = self.interrupts.index(pin)
+
+        # Signal that an interrupt has occurred.
+        self.active_interrupt = True
 
     async def process_interrupt(self):
+        """
+        Asyncio task to process rotary and switch interrupts.
+        When using a shared interrupt pin, this function loops through all encoders
+        to determine which one triggered the interrupt.
+        """
         while True:
-            if self.active_interrupt != -1:
-                idx = self.active_interrupt
-                self.active_interrupt = -1
+            # Check if an interrupt is pending.
+            if self.active_interrupt:
+                print("Interrupt detected! Checking encoders...")
+                # Reset the active interrupt flag.
+                self.active_interrupt = False
 
-                self.init.mutex_acquire(self.mutex, "i2cencoder:process_interrupt:read_status")
-                # self.mutex.acquire()
+                # Loop through all encoders to find the one that triggered the interrupt.
+                for idx, encoder in enumerate(self.encoders):
+                    print(f"Checking encoder {idx}...")
+                    # Acquire the mutex for thread-safe I2C access.
+                    self.init.mutex_acquire(self.mutex, "i2cencoder:process_interrupt:read_status")
 
-                status = self.encoders[idx].readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
-                self.init.mutex_release(self.mutex, "i2cencoder:process_interrupt:read_status")
-                # self.mutex.release()
+                    # Check the status of the current encoder.
+                    status = encoder.readEncoder8(i2cEncoderLibV2.REG_ESTATUS)
 
-                if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
-                    direction = 1 if status & i2cEncoderLibV2.RINC else -1
-                    super().rotary_encoder_change(idx, direction)
-                if status & i2cEncoderLibV2.PUSHP:
-                    super().switch_click(idx + 1)
+                    # Release the mutex.
+                    self.init.mutex_release(self.mutex, "i2cencoder:process_interrupt:read_status")
 
+                    # If this encoder triggered the interrupt, process it.
+                    if status:
+                        print(f"Encoder {idx} status: {status} (hex: {hex(status)})")
+
+                        # Handle rotary encoder changes.
+                        if status & (i2cEncoderLibV2.RINC | i2cEncoderLibV2.RDEC):
+                            direction = 1 if status & i2cEncoderLibV2.RINC else -1
+                            print(f"Encoder {idx} rotated: direction = {direction}")
+                            super().rotary_encoder_change(idx, direction)
+                            # Break out of the loop since we've found the encoder that triggered the interrupt.
+                            break
+
+                        # Handle button presses.
+                        if status & i2cEncoderLibV2.PUSHP:
+                            print(f"Encoder {idx} button pressed!")
+                            super().switch_click(idx + 1)
+                            # Break out of the loop since we've found the encoder that triggered the interrupt.
+                            break
+
+                        # If the status is not a valid event, continue to the next encoder.
+                        print(f"Encoder {idx} status {status} (hex: {hex(status)}) is not a valid event. Continuing to next encoder...")
+
+            # Sleep briefly to avoid busy-waiting.
             await asyncio.sleep(0.01)

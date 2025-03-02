@@ -16,11 +16,11 @@ General Settings
 """
 # The number of coils the controller is to support. An equal number of encoders,
 # RGB LEDs and outputs is expected. When going beyond four coils, a wider display
-# is required.
+# is required. Valid values are currently 4-8.
 init.NUMBER_OF_COILS = 4
 
 # Enable mutex debugging.
-init.MUTEX_DEBUGGING = False
+init.MUTEX_DEBUGGING = True
 
 
 """
@@ -140,7 +140,7 @@ init.ROTARY_PULL_UP = False
 
 # from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
-# I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
+# I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 
 # init.I2CENCODER_I2C_INSTANCE = 1
@@ -150,12 +150,13 @@ init.ROTARY_PULL_UP = False
 
 # from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
-# I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
+# I2CEncoderMini V1.2 - https://www.duppa.net/shop/i2cencoder-mini-with-soldered-accessory
 # Requires: https://github.com/cameronprince/I2CEncoderMini
 
 init.I2CENCODER_MINI_I2C_INSTANCE = 1
 init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
-init.I2CENCODER_MINI_INTERRUPTS = [20, 21, 26, 27]
+# init.I2CENCODER_MINI_INTERRUPTS = [20, 21, 26, 27]
+init.I2CENCODER_MINI_INTERRUPT_PIN = 20
 
 from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
@@ -204,11 +205,11 @@ init.RGB_PCA9685_LED4_BLUE = 11
 
 # from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
-# I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
+# I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 # from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
-# RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
+# RGB LED Ring Small - https://www.duppa.net/shop/rgb-led-ring-small/
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
 
 init.RGB_LED_RING_SMALL_I2C_INSTANCE = 2
