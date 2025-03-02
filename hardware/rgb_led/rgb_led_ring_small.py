@@ -10,7 +10,7 @@ RGB LED Ring Small driver.
 import time
 import _thread
 from RGBLEDRingSmall import RGBLEDRingSmall as LEDRingSmall
-from ...lib.utils import calculate_percent, calculate_midi_percent
+from ...lib.utils import calculate_percent  # Updated import
 from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init
 
@@ -190,7 +190,7 @@ class RGB_RGBLEDRingSmall(RGB):
             self.init.mutex_release(self.mutex, "rgb_led_ring_small:_initialize_led_ring")
             self.off()
 
-    def _set_rgb(self, led_n, color, brightness):
+    def _set_rgb(self, led_n, color, brightness, no_delay=False):
         """
         Set the color and brightness of a specific LED with mutex and a small delay.
 
@@ -213,7 +213,7 @@ class RGB_RGBLEDRingSmall(RGB):
                 )
                 color_code = (dimmed_color[0] << 16) | (dimmed_color[1] << 8) | dimmed_color[2]
                 self.led_ring.set_rgb(led_n, color_code)
-                if self.step_delay > 0:
+                if not no_delay and self.step_delay > 0:
                     time.sleep(self.step_delay)
         finally:
             self.init.mutex_release(self.mutex, "rgb_led_ring_small:_set_rgb")
@@ -222,12 +222,12 @@ class RGB_RGBLEDRingSmall(RGB):
         """
         Set all LEDs to the threshold brightness (default off state).
         """
-        if self.default_color is None:
-            for i in self.led_indexes:
-                self._set_rgb(i, self.vu_colors[i], self.threshold_brightness)
-        else:
-            for i in self.led_indexes:
-                self._set_rgb(i, self.default_color, self.threshold_brightness)
+        for i in self.led_indexes:
+            if self.default_color is None:
+                color = self.vu_colors[i]
+            else:
+                color = self.default_color
+            self._set_rgb(i, color, self.threshold_brightness, no_delay=True)
 
     def set_status(self, output, frequency, on_time, max_duty=None, max_on_time=None):
         """
@@ -246,10 +246,8 @@ class RGB_RGBLEDRingSmall(RGB):
         max_on_time : int, optional
             The maximum on time.
         """
-        if max_duty and max_on_time:
-            value = calculate_percent(frequency, on_time, max_duty, max_on_time)
-        else:
-            value = calculate_midi_percent(frequency, on_time)
+        # Use the updated calculate_percent function to handle both cases.
+        value = calculate_percent(frequency, on_time, max_duty, max_on_time)
 
         # Calculate the number of LEDs to brighten.
         num_bright_leds = int(self.num_leds * value / 100)
