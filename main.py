@@ -20,7 +20,7 @@ General Settings
 init.NUMBER_OF_COILS = 4
 
 # Enable mutex debugging.
-init.MUTEX_DEBUGGING = True
+init.MUTEX_DEBUGGING = False
 
 
 """
@@ -39,8 +39,8 @@ init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-init.PIN_I2C_2_SCL = 19
-init.PIN_I2C_2_SDA = 18
+init.PIN_I2C_2_SCL = 11
+init.PIN_I2C_2_SDA = 10
 init.I2C_2_INTERFACE = 1
 init.I2C_2_FREQ = 400000
 init.I2C_2_TIMEOUT = 50000
@@ -78,14 +78,14 @@ contiguous memory.
 
 # Shared display settings.
 # init.DISPLAY_INTERFACE = "I2C_1" # Either I2C_1, I2C_2, SPI_1 or SPI_2.
-init.DISPLAY_INTERFACE = "I2C_1"
+init.DISPLAY_INTERFACE = "I2C_2"
 init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
 
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
 # Interface: I2C/SPI
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
-# from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
+from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
 # Interface: I2C/SPI
@@ -99,7 +99,7 @@ init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands.
-from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
+# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
 
@@ -143,22 +143,21 @@ init.ROTARY_PULL_UP = False
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 
-# init.I2CENCODER_I2C_INSTANCE = 1
-# init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
-# init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x48] # 80, 48, 96, 72
-# init.I2CENCODER_INTERRUPTS = [18, 19, 20, 21]
+init.I2CENCODER_I2C_INSTANCE = 2
+init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
+init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44] # 80, 48, 96, 68
+init.I2CENCODER_INTERRUPT_PIN = 0
 
-# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://www.duppa.net/shop/i2cencoder-mini-with-soldered-accessory
 # Requires: https://github.com/cameronprince/I2CEncoderMini
 
 init.I2CENCODER_MINI_I2C_INSTANCE = 1
 init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
-# init.I2CENCODER_MINI_INTERRUPTS = [20, 21, 26, 27]
 init.I2CENCODER_MINI_INTERRUPT_PIN = 20
 
-from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
+# from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
 init.inputs = inputs()
 
@@ -207,7 +206,7 @@ init.RGB_PCA9685_LED4_BLUE = 11
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 # RGB LED Ring Small - https://www.duppa.net/shop/rgb-led-ring-small/
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
@@ -223,7 +222,7 @@ init.RGB_LED_RING_SMALL_ROTATION = 180
 init.RGB_LED_RING_SMALL_DELAY_BETWEEN_STEPS = 0.005
 init.RGB_LED_RING_SMALL_MODE = "vu_meter" # Either "status" or "vu_meter"
 
-from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
 # Serial Wombat 18AB - https://amzn.to/4ih0i0X
 # Requires: https://github.com/BroadwellConsultingInc/SerialWombat/tree/main/SerialWombat18A_18B

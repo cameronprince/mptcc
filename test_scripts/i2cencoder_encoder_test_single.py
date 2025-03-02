@@ -5,7 +5,7 @@ import i2cEncoderLibV2
 
 # Setup the Interrupt Pins from the encoders.
 INT_pins = [
-    Pin(18, Pin.IN),
+    Pin(0, Pin.IN),
     Pin(19, Pin.IN),
     Pin(20, Pin.IN),
     Pin(21, Pin.IN)
@@ -14,7 +14,7 @@ INT_pins = [
 INT_pin = INT_pins[0]
 
 # Initialize the device.
-i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
+i2c = I2C(1, scl=Pin(11), sda=Pin(10), freq=400000)
 
 # encoder_addresses = [0x50, 0x30, 0x60, 0x48]
 

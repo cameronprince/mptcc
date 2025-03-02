@@ -48,13 +48,7 @@ class I2CEncoder(Input):
         # Initialize last_rotations to track previous encoder values.
         self.last_rotations = [0] * self.init.NUMBER_OF_COILS
 
-        # Set up the shared interrupt pin.
-        if not hasattr(self.init, 'I2CENCODER_SHARED_INTERRUPT_PIN'):
-            raise ValueError(
-                "I2CENCODER_SHARED_INTERRUPT_PIN must be defined in the init object."
-            )
-
-        self.interrupt_pin = Pin(self.init.I2CENCODER_SHARED_INTERRUPT_PIN, Pin.IN, Pin.PULL_UP)
+        self.interrupt_pin = Pin(self.init.I2CENCODER_INTERRUPT_PIN, Pin.IN, Pin.PULL_UP)
         self.interrupt_pin.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
 
         # Initialize encoders.
