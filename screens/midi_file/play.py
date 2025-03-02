@@ -72,6 +72,7 @@ class MIDIFilePlay:
         self.last_display_update = time.ticks_ms()
 
         # Update the display with the initial elapsed time (00:00)
+        self.display.clear()
         self.update_display()
 
         # Start playback in a separate thread.
@@ -196,7 +197,7 @@ class MIDIFilePlay:
         # Explicitly set all RGB LEDs to off.
         for rgb_led in self.init.rgb_led:
             try:
-                rgb_led.setColor(0, 0, 0)
+                rgb_led.off()
             except Exception as e:
                 print(f"Error turning off RGB LED: {e}")
 

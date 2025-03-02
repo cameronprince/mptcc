@@ -32,11 +32,11 @@ init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-# init.PIN_I2C_2_SCL = 19
-# init.PIN_I2C_2_SDA = 18
-# init.I2C_2_INTERFACE = 1
-# init.I2C_2_FREQ = 400000
-# init.I2C_2_TIMEOUT = 50000
+init.PIN_I2C_2_SCL = 19
+init.PIN_I2C_2_SDA = 18
+init.I2C_2_INTERFACE = 1
+init.I2C_2_FREQ = 400000
+init.I2C_2_TIMEOUT = 50000
 
 # SPI bus 1 pin assignments and settings.
 init.SPI_1_INTERFACE = 0
@@ -45,18 +45,18 @@ init.PIN_SPI_1_SCK = 2
 init.PIN_SPI_1_MOSI = 3
 init.PIN_SPI_1_MISO = 4
 init.PIN_SPI_1_CS = 5
-# init.PIN_SPI_1_DC = None
-# init.PIN_SPI_1_RST = None
+init.PIN_SPI_1_DC = None
+init.PIN_SPI_1_RST = None
 
 # SPI bus 2 pin assignments and settings.
-# init.SPI_2_INTERFACE = 1
-# init.SPI_2_BAUD = 16000000
-# init.PIN_SPI_2_SCK = 10
-# init.PIN_SPI_2_MOSI = 11
-# init.PIN_SPI_2_MISO = None
-# init.PIN_SPI_2_CS = 13
-# init.PIN_SPI_2_DC = 12
-# init.PIN_SPI_2_RST = 14
+init.SPI_2_INTERFACE = 1
+init.SPI_2_BAUD = 10000000
+init.PIN_SPI_2_SCK = 10
+init.PIN_SPI_2_MOSI = 11
+init.PIN_SPI_2_MISO = None
+init.PIN_SPI_2_CS = 13
+init.PIN_SPI_2_DC = 12
+init.PIN_SPI_2_RST = 14
 
 
 """
@@ -70,14 +70,15 @@ contiguous memory.
 """
 
 # Shared display settings.
-init.DISPLAY_INTERFACE = "I2C_1" # Either I2C_1, I2C_2, SPI_1 or SPI_2.
+# init.DISPLAY_INTERFACE = "I2C_1" # Either I2C_1, I2C_2, SPI_1 or SPI_2.
+init.DISPLAY_INTERFACE = "I2C_1"
 init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
 
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
 # Interface: I2C/SPI
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
-from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
+# from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
 # Interface: I2C/SPI
@@ -91,7 +92,7 @@ from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands.
-# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
+from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
 
@@ -130,7 +131,7 @@ init.PIN_ROTARY_4_SW = 15
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
 
-from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+# from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
@@ -145,11 +146,11 @@ from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 # I2CEncoderMini V1.2 - https://github.com/Fattoresaimon/I2CEncoderMini/
 # Requires: https://github.com/cameronprince/I2CEncoderMini
 
-# init.I2CENCODER_MINI_I2C_INSTANCE = 1
-# init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
-# init.I2CENCODER_MINI_INTERRUPTS = [15, 14, 13, 12]
+init.I2CENCODER_MINI_I2C_INSTANCE = 1
+init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24]
+init.I2CENCODER_MINI_INTERRUPTS = [20, 21, 26, 27]
 
-# from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
+from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
 
 init.inputs = inputs()
 
@@ -169,7 +170,7 @@ need for current limiting resistors for the LEDs.
 # Asyncio RGB LED updates are available in cases where both threads update
 # I2C devices on the same bus. This setting causes LED colors to be stored
 # instead of calling the hardware directly.
-init.RGB_LED_ASYNCIO_POLLING = True
+init.RGB_LED_ASYNCIO_POLLING = False
 
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
@@ -194,7 +195,7 @@ init.RGB_PCA9685_LED4_RED = 9
 init.RGB_PCA9685_LED4_GREEN = 10
 init.RGB_PCA9685_LED4_BLUE = 11
 
-from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://github.com/Fattoresaimon/I2CEncoderV2.1
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
@@ -203,10 +204,17 @@ from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 # RGB LED Ring Small - https://github.com/Fattoresaimon/RGB_LED_Ring_Small
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
 
-# init.RGB_LED_RING_SMALL_I2C_INSTANCE = 1
-# init.RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
+init.RGB_LED_RING_SMALL_I2C_INSTANCE = 2
+init.RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
+# init.RGB_LED_RING_SMALL_DEFAULT_COLOR = "#000000"
+init.RGB_LED_RING_SMALL_DEFAULT_COLOR = "#326400"
+# init.RGB_LED_RING_SMALL_DEFAULT_COLOR = "status"
+init.RGB_LED_RING_SMALL_THRESHOLD_BRIGHTNESS = 16
+init.RGB_LED_RING_SMALL_FULL_BRIGHTNESS = 32
+init.RGB_LED_RING_SMALL_ROTATION = 180
+init.RGB_LED_RING_SMALL_DELAY_BETWEEN_STEPS = 0.005
 
-# from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
+from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
 # Serial Wombat 18AB - https://amzn.to/4ih0i0X
 # Requires: https://github.com/BroadwellConsultingInc/SerialWombat/tree/main/SerialWombat18A_18B

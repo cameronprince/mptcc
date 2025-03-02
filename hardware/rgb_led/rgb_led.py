@@ -7,7 +7,7 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
-from mptcc.lib.utils import status_color
+from ...lib.utils import status_color
 from ..hardware import Hardware
 
 class RGBLED(Hardware):
