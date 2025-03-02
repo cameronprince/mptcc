@@ -16,6 +16,25 @@ class SSD1322(Display):
     """
     A class to interface with the SSD1322 display driver for the 
     MicroPython Tesla Coil Controller (MPTCC).
+
+    Attributes:
+    -----------
+    DISPLAY_WIDTH : int
+        The width of the display.
+    DISPLAY_HEIGHT : int
+        The height of the display.
+    DISPLAY_LINE_HEIGHT : int
+        The height of a line in the display.
+    DISPLAY_FONT_WIDTH : int
+        The width of a character in the display font.
+    DISPLAY_FONT_HEIGHT : int
+        The height of a character in the display font.
+    DISPLAY_HEADER_HEIGHT : int
+        The height of the header in the display.
+    DISPLAY_ITEMS_PER_PAGE : int
+        The number of items displayed per page.
+    driver : driver
+        The SSD1322 display driver instance.
     """
 
     DISPLAY_WIDTH = 256
@@ -45,14 +64,10 @@ class SSD1322(Display):
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 
-        # Debugging: Print initialization details
-        # print(f"SSD1322 initialized: width={self.width}, height={self.height}")
-
     def clear(self):
         """
         Clears the display.
         """
-        # print("clear: Clearing display")
         self.driver.clear()
 
     def _clamp_y(self, y, height=0):
@@ -73,42 +88,70 @@ class SSD1322(Display):
         """
         max_y = self.DISPLAY_HEIGHT - height - 1  # Subtract 1 to ensure the object fits
         clamped_y = max(0, min(y, max_y))
-        # if clamped_y != y:
-        #     print(f"_clamp_y: Clamped y={y} to {clamped_y} (height={height})")
         return clamped_y
 
     def text(self, text, w, h, c):
         """
-        Displays text on the screen, ensuring the text fits within the display bounds.
+        Displays text on the screen.
+
+        Parameters:
+        ----------
+        text : str
+            The text to display.
+        w : int
+            The x-coordinate for the text.
+        h : int
+            The y-coordinate for the text.
+        c : int
+            The font color (0 or 1).
         """
         h = self._clamp_y(h, self.DISPLAY_FONT_HEIGHT)
         if c > 0:
             c = 15
-        # print(f"text: text='{text}', x={w}, y={h}, color={c}")
         self.driver.draw_text8x8(w, h, text, c)
 
     def hline(self, x, y, w, c):
         """
-        Draws a horizontal line on the screen, ensuring the line fits within the display bounds.
+        Draws a horizontal line on the screen.
+
+        Parameters:
+        ----------
+        x : int
+            The x-coordinate of the start of the line.
+        y : int
+            The y-coordinate of the start of the line.
+        w : int
+            The width of the line.
+        c : int
+            The color of the line (0 or 1).
         """
         y = self._clamp_y(y)
         if c > 0:
             c = 15
-        # print(f"hline: x={x}, y={y}, width={w}, color={c}")
         self.driver.draw_hline(x, y, w, c)
 
     def fill_rect(self, x, y, w, h, c):
         """
-        Draws a filled rectangle on the screen, ensuring the rectangle fits within the display bounds.
+        Draws a filled rectangle on the screen.
+
+        Parameters:
+        ----------
+        x : int
+            The x-coordinate of the top-left corner of the rectangle.
+        y : int
+            The y-coordinate of the top-left corner of the rectangle.
+        w : int
+            The width of the rectangle.
+        h : int
+            The height of the rectangle.
+        c : int
+            The color of the rectangle (0 or 1).
         """
         y = self._clamp_y(y, h)
-        # Ensure the rectangle does not exceed the display height
+        # Ensure the rectangle does not exceed the display height.
         max_height = self.DISPLAY_HEIGHT - y
         h = min(h, max_height)
-        
-        # Debugging: Print the clamped values
-        # print(f"fill_rect: x={x}, y={y}, width={w}, height={h}, color={c}")
-        
+
         if c > 0:
             c = 15
         self.driver.fill_rectangle(x, y, w, h, c)
@@ -117,5 +160,4 @@ class SSD1322(Display):
         """
         Updates the display with the current frame buffer content.
         """
-        # print("show: Updating display")
         self.driver.present()
