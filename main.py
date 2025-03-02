@@ -10,9 +10,16 @@ Defines and initializes the hardware and menu.
 # Prepare the init object to store configuration and initialized hardware.
 from mptcc.hardware.init import init
 
+
 """
-Debugging
+General Settings
 """
+# The number of coils the controller is to support. An equal number of encoders,
+# RGB LEDs and outputs is expected. When going beyond four coils, a wider display
+# is required.
+init.NUMBER_OF_COILS = 4
+
+# Enable mutex debugging.
 init.MUTEX_DEBUGGING = False
 
 
@@ -208,11 +215,12 @@ init.RGB_LED_RING_SMALL_I2C_INSTANCE = 2
 init.RGB_LED_RING_SMALL_ADDRESSES = [0x68, 0x6C, 0x62, 0x61]
 # init.RGB_LED_RING_SMALL_DEFAULT_COLOR = "#000000"
 init.RGB_LED_RING_SMALL_DEFAULT_COLOR = "#326400"
-# init.RGB_LED_RING_SMALL_DEFAULT_COLOR = "status"
+# init.RGB_LED_RING_SMALL_DEFAULT_COLOR = "vu_meter"
 init.RGB_LED_RING_SMALL_THRESHOLD_BRIGHTNESS = 16
 init.RGB_LED_RING_SMALL_FULL_BRIGHTNESS = 32
 init.RGB_LED_RING_SMALL_ROTATION = 180
 init.RGB_LED_RING_SMALL_DELAY_BETWEEN_STEPS = 0.005
+init.RGB_LED_RING_SMALL_MODE = "vu_meter" # Either "status" or "vu_meter"
 
 from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
@@ -260,7 +268,7 @@ init.PIN_OUTPUT_3 = 7
 init.PIN_OUTPUT_4 = 6
 
 # GPIO pin outputs with hardware PWM.
-from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
+# from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
 # from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
@@ -269,7 +277,7 @@ from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 # from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
 
 # GPIO pin outputs with timers.
-# from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
 
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
@@ -335,6 +343,12 @@ init.CONFIG_PATH = "/mptcc/config.json"
 
 
 """
+Settings Validation
+"""
+init.validate_settings()
+
+
+"""
 Menu Definition
 """
 from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, Screen
@@ -364,7 +378,6 @@ init.menu.set_screen(MenuScreen('MicroPython TCC')
 )
 
 init.menu.draw()
-
 
 """
 Asyncio Loop

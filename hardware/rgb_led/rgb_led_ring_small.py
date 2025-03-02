@@ -10,7 +10,7 @@ RGB LED Ring Small driver.
 import time
 import _thread
 from RGBLEDRingSmall import RGBLEDRingSmall as LEDRingSmall
-from ...lib.utils import calculate_percent  # Updated import
+from ...lib.utils import calculate_percent, status_color
 from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init
 
@@ -31,6 +31,14 @@ class RGBLEDRingSmall(RGBLED):
         super().__init__()
         self.init = init
 
+        # Validate that the number of RGB LED Ring Small addresses matches NUMBER_OF_COILS
+        if len(self.init.RGB_LED_RING_SMALL_ADDRESSES) != self.init.NUMBER_OF_COILS:
+            raise ValueError(
+                f"The number of RGB LED Ring Small addresses ({len(self.init.RGB_LED_RING_SMALL_ADDRESSES)}) "
+                f"must match NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS}). The program will now exit."
+            )
+
+        # Prepare the I2C bus.
         if self.init.RGB_LED_RING_SMALL_I2C_INSTANCE == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
@@ -40,7 +48,7 @@ class RGBLEDRingSmall(RGBLED):
             self.i2c = self.init.i2c_1
             self.mutex = self.init.i2c_1_mutex
 
-        # Initialize the four RGB LED Ring Small devices.
+        # Dynamically initialize RGB LED Ring Small devices based on NUMBER_OF_COILS
         self.init.rgb_led = [
             RGB_RGBLEDRingSmall(self.i2c, address, self.mutex)
             for address in self.init.RGB_LED_RING_SMALL_ADDRESSES
@@ -68,14 +76,14 @@ class RGB_RGBLEDRingSmall(RGB):
 
     def _get_default_color(self):
         """
-        Get the default color or handle the "status" case.
+        Get the default color or handle the "vu_meter" case.
 
         Returns:
         -------
         tuple
-            The default color as an RGB tuple or None if "status" is set.
+            The default color as an RGB tuple or None if "vu_meter" is set.
         """
-        if self.init.RGB_LED_RING_SMALL_DEFAULT_COLOR == "status":
+        if self.init.RGB_LED_RING_SMALL_DEFAULT_COLOR == "vu_meter":
             return None
         else:
             return self._hex_to_rgb(self.init.RGB_LED_RING_SMALL_DEFAULT_COLOR)
@@ -246,19 +254,37 @@ class RGB_RGBLEDRingSmall(RGB):
         max_on_time : int, optional
             The maximum on time.
         """
-        # Use the updated calculate_percent function to handle both cases.
-        value = calculate_percent(frequency, on_time, max_duty, max_on_time)
+        if self.init.RGB_LED_RING_SMALL_MODE == "status":
+            color = status_color(frequency, on_time, max_duty, max_on_time)
+            self._set_all_leds(color, self.full_brightness)
+        else:
+            # Use the updated calculate_percent function to handle both cases.
+            value = calculate_percent(frequency, on_time, max_duty, max_on_time)
 
-        # Calculate the number of LEDs to brighten.
-        num_bright_leds = int(self.num_leds * value / 100)
+            # Calculate the number of LEDs to brighten.
+            num_bright_leds = int(self.num_leds * value / 100)
 
-        # Brighten the first `num_bright_leds` LEDs.
-        for i in range(num_bright_leds):
-            index = self.led_indexes[i]
-            self._set_rgb(index, self.vu_colors[index], self.full_brightness)
-        for i in range(num_bright_leds, self.num_leds):
-            index = self.led_indexes[i]
-            if self.default_color is None:
-                self._set_rgb(index, self.vu_colors[index], self.threshold_brightness)
-            else:
-                self._set_rgb(index, self.default_color, self.threshold_brightness)
+            # Brighten the first `num_bright_leds` LEDs.
+            for i in range(num_bright_leds):
+                index = self.led_indexes[i]
+                self._set_rgb(index, self.vu_colors[index], self.full_brightness)
+            for i in range(num_bright_leds, self.num_leds):
+                index = self.led_indexes[i]
+                if self.default_color is None:
+                    self._set_rgb(index, self.vu_colors[index], self.threshold_brightness)
+                else:
+                    self._set_rgb(index, self.default_color, self.threshold_brightness)
+
+    def _set_all_leds(self, color, brightness):
+        """
+        Set all LEDs to the same color and brightness.
+
+        Parameters:
+        ----------
+        color : tuple
+            The RGB color (R, G, B).
+        brightness : int
+            The brightness level (0-255).
+        """
+        for i in self.led_indexes:
+            self._set_rgb(i, color, brightness, no_delay=True)

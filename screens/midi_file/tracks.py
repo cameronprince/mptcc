@@ -7,8 +7,7 @@ screens/midi_file/tracks.py
 Provides the MIDI track listing screen.
 """
 
-from mptcc.hardware.init import init
-import mptcc.lib.utils as utils
+from ...hardware.init import init
 import umidiparser
 
 class MIDIFileTracks:
@@ -45,7 +44,7 @@ class MIDIFileTracks:
             mapped_tracks_count = sum(1 for output in self.midi_file.outputs if output is not None)
             self.display.header(f'MIDI Tracks {mapped_tracks_count}/{len(self.midi_file.outputs)}')
             start = self.midi_file.current_track_index
-            end = min(self.midi_file.current_track_index + 4, len(self.midi_file.track_list))
+            end = min(self.midi_file.current_track_index + self.init.NUMBER_OF_COILS, len(self.midi_file.track_list))  # Updated to use NUMBER_OF_COILS
             menu_y_end = 12
             for i in range(start, end):
                 track_info = self.midi_file.track_list[i]

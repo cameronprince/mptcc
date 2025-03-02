@@ -22,12 +22,6 @@ class MCP23017_Timer(Output):
     GPIOA = 0x12   # GPIO Port A Register.
     OLATA = 0x14   # Output Latch Register for Port A.
     
-    # Pins to control (PA0-PA3).
-    MCP23017_OUTPUT_1_PIN = 0  # Pin 0 on Port A.
-    MCP23017_OUTPUT_2_PIN = 1  # Pin 1 on Port A.
-    MCP23017_OUTPUT_3_PIN = 2  # Pin 2 on Port A.
-    MCP23017_OUTPUT_4_PIN = 3  # Pin 3 on Port A.
-    
     def __init__(self):
         """
         Initializes the MCP23017 output driver.
@@ -47,13 +41,20 @@ class MCP23017_Timer(Output):
         if not hasattr(self.init, 'i2c_mutex'):
             self.init.i2c_mutex = _thread.allocate_lock()
 
-        # Instantiate each Output_MCP23017.
-        self.output = [
-            Output_MCP23017_Timer(self.i2c, self.MCP23017_ADDR, self.MCP23017_OUTPUT_1_PIN, self.init.i2c_mutex),
-            Output_MCP23017_Timer(self.i2c, self.MCP23017_ADDR, self.MCP23017_OUTPUT_2_PIN, self.init.i2c_mutex),
-            Output_MCP23017_Timer(self.i2c, self.MCP23017_ADDR, self.MCP23017_OUTPUT_3_PIN, self.init.i2c_mutex),
-            Output_MCP23017_Timer(self.i2c, self.MCP23017_ADDR, self.MCP23017_OUTPUT_4_PIN, self.init.i2c_mutex),
-        ]
+        # Dynamically initialize Output_MCP23017_Timer instances based on NUMBER_OF_COILS
+        self.output = []
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the output pin for the current coil
+            pin_attr = f"MCP23017_OUTPUT_{i}_PIN"
+            if not hasattr(self, pin_attr):
+                raise ValueError(
+                    f"Pin configuration for MCP23017 output {i} is missing. "
+                    f"Please ensure {pin_attr} is defined in main."
+                )
+            pin = getattr(self, pin_attr)
+
+            # Initialize the Output_MCP23017_Timer instance
+            self.output.append(Output_MCP23017_Timer(self.i2c, self.MCP23017_ADDR, pin, self.init.i2c_mutex))
 
     def _reset_mcp23017(self):
         """
@@ -106,7 +107,7 @@ class Output_MCP23017_Timer:
     """
     def __init__(self, i2c, address, pin, i2c_mutex):
         """
-        Initializes the Output_MCP23017 object.
+        Initializes the Output_MCP23017_Timer object.
         """
         self.i2c = i2c
         self.address = address

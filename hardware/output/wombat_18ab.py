@@ -38,32 +38,25 @@ class Wombat_18AB(Output):
 
         self.driver = driver(self.i2c, self.init.OUTPUT_WOMBAT_18AB_ADDR)
 
-        # Instantiate drivers for each output with a delay between each one.
+        # Dynamically initialize Output_Wombat_18AB instances based on NUMBER_OF_COILS.
         self.output = []
-        self.output.append(Output_Wombat_18AB(
-            self.driver,
-            self.init.OUTPUT_WOMBAT_18AB_1_PIN,
-            self.mutex,
-        ))
-        time.sleep(self.init_delay)
-        self.output.append(Output_Wombat_18AB(
-            self.driver,
-            self.init.OUTPUT_WOMBAT_18AB_2_PIN,
-            self.mutex,
-        ))
-        time.sleep(self.init_delay)
-        self.output.append(Output_Wombat_18AB(
-            self.driver,
-            self.init.OUTPUT_WOMBAT_18AB_3_PIN,
-            self.mutex,
-        ))
-        time.sleep(self.init_delay)
-        self.output.append(Output_Wombat_18AB(
-            self.driver,
-            self.init.OUTPUT_WOMBAT_18AB_4_PIN,
-            self.mutex,
-        ))
-        time.sleep(self.init_delay)
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the output pin for the current coil.
+            pin_attr = f"OUTPUT_WOMBAT_18AB_{i}_PIN"
+            if not hasattr(self.init, pin_attr):
+                raise ValueError(
+                    f"Pin configuration for WOMBAT_18AB output {i} is missing. "
+                    f"Please ensure {pin_attr} is defined in main."
+                )
+            pin = getattr(self.init, pin_attr)
+
+            # Initialize the Output_Wombat_18AB instance.
+            self.output.append(Output_Wombat_18AB(
+                self.driver,
+                pin,
+                self.mutex,
+            ))
+            time.sleep(self.init_delay)
 
     def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """

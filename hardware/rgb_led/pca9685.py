@@ -46,37 +46,34 @@ class PCA9685(RGBLED):
         self.driver = driver(self.i2c, address=self.init.RGB_PCA9685_ADDR)
         self.driver.freq(self.init.RGB_PCA9685_FREQ)
 
-        # Initialize RGB LEDs.
-        self.init.rgb_led = [
-            RGB_PCA9685(
+        # Dynamically initialize RGB LEDs based on NUMBER_OF_COILS.
+        self.init.rgb_led = []
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the RGB channel configurations for the current coil.
+            red_attr = f"RGB_PCA9685_LED{i}_RED"
+            green_attr = f"RGB_PCA9685_LED{i}_GREEN"
+            blue_attr = f"RGB_PCA9685_LED{i}_BLUE"
+
+            if not hasattr(self.init, red_attr) or \
+               not hasattr(self.init, green_attr) or \
+               not hasattr(self.init, blue_attr):
+                raise ValueError(
+                    f"RGB LED configuration for PCA9685 {i} is missing. "
+                    f"Please ensure {red_attr}, {green_attr}, and {blue_attr} are defined in main."
+                )
+
+            red_channel = getattr(self.init, red_attr)
+            green_channel = getattr(self.init, green_attr)
+            blue_channel = getattr(self.init, blue_attr)
+
+            # Initialize the RGB_PCA9685 instance.
+            self.init.rgb_led.append(RGB_PCA9685(
                 self.driver,
-                red_channel=init.RGB_PCA9685_LED1_RED,
-                green_channel=init.RGB_PCA9685_LED1_GREEN,
-                blue_channel=init.RGB_PCA9685_LED1_BLUE,
+                red_channel=red_channel,
+                green_channel=green_channel,
+                blue_channel=blue_channel,
                 mutex=self.mutex,
-            ),
-            RGB_PCA9685(
-                self.driver,
-                red_channel=init.RGB_PCA9685_LED2_RED,
-                green_channel=init.RGB_PCA9685_LED2_GREEN,
-                blue_channel=init.RGB_PCA9685_LED2_BLUE,
-                mutex=self.mutex,
-            ),
-            RGB_PCA9685(
-                self.driver,
-                red_channel=init.RGB_PCA9685_LED3_RED,
-                green_channel=init.RGB_PCA9685_LED3_GREEN,
-                blue_channel=init.RGB_PCA9685_LED3_BLUE,
-                mutex=self.mutex,
-            ),
-            RGB_PCA9685(
-                self.driver,
-                red_channel=init.RGB_PCA9685_LED4_RED,
-                green_channel=init.RGB_PCA9685_LED4_GREEN,
-                blue_channel=init.RGB_PCA9685_LED4_BLUE,
-                mutex=self.mutex,
-            ),
-        ]
+            ))
 
 class RGB_PCA9685(RGB):
     """

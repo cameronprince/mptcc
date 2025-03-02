@@ -8,7 +8,6 @@ Class for driving outputs with software PWM (bit banging).
 """
 
 from machine import Pin
-from ...lib import utils
 from ...hardware.init import init
 from ..output.output import Output
 import uasyncio as asyncio
@@ -19,17 +18,25 @@ class GPIO_BitBang(Output):
         super().__init__()
         self.init = init
 
-        # Define outputs as GPIO pins.
-        self.output = [
-            Pin(self.init.PIN_OUTPUT_1, Pin.OUT),
-            Pin(self.init.PIN_OUTPUT_2, Pin.OUT),
-            Pin(self.init.PIN_OUTPUT_3, Pin.OUT),
-            Pin(self.init.PIN_OUTPUT_4, Pin.OUT),
-        ]
+        # Initialize outputs dynamically.
+        self.output = []
+        self.running = []
+        self.tasks = []
 
-        # Initialize flags and tasks for each output.
-        self.running = [False] * 4
-        self.tasks = [None] * 4
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the output pin for the current coil.
+            pin_attr = f"PIN_OUTPUT_{i}"
+            if not hasattr(self.init, pin_attr):
+                raise ValueError(
+                    f"Pin configuration for output {i} is missing. "
+                    f"Please ensure PIN_OUTPUT_{i} is defined in main."
+                )
+            pin = getattr(self.init, pin_attr)
+
+            # Initialize the output pin.
+            self.output.append(Pin(pin, Pin.OUT))
+            self.running.append(False)
+            self.tasks.append(None)
 
     async def _bitbang_pwm(self, output, frequency, on_time):
         """

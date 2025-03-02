@@ -34,32 +34,29 @@ class PCA9685(Output):
             self.i2c = self.init.i2c_1
             self.mutex = self.init.i2c_1_mutex
 
-        # Instantiate each Output_PCA9685 with a delay between each one.
+        # Dynamically initialize Output_PCA9685 instances based on NUMBER_OF_COILS
         self.output = []
-        self.output.append(Output_PCA9685(
-            driver(self.i2c, address=self.init.OUTPUT_PCA9685_1_ADDR),
-            self.init.OUTPUT_PCA9685_1_CHAN,
-            self.mutex,
-        ))
-        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
-        self.output.append(Output_PCA9685(
-            driver(self.i2c, address=self.init.OUTPUT_PCA9685_2_ADDR),
-            self.init.OUTPUT_PCA9685_2_CHAN,
-            self.mutex,
-        ))
-        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
-        self.output.append(Output_PCA9685(
-            driver(self.i2c, address=self.init.OUTPUT_PCA9685_3_ADDR),
-            self.init.OUTPUT_PCA9685_3_CHAN,
-            self.mutex,
-        ))
-        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
-        self.output.append(Output_PCA9685(
-            driver(self.i2c, address=self.init.OUTPUT_PCA9685_4_ADDR),
-            self.init.OUTPUT_PCA9685_4_CHAN,
-            self.mutex,
-        ))
-        time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the address and channel for the current coil
+            addr_attr = f"OUTPUT_PCA9685_{i}_ADDR"
+            chan_attr = f"OUTPUT_PCA9685_{i}_CHAN"
+
+            if not hasattr(self.init, addr_attr) or not hasattr(self.init, chan_attr):
+                raise ValueError(
+                    f"Configuration for PCA9685 output driver {i} is missing. "
+                    f"Please ensure {addr_attr} and {chan_attr} are defined in main."
+                )
+
+            addr = getattr(self.init, addr_attr)
+            chan = getattr(self.init, chan_attr)
+
+            # Initialize the Output_PCA9685 instance
+            self.output.append(Output_PCA9685(
+                driver(self.i2c, address=addr),
+                chan,
+                self.mutex,
+            ))
+            time.sleep(self.init.OUTPUT_PCA9685_INIT_DELAY)
 
     def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """

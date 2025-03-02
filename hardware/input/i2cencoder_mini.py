@@ -27,6 +27,15 @@ class I2CEncoderMini(Input):
         # Flag to track initialization status.
         self.init_complete = False
 
+        # Validate that the number of encoders and interrupts matches NUMBER_OF_COILS
+        if len(self.init.I2CENCODER_MINI_ADDRESSES) != self.init.NUMBER_OF_COILS or \
+           len(self.init.I2CENCODER_MINI_INTERRUPTS) != self.init.NUMBER_OF_COILS:
+            raise ValueError(
+                f"The number of I2C encoder mini addresses ({len(self.init.I2CENCODER_MINI_ADDRESSES)}) "
+                f"and interrupt pins ({len(self.init.I2CENCODER_MINI_INTERRUPTS)}) must match "
+                f"NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS}). The program will now exit."
+            )
+
         # Prepare the I2C bus.
         if self.init.I2CENCODER_MINI_I2C_INSTANCE == 2:
             self.init.init_i2c_2()
@@ -44,19 +53,20 @@ class I2CEncoderMini(Input):
         self.active_interrupt = -1
 
         # Initialize last_rotations to track previous encoder values
-        self.last_rotations = [0] * len(self.init.I2CENCODER_MINI_ADDRESSES)
+        self.last_rotations = [0] * self.init.NUMBER_OF_COILS
 
-        # Set up interrupt pins.
-        for int_pin in self.init.I2CENCODER_MINI_INTERRUPTS:
+        # Single loop to handle both interrupt pins and encoder addresses
+        for i in range(self.init.NUMBER_OF_COILS):
+            # Set up interrupt pins
+            int_pin = self.init.I2CENCODER_MINI_INTERRUPTS[i]
             ip = Pin(int_pin, Pin.IN, Pin.PULL_UP)
             ip.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
             self.interrupts.append(ip)
 
-        # Instantiate the encoder objects.
-        self.encoders = [i2cEncoderMiniLib.i2cEncoderMiniLib(self.i2c, addr) for addr in self.init.I2CENCODER_MINI_ADDRESSES]
-
-        # Initialize each encoder.
-        for encoder in self.encoders:
+            # Initialize encoders
+            addr = self.init.I2CENCODER_MINI_ADDRESSES[i]
+            encoder = i2cEncoderMiniLib.i2cEncoderMiniLib(self.i2c, addr)
+            self.encoders.append(encoder)
             self.init_encoder(encoder)
 
         # Mark initialization as complete.

@@ -7,9 +7,8 @@ screens/midi_file/files.py
 Provides the MIDI file listing screen.
 """
 
-from mptcc.hardware.init import init
-import mptcc.lib.utils as utils
-from mptcc.lib.config import Config as config
+from ...hardware.init import init
+from ...lib.config import Config as config
 import uos
 
 class MIDIFileFiles:
@@ -155,8 +154,8 @@ class MIDIFileFiles:
         self.display.stop_scroll_task()
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
         self.midi_file.track_cursor_position = 0
-        self.midi_file.outputs = [None] * 4
-        self.midi_file.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * 4
+        self.midi_file.outputs = [None] * self.init.NUMBER_OF_COILS
+        self.midi_file.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * self.init.NUMBER_OF_COILS
         self.midi_file.handlers["tracks"].draw()
         # Prevent clicks from propagating to the tracks sub-screen on files with
         # a lot of tracks.

@@ -8,7 +8,6 @@ Class for driving outputs with timers.
 """
 
 from machine import Pin, Timer
-from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -17,13 +16,25 @@ class GPIO_Timer(Output):
         super().__init__()
         self.init = init
 
-        # Define outputs as GPIO pins and initialize timers.
-        self.output = [
-            {'pin': Pin(self.init.PIN_OUTPUT_1, Pin.OUT), 'timer': Timer(), 'running': False},
-            {'pin': Pin(self.init.PIN_OUTPUT_2, Pin.OUT), 'timer': Timer(), 'running': False},
-            {'pin': Pin(self.init.PIN_OUTPUT_3, Pin.OUT), 'timer': Timer(), 'running': False},
-            {'pin': Pin(self.init.PIN_OUTPUT_4, Pin.OUT), 'timer': Timer(), 'running': False}
-        ]
+        # Initialize outputs dynamically.
+        self.output = []
+
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the output pin for the current coil.
+            pin_attr = f"PIN_OUTPUT_{i}"
+            if not hasattr(self.init, pin_attr):
+                raise ValueError(
+                    f"Pin configuration for output {i} is missing. "
+                    f"Please ensure {pin_attr} is defined in main."
+                )
+            pin = getattr(self.init, pin_attr)
+
+            # Initialize the GPIO pin and timer.
+            self.output.append({
+                'pin': Pin(pin, Pin.OUT),
+                'timer': Timer(),
+                'running': False
+            })
 
     def _set_output_timer(self, output, frequency, on_time):
         """

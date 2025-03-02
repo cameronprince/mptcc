@@ -25,6 +25,15 @@ class I2CEncoder(Input):
 
         self.init_complete = False
 
+        # Validate that the number of encoders and interrupts matches NUMBER_OF_COILS
+        if len(self.init.I2CENCODER_ADDRESSES) != self.init.NUMBER_OF_COILS or \
+           len(self.init.I2CENCODER_INTERRUPTS) != self.init.NUMBER_OF_COILS:
+            raise ValueError(
+                f"The number of I2C encoder addresses ({len(self.init.I2CENCODER_ADDRESSES)}) "
+                f"and interrupt pins ({len(self.init.I2CENCODER_INTERRUPTS)}) must match "
+                f"NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS}). The program will now exit."
+            )
+
         if self.init.I2CENCODER_I2C_INSTANCE == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
@@ -36,17 +45,22 @@ class I2CEncoder(Input):
 
         self.interrupts = []
         self.active_interrupt = -1
-        self.last_rotations = [0] * len(self.init.I2CENCODER_ADDRESSES)
+        self.last_rotations = [0] * self.init.NUMBER_OF_COILS
 
-        for int_pin in self.init.I2CENCODER_INTERRUPTS:
+        # Single loop to handle both interrupt pins and encoder addresses
+        for i in range(self.init.NUMBER_OF_COILS):
+            # Set up interrupt pins
+            int_pin = self.init.I2CENCODER_INTERRUPTS[i]
             ip = Pin(int_pin, Pin.IN)
             ip.irq(trigger=Pin.IRQ_FALLING, handler=self.interrupt_handler)
             self.interrupts.append(ip)
 
-        self.encoders = [i2cEncoderLibV2.i2cEncoderLibV2(self.i2c, addr) for addr in self.init.I2CENCODER_ADDRESSES]
-
-        for encoder in self.encoders:
+            # Initialize encoders
+            addr = self.init.I2CENCODER_ADDRESSES[i]
+            encoder = i2cEncoderLibV2.i2cEncoderLibV2(self.i2c, addr)
+            self.encoders.append(encoder)
             self.init_encoder(encoder)
+
         self.init_complete = True
 
         asyncio.create_task(self.process_interrupt())
