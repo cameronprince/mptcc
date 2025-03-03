@@ -7,8 +7,7 @@ screens/midi_file/assignment.py
 Provides the track assignment screen.
 """
 
-from mptcc.hardware.init import init
-import mptcc.lib.utils as utils
+from ...hardware.init import init
 
 class MIDIFileAssignment:
     def __init__(self, midi_file):
@@ -103,11 +102,11 @@ class MIDIFileAssignment:
 
         new_output += direction
 
-        # Ensure new_output cycles within the range of -1 to 3 (for "None" and four outputs).
-        if new_output > 3:
+        # Ensure new_output cycles within the range of -1 to (NUMBER_OF_COILS - 1).
+        if new_output > (self.init.NUMBER_OF_COILS - 1):
             new_output = -1
         if new_output < -1:
-            new_output = 3
+            new_output = (self.init.NUMBER_OF_COILS - 1)
 
         self.output_selection = new_output + 1 if new_output != -1 else None
         self.update_output_value()

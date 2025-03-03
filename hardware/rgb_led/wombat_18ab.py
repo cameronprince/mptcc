@@ -45,37 +45,34 @@ class Wombat_18AB(RGBLED):
         # Initialize the Wombat 18AB driver.
         self.driver = driver(self.i2c, address=self.init.RGB_WOMBAT_18AB_ADDR)
 
-        # Initialize RGB LEDs.
-        self.init.rgb_led = [
-            RGB_Wombat_18AB(
+        # Dynamically initialize RGB LEDs based on NUMBER_OF_COILS.
+        self.init.rgb_led = []
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the RGB pin configurations for the current coil.
+            red_attr = f"RGB_WOMBAT_18AB_LED{i}_RED"
+            green_attr = f"RGB_WOMBAT_18AB_LED{i}_GREEN"
+            blue_attr = f"RGB_WOMBAT_18AB_LED{i}_BLUE"
+
+            if not hasattr(self.init, red_attr) or \
+               not hasattr(self.init, green_attr) or \
+               not hasattr(self.init, blue_attr):
+                raise ValueError(
+                    f"RGB LED configuration for Wombat 18AB {i} is missing. "
+                    f"Please ensure {red_attr}, {green_attr}, and {blue_attr} are defined in main."
+                )
+
+            red_pin = getattr(self.init, red_attr)
+            green_pin = getattr(self.init, green_attr)
+            blue_pin = getattr(self.init, blue_attr)
+
+            # Initialize the RGB_Wombat_18AB instance.
+            self.init.rgb_led.append(RGB_Wombat_18AB(
                 self.driver,
-                red_pin=init.RGB_WOMBAT_18AB_LED1_RED,
-                green_pin=init.RGB_WOMBAT_18AB_LED1_GREEN,
-                blue_pin=init.RGB_WOMBAT_18AB_LED1_BLUE,
+                red_pin=red_pin,
+                green_pin=green_pin,
+                blue_pin=blue_pin,
                 mutex=self.mutex,
-            ),
-            RGB_Wombat_18AB(
-                self.driver,
-                red_pin=init.RGB_WOMBAT_18AB_LED2_RED,
-                green_pin=init.RGB_WOMBAT_18AB_LED2_GREEN,
-                blue_pin=init.RGB_WOMBAT_18AB_LED2_BLUE,
-                mutex=self.mutex,
-            ),
-            RGB_Wombat_18AB(
-                self.driver,
-                red_pin=init.RGB_WOMBAT_18AB_LED3_RED,
-                green_pin=init.RGB_WOMBAT_18AB_LED3_GREEN,
-                blue_pin=init.RGB_WOMBAT_18AB_LED3_BLUE,
-                mutex=self.mutex,
-            ),
-            RGB_Wombat_18AB(
-                self.driver,
-                red_pin=init.RGB_WOMBAT_18AB_LED4_RED,
-                green_pin=init.RGB_WOMBAT_18AB_LED4_GREEN,
-                blue_pin=init.RGB_WOMBAT_18AB_LED4_BLUE,
-                mutex=self.mutex,
-            ),
-        ]
+            ))
 
 class RGB_Wombat_18AB(RGB):
     """
@@ -93,19 +90,19 @@ class RGB_Wombat_18AB(RGB):
         # Initialize PWM outputs for the RGB LED.
         self.red_pwm = swpwm(self.driver)
         self.green_pwm = swpwm(self.driver)
-        # self.blue_pwm = swpwm(self.driver)
+        self.blue_pwm = swpwm(self.driver)
 
         # Set up PWM outputs with a frequency of 1 kHz and 0% duty cycle (off).
         self.init.mutex_acquire(self.mutex, "rgb_wombat_18ab:init")
         try:
             self.red_pwm.begin(self.red_pin, 0)
             self.green_pwm.begin(self.green_pin, 0)
-            # self.blue_pwm.begin(self.blue_pin, 0)
+            self.blue_pwm.begin(self.blue_pin, 0)
 
             # Set the frequency for all PWM outputs.
             self.red_pwm.writeFrequency_Hz(1000)  # 1 kHz
             self.green_pwm.writeFrequency_Hz(1000)
-            # self.blue_pwm.writeFrequency_Hz(1000)
+            self.blue_pwm.writeFrequency_Hz(1000)
         finally:
             self.init.mutex_release(self.mutex, "rgb_wombat_18ab:init")
 
@@ -136,7 +133,7 @@ class RGB_Wombat_18AB(RGB):
             # Set the duty cycles for the red, green, and blue channels.
             self.red_pwm.writeDutyCycle(red_duty)
             self.green_pwm.writeDutyCycle(green_duty)
-            # self.blue_pwm.writeDutyCycle(blue_duty)
+            self.blue_pwm.writeDutyCycle(blue_duty)
         finally:
             # Release the mutex.
             self.init.mutex_release(self.mutex, "rgb_wombat_18ab:set_color")

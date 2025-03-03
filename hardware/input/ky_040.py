@@ -19,36 +19,59 @@ class KY040(Input):
         super().__init__()
 
         self.init = init
-        self.last_switch_click_time = [0] * 4
+        self.last_switch_click_time = [0] * self.init.NUMBER_OF_COILS
 
-        self.rotary_encoders = [
-            RotaryIRQ(pin_num_clk=init.PIN_ROTARY_1_CLK, pin_num_dt=init.PIN_ROTARY_1_DT,
-                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
-                      pull_up=init.ROTARY_PULL_UP, half_step=False),
-            RotaryIRQ(pin_num_clk=init.PIN_ROTARY_2_CLK, pin_num_dt=init.PIN_ROTARY_2_DT,
-                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
-                      pull_up=init.ROTARY_PULL_UP, half_step=False),
-            RotaryIRQ(pin_num_clk=init.PIN_ROTARY_3_CLK, pin_num_dt=init.PIN_ROTARY_3_DT,
-                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
-                      pull_up=init.ROTARY_PULL_UP, half_step=False),
-            RotaryIRQ(pin_num_clk=init.PIN_ROTARY_4_CLK, pin_num_dt=init.PIN_ROTARY_4_DT,
-                      min_val=0, max_val=100, reverse=False, range_mode=RotaryIRQ.RANGE_WRAP,
-                      pull_up=init.ROTARY_PULL_UP, half_step=False),
-        ]
-        self.last_rotations = [encoder.value() for encoder in self.rotary_encoders]
+        # Dynamically populate rotary_pins based on NUMBER_OF_COILS.
+        rotary_pins = []
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            clk_pin_attr = f"PIN_ROTARY_{i}_CLK"
+            dt_pin_attr = f"PIN_ROTARY_{i}_DT"
+            sw_pin_attr = f"PIN_ROTARY_{i}_SW"
 
-        for idx, encoder in enumerate(self.rotary_encoders):
-            encoder.add_listener(self.create_listener(idx))
+            if not hasattr(self.init, clk_pin_attr) or \
+               not hasattr(self.init, dt_pin_attr) or \
+               not hasattr(self.init, sw_pin_attr):
+                raise ValueError(
+                    f"Rotary encoder configuration for KY-040 input {i} is missing. "
+                    f"Please ensure {clk_pin_attr}, {dt_pin_attr}, and {sw_pin_attr} are defined in main."
+                )
 
-        self.init.switch_1 = Pin(init.PIN_ROTARY_1_SW, Pin.IN, Pin.PULL_UP)
-        self.init.switch_2 = Pin(init.PIN_ROTARY_2_SW, Pin.IN, Pin.PULL_UP)
-        self.init.switch_3 = Pin(init.PIN_ROTARY_3_SW, Pin.IN, Pin.PULL_UP)
-        self.init.switch_4 = Pin(init.PIN_ROTARY_4_SW, Pin.IN, Pin.PULL_UP)
+            rotary_pins.append((
+                getattr(self.init, clk_pin_attr),
+                getattr(self.init, dt_pin_attr),
+                getattr(self.init, sw_pin_attr),
+            ))
 
-        self.init.switch_1.irq(lambda pin: self.switch_click(1), Pin.IRQ_FALLING)
-        self.init.switch_2.irq(lambda pin: self.switch_click(2), Pin.IRQ_FALLING)
-        self.init.switch_3.irq(lambda pin: self.switch_click(3), Pin.IRQ_FALLING)
-        self.init.switch_4.irq(lambda pin: self.switch_click(4), Pin.IRQ_FALLING)
+        # Initialize rotary encoders and switches dynamically.
+        self.rotary_encoders = []
+        self.last_rotations = []
+
+        for i in range(self.init.NUMBER_OF_COILS):
+            clk_pin = rotary_pins[i][0]
+            dt_pin = rotary_pins[i][1]
+            sw_pin = rotary_pins[i][2]
+
+            # Initialize rotary encoder.
+            encoder = RotaryIRQ(
+                pin_num_clk=clk_pin,
+                pin_num_dt=dt_pin,
+                min_val=0,
+                max_val=100,
+                reverse=False,
+                range_mode=RotaryIRQ.RANGE_WRAP,
+                pull_up=init.ROTARY_PULL_UP,
+                half_step=False,
+            )
+            self.rotary_encoders.append(encoder)
+            self.last_rotations.append(encoder.value())
+
+            # Add listener for rotary encoder.
+            encoder.add_listener(self.create_listener(i))
+
+            # Initialize switch.
+            switch_pin = Pin(sw_pin, Pin.IN, Pin.PULL_UP)
+            switch_pin.irq(lambda pin, idx=i: self.switch_click(idx + 1), Pin.IRQ_FALLING)
+            setattr(self.init, f"switch_{i + 1}", switch_pin)
 
     def create_listener(self, idx):
         def listener():

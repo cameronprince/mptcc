@@ -17,7 +17,20 @@ class Output(Hardware):
 
     def set_all_outputs(self, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
-        Disables all outputs by setting their duty cycle to 0 and turning off the associated LEDs.
+        Sets all outputs based on the provided parameters.
+
+        Parameters:
+        ----------
+        active : bool, optional
+            Whether the outputs should be active. Defaults to False.
+        freq : int, optional
+            The frequency of the output signal in Hz. Required if active is True.
+        on_time : int, optional
+            The on time of the output signal in microseconds. Required if active is True.
+        max_duty : int, optional
+            The maximum duty cycle allowed.
+        max_on_time : int, optional
+            The maximum on time allowed in microseconds.
         """
-        for i in range(4):
+        for i in range(self.init.NUMBER_OF_COILS):
             self.set_output(i, active, freq, on_time, max_duty, max_on_time)

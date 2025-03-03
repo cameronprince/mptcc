@@ -10,9 +10,9 @@ Provides the MIDI playback functionality.
 import _thread
 import time
 import uasyncio as asyncio
-from mptcc.hardware.init import init
-from mptcc.lib.utils import midi_to_frequency, velocity_to_ontime, constrain
-from mptcc.lib.config import Config as config
+from ...hardware.init import init
+from ...lib.utils import midi_to_frequency, velocity_to_ontime, constrain
+from ...lib.config import Config as config
 import umidiparser
 
 class MIDIFilePlay:
@@ -37,6 +37,10 @@ class MIDIFilePlay:
 
         # Read the default output level from the configuration.
         self.config = config.read_config()
+
+        # Dynamically create rotary_X methods based on NUMBER_OF_COILS.
+        for i in range(self.init.NUMBER_OF_COILS):
+            setattr(self, f"rotary_{i + 1}", lambda direction, idx=i: self.rotary(idx, direction))
 
     def draw(self, file_path):
         """
@@ -72,6 +76,7 @@ class MIDIFilePlay:
         self.last_display_update = time.ticks_ms()
 
         # Update the display with the initial elapsed time (00:00)
+        self.display.clear()
         self.update_display()
 
         # Start playback in a separate thread.
@@ -133,16 +138,31 @@ class MIDIFilePlay:
         self.minutes = self.elapsed_time // 60
         self.seconds = self.elapsed_time % 60
 
-        # Clear both time and levels area.
-        self.display.fill_rect(0, 16, 128, 48, 0)
+        # Calculate the maximum number of columns that fit on the screen.
+        level_text_width = len("1:100%") * self.display.DISPLAY_FONT_WIDTH  # Width of one level entry
+        max_columns = self.display.DISPLAY_WIDTH // level_text_width  # Maximum columns per row
+
+        # Calculate the number of rows needed to display all levels.
+        num_rows = (self.init.NUMBER_OF_COILS + max_columns - 1) // max_columns
+
+        # Calculate the height of the levels display area.
+        levels_area_height = num_rows * self.display.DISPLAY_LINE_HEIGHT
+
+        # Clear the time and levels area dynamically.
+        self.display.fill_rect(0, 16, self.display.width, levels_area_height + 16, 0)
 
         # Update the time.
         self.display.header("PLAY MIDI FILE")
         self.display.text(f"Time: {self.minutes:02}:{self.seconds:02}", 0, 16, 1)
 
-        # Update the levels.
-        self.display.text(f"1:{self.levels[0]:3d}%  2:{self.levels[1]:3d}%", 0, 32, 1)
-        self.display.text(f"3:{self.levels[2]:3d}%  4:{self.levels[3]:3d}%", 0, 48, 1)
+        # Update the levels in multiple columns, wrapping based on screen width.
+        y_start = 32  # Starting Y position for the first row of levels
+        y_increment = self.display.DISPLAY_LINE_HEIGHT  # Vertical spacing between rows
+
+        for i in range(0, self.init.NUMBER_OF_COILS, max_columns):
+            row_levels = self.levels[i:i + max_columns]
+            level_text = " ".join(f"{i + j + 1}:{level:3d}%" for j, level in enumerate(row_levels))
+            self.display.text(level_text, 0, y_start + (i // max_columns) * y_increment, 1)
 
         # Refresh the display.
         self.display.show()
@@ -196,7 +216,7 @@ class MIDIFilePlay:
         # Explicitly set all RGB LEDs to off.
         for rgb_led in self.init.rgb_led:
             try:
-                rgb_led.setColor(0, 0, 0)
+                rgb_led.off()
             except Exception as e:
                 print(f"Error turning off RGB LED: {e}")
 
@@ -227,18 +247,6 @@ class MIDIFilePlay:
 
         # Signal that the levels need to be updated.
         self.levels_updated = True
-
-    def rotary_1(self, direction):
-        self.rotary(0, direction)
-
-    def rotary_2(self, direction):
-        self.rotary(1, direction)
-
-    def rotary_3(self, direction):
-        self.rotary(2, direction)
-
-    def rotary_4(self, direction):
-        self.rotary(3, direction)
 
     # All switches act as stop buttons.
     def switch_1(self):

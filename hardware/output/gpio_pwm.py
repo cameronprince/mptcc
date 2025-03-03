@@ -8,7 +8,6 @@ Class for driving outputs with hardware PWM.
 """
 
 from machine import Pin, PWM
-from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -27,12 +26,21 @@ class GPIO_PWM(Output):
         super().__init__()
         self.init = init
 
-        self.output = [
-            PWM(Pin(self.init.PIN_OUTPUT_1)),
-            PWM(Pin(self.init.PIN_OUTPUT_2)),
-            PWM(Pin(self.init.PIN_OUTPUT_3)),
-            PWM(Pin(self.init.PIN_OUTPUT_4))
-        ]
+        # Initialize outputs dynamically
+        self.output = []
+
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the output pin for the current coil
+            pin_attr = f"PIN_OUTPUT_{i}"
+            if not hasattr(self.init, pin_attr):
+                raise ValueError(
+                    f"Output pin configuration for coil {i} is missing. "
+                    f"Please ensure {pin_attr} is defined in the init module."
+                )
+            pin = getattr(self.init, pin_attr)
+
+            # Initialize the PWM object for the current output pin
+            self.output.append(PWM(Pin(pin)))
 
     def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
         """

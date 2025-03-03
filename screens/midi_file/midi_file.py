@@ -10,10 +10,9 @@ The modules in the midi_file subdirectory provide the primary functionality.
 
 import json
 import uos
-from mptcc.hardware.init import init
-from mptcc.lib.menu import Screen
-import mptcc.lib.utils as utils
-from mptcc.lib.config import Config as config
+from ...hardware.init import init
+from ...lib.menu import Screen
+from ...lib.config import Config as config
 
 class MIDIFile(Screen):
     """
@@ -84,9 +83,9 @@ class MIDIFile(Screen):
         self.current_page = None
         self.selected_filename = None
         self.selected_track = None
-        self.outputs = [None] * 4
+        self.outputs = [None] * self.init.NUMBER_OF_COILS  # Dynamically sized based on NUMBER_OF_COILS
         self.last_rotary_1_value = 0
-        self.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * 4
+        self.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * self.init.NUMBER_OF_COILS  # Dynamically sized
         self.per_page = self.display.DISPLAY_ITEMS_PER_PAGE
         self.output_y = None
         self.line_height = self.display.DISPLAY_LINE_HEIGHT
@@ -134,15 +133,24 @@ class MIDIFile(Screen):
                     levels = map_data["levels"]
                 else:
                     mappings = map_data
-                    
-                    levels = [self.default_level] * 4
+                    levels = [self.default_level] * self.init.NUMBER_OF_COILS  # Default levels
 
                 if not isinstance(mappings, list) or not isinstance(levels, list):
                     raise ValueError("Invalid map file format: mappings and levels must be lists")
 
-                for i in range(min(len(self.outputs), len(mappings))):
+                # Ensure mappings and levels match the current NUMBER_OF_COILS
+                if len(mappings) < self.init.NUMBER_OF_COILS:
+                    mappings.extend([0] * (self.init.NUMBER_OF_COILS - len(mappings)))  # Pad with zeros
+                if len(levels) < self.init.NUMBER_OF_COILS:
+                    levels.extend([self.default_level] * (self.init.NUMBER_OF_COILS - len(levels)))  # Pad with default levels
+
+                # Truncate if the map file has more elements than NUMBER_OF_COILS
+                mappings = mappings[:self.init.NUMBER_OF_COILS]
+                levels = levels[:self.init.NUMBER_OF_COILS]
+
+                # Assign mappings and levels
+                for i in range(self.init.NUMBER_OF_COILS):
                     self.outputs[i] = mappings[i] - 1 if mappings[i] != 0 else None
-                for i in range(min(len(self.levels), len(levels))):
                     self.levels[i] = levels[i]
         except OSError:
             self.save_map_file(file_path, False)
@@ -185,19 +193,10 @@ class MIDIFile(Screen):
         direction : int
             The rotary encoder direction.
         """
-        # print(f"MIDIFile.rotary: Routing input for encoder {encoder_number}")  # Debugging
         handler = self.handlers.get(self.current_page)
         if handler:
-            # print(f"MIDIFile.rotary: Found handler for page {self.current_page}")  # Debugging
             if hasattr(handler, f"rotary_{encoder_number}"):
-                # print(f"MIDIFile.rotary: Calling rotary_{encoder_number} on handler")  # Debugging
                 getattr(handler, f"rotary_{encoder_number}")(direction)
-            else:
-                pass
-                # print(f"MIDIFile.rotary: Handler does not have rotary_{encoder_number} method")  # Debugging
-        else:
-            pass
-            # print(f"MIDIFile.rotary: No handler found for page {self.current_page}")  # Debugging
 
     def switch(self, switch_number):
         """

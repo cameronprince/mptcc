@@ -62,6 +62,24 @@ class Init:
         self.rgb_led_color = {}
         self.ignore_input = False
 
+    def validate_settings(self):
+        """
+        Validates the NUMBER_OF_COILS variable.
+        Raises an error and stops the program if the constraints are not met.
+        """
+        # Ensure NUMBER_OF_COILS is at least 4
+        if self.NUMBER_OF_COILS < 4:
+            raise ValueError("NUMBER_OF_COILS must be at least 4. The program will now exit.")
+
+        # Check if the number of coils is greater than 4
+        if self.NUMBER_OF_COILS > 4:
+            if self.display.DISPLAY_WIDTH < 256:
+                raise ValueError("For more than 4 coils, the display width must be at least 256 pixels. The program will now exit.")
+
+        # Check if the number of coils is greater than 8
+        if self.NUMBER_OF_COILS > 8:
+            raise ValueError("The maximum number of supported coils is currently 8. The program will now exit.")
+
     def init_i2c_1(self):
         """
         Initializes the first I2C bus.

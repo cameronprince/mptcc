@@ -9,7 +9,6 @@ Class for driving outputs with PIO PWM.
 
 from machine import Pin, freq
 from rp2 import PIO, StateMachine, asm_pio
-from ...lib.utils import status_color
 from ...hardware.init import init
 from ..output.output import Output
 
@@ -53,16 +52,24 @@ class GPIO_PIO(Output):
         # PIO state machine clock frequency (125 MHz).
         self.smf = freq()
 
-        # Set up PIO and state machines for each output pin.
-        self.output = [
-            StateMachine(0, pwm_program, set_base=Pin(self.init.PIN_OUTPUT_1)),
-            StateMachine(1, pwm_program, set_base=Pin(self.init.PIN_OUTPUT_2)),
-            StateMachine(2, pwm_program, set_base=Pin(self.init.PIN_OUTPUT_3)),
-            StateMachine(3, pwm_program, set_base=Pin(self.init.PIN_OUTPUT_4))
-        ]
+        # Initialize outputs dynamically.
+        self.output = []
 
-        # Ensure state machines are initially inactive.
-        for sm in self.output:
+        for i in range(1, self.init.NUMBER_OF_COILS + 1):
+            # Dynamically get the output pin for the current coil.
+            pin_attr = f"PIN_OUTPUT_{i}"
+            if not hasattr(self.init, pin_attr):
+                raise ValueError(
+                    f"Pin configuration for output {i} is missing. "
+                    f"Please ensure {pin_attr} is defined in main."
+                )
+            pin = getattr(self.init, pin_attr)
+
+            # Initialize the state machine for the current output pin.
+            sm = StateMachine(i - 1, pwm_program, set_base=Pin(pin))
+            self.output.append(sm)
+
+            # Ensure the state machine is initially inactive.
             sm.active(0)
 
     def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):

@@ -51,7 +51,7 @@ class SSD1306(Display):
         super().__init__()
         self.init = init
 
-        if self.init.DISPLAY_INTERFACE == "i2c_2":
+        if self.init.DISPLAY_INTERFACE == "I2C_2":
             self.init.init_i2c_2()
             from ssd1306 import SSD1306_I2C as driver
             self.driver = driver(
@@ -61,7 +61,7 @@ class SSD1306(Display):
                 addr=self.init.DISPLAY_I2C_ADDR,
             )
             self.mutex = self.init.i2c_2_mutex
-        elif self.init.DISPLAY_INTERFACE == "spi_1":
+        elif self.init.DISPLAY_INTERFACE == "SPI_1":
             self.init.init_spi_1()
             from ssd1306 import SSD1306_SPI as driver
             self.driver = driver(
@@ -72,7 +72,7 @@ class SSD1306(Display):
                 res = Pin(self.init.PIN_SPI_1_RST),
                 cs = Pin(self.init.PIN_SPI_1_CS),
             )
-        elif self.init.DISPLAY_INTERFACE == "spi_2":
+        elif self.init.DISPLAY_INTERFACE == "SPI_2":
             self.init.init_spi_2()
             from ssd1306 import SSD1306_SPI as driver
             self.driver = driver(

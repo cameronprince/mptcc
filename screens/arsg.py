@@ -9,10 +9,10 @@ Provides functionality for the ARSG emulator.
 import _thread
 import time
 import uasyncio as asyncio
-from mptcc.hardware.init import init
-from mptcc.lib.menu import Screen
-from mptcc.lib.config import Config as config
-import mptcc.lib.utils as utils
+from ..hardware.init import init
+from ..lib.menu import Screen
+from ..lib.config import Config as config
+from ..lib.utils import calculate_on_time
 
 class ARSG(Screen):
     """
@@ -145,7 +145,7 @@ class ARSG(Screen):
         """
         Updates the on time to ensure it does not exceed the maximum allowed duty cycle or on-time.
         """
-        self.on_time = utils.calculate_on_time(self.on_time, self.freq, self.max_duty, self.max_on_time)
+        self.on_time = calculate_on_time(self.on_time, self.freq, self.max_duty, self.max_on_time)
 
     def rotary_1(self, direction):
         """

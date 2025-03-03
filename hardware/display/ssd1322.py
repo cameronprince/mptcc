@@ -56,9 +56,9 @@ class SSD1322(Display):
 
         init.init_spi_2()
 
-        dc=Pin(self.init.PIN_SPI_2_DC, Pin.OUT)
-        cs=Pin(self.init.PIN_SPI_2_CS, Pin.OUT)
-        res=Pin(self.init.PIN_SPI_2_RST, Pin.OUT)
+        dc = Pin(self.init.PIN_SPI_2_DC, Pin.OUT)
+        cs = Pin(self.init.PIN_SPI_2_CS, Pin.OUT)
+        res = Pin(self.init.PIN_SPI_2_RST, Pin.OUT)
 
         self.driver = driver(self.init.spi_2, dc=dc, cs=cs, rst=res)
         self.width = self.DISPLAY_WIDTH
@@ -69,6 +69,26 @@ class SSD1322(Display):
         Clears the display.
         """
         self.driver.clear()
+
+    def _clamp_y(self, y, height=0):
+        """
+        Clamps the y-coordinate to ensure the object fits within the display bounds.
+
+        Parameters:
+        ----------
+        y : int
+            The y-coordinate to clamp.
+        height : int
+            The height of the object being drawn (default: 0).
+
+        Returns:
+        -------
+        int
+            The clamped y-coordinate.
+        """
+        max_y = self.DISPLAY_HEIGHT - height - 1  # Subtract 1 to ensure the object fits
+        clamped_y = max(0, min(y, max_y))
+        return clamped_y
 
     def text(self, text, w, h, c):
         """
@@ -85,7 +105,7 @@ class SSD1322(Display):
         c : int
             The font color (0 or 1).
         """
-        # def draw_text8x8(self, x, y, text, gs=15):
+        h = self._clamp_y(h, self.DISPLAY_FONT_HEIGHT)
         if c > 0:
             c = 15
         self.driver.draw_text8x8(w, h, text, c)
@@ -105,6 +125,7 @@ class SSD1322(Display):
         c : int
             The color of the line (0 or 1).
         """
+        y = self._clamp_y(y)
         if c > 0:
             c = 15
         self.driver.draw_hline(x, y, w, c)
@@ -126,6 +147,11 @@ class SSD1322(Display):
         c : int
             The color of the rectangle (0 or 1).
         """
+        y = self._clamp_y(y, h)
+        # Ensure the rectangle does not exceed the display height.
+        max_height = self.DISPLAY_HEIGHT - y
+        h = min(h, max_height)
+
         if c > 0:
             c = 15
         self.driver.fill_rectangle(x, y, w, h, c)
