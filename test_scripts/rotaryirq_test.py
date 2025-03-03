@@ -4,10 +4,10 @@ import time
 
 # Define the pins for each encoder
 encoders = [
-    {'clk': 26, 'dt': 27, 'sw': 28},
-    {'clk': 20, 'dt': 21, 'sw': 22},
-    {'clk': 12, 'dt': 11, 'sw': 10},
-    {'clk': 15, 'dt': 14, 'sw': 13}
+    {'clk': 27, 'dt': 0, 'sw': 26},
+    {'clk': 21, 'dt': 22, 'sw': 20},
+    {'clk': 11, 'dt': 10, 'sw': 12},
+    {'clk': 14, 'dt': 13, 'sw': 15}
 ]
 
 # Initialize the encoders
@@ -24,13 +24,13 @@ for pins in encoders:
         max_val=100,
         reverse=False,
         range_mode=RotaryIRQ.RANGE_UNBOUNDED,
-        pull_up=True  # Enable internal pull-ups
+        pull_up=False  # Enable internal pull-ups
     )
     rotary_encoders.append(rotary)
     current_values.append(0)
 
     # Initialize switch pin with internal pull-up enabled
-    switch = Pin(pins['sw'], Pin.IN, Pin.PULL_UP)
+    switch = Pin(pins['sw'], Pin.IN)
     switches.append(switch)
 
 print("Initialized all encoders. Rotate and press buttons to test.")

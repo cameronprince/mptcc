@@ -39,8 +39,8 @@ init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-init.PIN_I2C_2_SCL = 11
-init.PIN_I2C_2_SDA = 10
+init.PIN_I2C_2_SCL = 19
+init.PIN_I2C_2_SDA = 18
 init.I2C_2_INTERFACE = 1
 init.I2C_2_FREQ = 400000
 init.I2C_2_TIMEOUT = 50000
@@ -78,7 +78,7 @@ contiguous memory.
 
 # Shared display settings.
 # init.DISPLAY_INTERFACE = "I2C_1" # Either I2C_1, I2C_2, SPI_1 or SPI_2.
-init.DISPLAY_INTERFACE = "I2C_2"
+init.DISPLAY_INTERFACE = "I2C_1"
 init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
 
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
@@ -119,7 +119,7 @@ reliable input method, but consumes twelve GPIO pins.
 
 # Rotary encoder pin assignments.
 init.PIN_ROTARY_1_CLK = 27
-init.PIN_ROTARY_1_DT = 28
+init.PIN_ROTARY_1_DT = 0
 init.PIN_ROTARY_1_SW = 26
 
 init.PIN_ROTARY_2_CLK = 21
@@ -138,17 +138,17 @@ init.PIN_ROTARY_4_SW = 15
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
 
-# from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 
-init.I2CENCODER_I2C_INSTANCE = 2
+init.I2CENCODER_I2C_INSTANCE = 1
 init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44] # 80, 48, 96, 68
 init.I2CENCODER_INTERRUPT_PIN = 0
 
-from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://www.duppa.net/shop/i2cencoder-mini-with-soldered-accessory
 # Requires: https://github.com/cameronprince/I2CEncoderMini
@@ -177,7 +177,7 @@ need for current limiting resistors for the LEDs.
 # Asyncio RGB LED updates are available in cases where both threads update
 # I2C devices on the same bus. This setting causes LED colors to be stored
 # instead of calling the hardware directly.
-init.RGB_LED_ASYNCIO_POLLING = False
+init.RGB_LED_ASYNCIO_POLLING = True
 
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
@@ -202,11 +202,11 @@ init.RGB_PCA9685_LED4_RED = 9
 init.RGB_PCA9685_LED4_GREEN = 10
 init.RGB_PCA9685_LED4_BLUE = 11
 
-# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 # RGB LED Ring Small - https://www.duppa.net/shop/rgb-led-ring-small/
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
@@ -268,7 +268,7 @@ init.PIN_OUTPUT_3 = 7
 init.PIN_OUTPUT_4 = 6
 
 # GPIO pin outputs with hardware PWM.
-# from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
+from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
 # from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
@@ -277,7 +277,7 @@ init.PIN_OUTPUT_4 = 6
 # from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
 
 # GPIO pin outputs with timers.
-from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+# from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
 
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico

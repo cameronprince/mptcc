@@ -69,14 +69,23 @@ class KY040(Input):
             encoder.add_listener(self.create_listener(i))
 
             # Initialize switch.
-            switch_pin = Pin(sw_pin, Pin.IN, Pin.PULL_UP)
+            # Conditionally enable pull-up based on init.ROTARY_PULL_UP.
+            if init.ROTARY_PULL_UP:
+                switch_pin = Pin(sw_pin, Pin.IN, Pin.PULL_UP)
+            else:
+                switch_pin = Pin(sw_pin, Pin.IN)
+
+            # Attach interrupt to the switch pin.
             switch_pin.irq(lambda pin, idx=i: self.switch_click(idx + 1), Pin.IRQ_FALLING)
             setattr(self.init, f"switch_{i + 1}", switch_pin)
+            print(f"KY-040 rotary encoder {i + 1} initialized: CLK={clk_pin}, DT={dt_pin}, SW={sw_pin}, pull_up={init.ROTARY_PULL_UP}")
 
     def create_listener(self, idx):
         def listener():
+            print("listener begin")
             direction = None
             new_value = self.rotary_encoders[idx].value()
+            print("listener value: ", new_value)
 
             if new_value is None:
                 return
@@ -94,10 +103,12 @@ class KY040(Input):
 
             self.last_rotations[idx] = new_value
             self.rotary_encoder_change(idx, direction)
+            print("listener end")
         return listener
 
     def switch_click(self, switch):
         current_time = time.ticks_ms()
         if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 500:
+            print("ky_040 switch_click")
             self.last_switch_click_time[switch - 1] = current_time
             super().switch_click(switch)

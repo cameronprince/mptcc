@@ -38,16 +38,17 @@ class MIDIFilePlay:
         # Read the default output level from the configuration.
         self.config = config.read_config()
 
-        # Dynamically create rotary_X methods based on NUMBER_OF_COILS.
-        for i in range(self.init.NUMBER_OF_COILS):
-            setattr(self, f"rotary_{i + 1}", lambda direction, idx=i: self.rotary(idx, direction))
-
     def draw(self, file_path):
         """
         The main MIDI file playback function.
         """
         self.midi_file.current_page = "play"
         self.file_path = file_path
+
+        # Dynamically create rotary_X methods based on NUMBER_OF_COILS.
+        # for i in range(self.init.NUMBER_OF_COILS):
+        #     print('creating dynamic rotary function for ', i)
+        #     setattr(self, f"rotary_{i + 1}", lambda direction, idx=i: self.rotary(idx, direction))
 
         # Show a loading message.
         self.display.loading_screen()
