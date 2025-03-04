@@ -19,6 +19,18 @@ General Settings
 # is required. Valid values are currently 4-8.
 init.NUMBER_OF_COILS = 4
 
+# Asyncio RGB LED updates are available in cases where both threads update
+# I2C devices on the same bus. This setting causes LED colors to be stored
+# instead of calling the hardware directly. Then an asynchronous function
+# detects the values being updated and triggers the hardware update. This is
+# because both threads can't reliably communicate with the same bus at the
+# same time. This setting is most needed with I2CEncoders where the integrated
+# RGB LED shares the same interface with the encoder. Without this setting
+# enabled, operating encoders during output/playback can cause freezes.
+# This feature should work on any RGB LED hardware, but keep in mind it does
+# have latency. RGB LEDs should have a dedicated bus instead, if possible.
+init.RGB_LED_ASYNCIO_POLLING = False
+
 # Enable mutex debugging.
 init.MUTEX_DEBUGGING = False
 
@@ -32,8 +44,8 @@ reader. The SD card is read incrementally during MIDI playback. It must have a
 dedicated bus.
 """
 # I2C bus 1 pin assignments and settings.
-init.PIN_I2C_1_SCL = 17
-init.PIN_I2C_1_SDA = 16
+init.PIN_I2C_1_SCL = 13
+init.PIN_I2C_1_SDA = 12
 init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
@@ -78,7 +90,7 @@ contiguous memory.
 
 # Shared display settings.
 # init.DISPLAY_INTERFACE = "I2C_1" # Either I2C_1, I2C_2, SPI_1 or SPI_2.
-init.DISPLAY_INTERFACE = "I2C_2"
+init.DISPLAY_INTERFACE = "I2C_1"
 init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
 
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
@@ -119,7 +131,7 @@ reliable input method, but consumes twelve GPIO pins.
 
 # Rotary encoder pin assignments.
 init.PIN_ROTARY_1_CLK = 27
-init.PIN_ROTARY_1_DT = 28
+init.PIN_ROTARY_1_DT = 0
 init.PIN_ROTARY_1_SW = 26
 
 init.PIN_ROTARY_2_CLK = 21
@@ -143,7 +155,7 @@ init.ROTARY_PULL_UP = False
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
 
-init.I2CENCODER_I2C_INSTANCE = 2
+init.I2CENCODER_I2C_INSTANCE = 1
 init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44] # 80, 48, 96, 68
 init.I2CENCODER_INTERRUPT_PIN = 0
@@ -173,16 +185,10 @@ RGB LEDs with the I2C bus, saving at least six GPIO pins. It also negates the
 need for current limiting resistors for the LEDs.
 """
 
-# Shared RGB LED settings.
-# Asyncio RGB LED updates are available in cases where both threads update
-# I2C devices on the same bus. This setting causes LED colors to be stored
-# instead of calling the hardware directly.
-init.RGB_LED_ASYNCIO_POLLING = False
-
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
 
-init.RGB_PCA9685_I2C_INSTANCE = 1
+init.RGB_PCA9685_I2C_INSTANCE = 2
 init.RGB_PCA9685_ADDR = 0x40
 init.RGB_PCA9685_FREQ = 1000
 
@@ -268,7 +274,7 @@ init.PIN_OUTPUT_3 = 7
 init.PIN_OUTPUT_4 = 6
 
 # GPIO pin outputs with hardware PWM.
-# from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
+from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 
 # GPIO pin outputs with Programmable Input Output (PIO).
 # from mptcc.hardware.output.gpio_pio import GPIO_PIO as output # Alternate option.
@@ -277,7 +283,7 @@ init.PIN_OUTPUT_4 = 6
 # from mptcc.hardware.output.gpio_bitbang import GPIO_BitBang as output # Alternate option.
 
 # GPIO pin outputs with timers.
-from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
+# from mptcc.hardware.output.gpio_timer import GPIO_Timer as output # Alternate option.
 
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico

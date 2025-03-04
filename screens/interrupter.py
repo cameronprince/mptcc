@@ -8,6 +8,7 @@ Provides functionality for the standard interrupter.
 
 import _thread
 import time
+import uasyncio as asyncio
 from ..hardware.init import init
 from ..lib.menu import Screen
 from ..lib.config import Config as config
@@ -56,6 +57,10 @@ class Interrupter(Screen):
         self.display.text("10x", 100, 56, 0)
         self.display.text("Active", 0, 56, 0)
         self.update_display(update_on_time=True, update_frequency=True, initial=True)
+
+        # Start the RGB LED update task if RGB LED asynchronous polling is enabled.
+        if self.init.RGB_LED_ASYNCIO_POLLING:
+            self.init.rgb_led_tasks.start(lambda: self.active)
 
     def update_display(self, update_on_time=True, update_frequency=True, update_ten_x=False, update_active=False, initial=False):
         """
@@ -152,6 +157,8 @@ class Interrupter(Screen):
         Handles the second switch input to deactivate the interrupter and return to the parent screen.
         """
         self.active = False
+        if self.init.RGB_LED_ASYNCIO_POLLING:
+            self.init.rgb_led_tasks.stop()
         parent_screen = self.parent
         if parent_screen:
             self.init.menu.set_screen(parent_screen)

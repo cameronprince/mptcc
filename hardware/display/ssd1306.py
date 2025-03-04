@@ -96,6 +96,7 @@ class SSD1306(Display):
 
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
+        print(f"SSD1306 display driver initialized on {self.init.DISPLAY_INTERFACE} at address: 0x{self.init.DISPLAY_I2C_ADDR:02X}")
 
     def clear(self):
         """
