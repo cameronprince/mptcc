@@ -38,17 +38,24 @@ class MIDIFilePlay:
         # Read the default output level from the configuration.
         self.config = config.read_config()
 
+        # Dynamically create rotary_X methods based on NUMBER_OF_COILS.
+        for i in range(self.init.NUMBER_OF_COILS):
+            setattr(self, f"rotary_{i + 1}", self._create_rotary_method(i))
+
+    def _create_rotary_method(self, index):
+        """
+        Factory function to create a rotary method for a specific index.
+        """
+        def rotary_method(direction):
+            self.rotary(index, direction)
+        return rotary_method
+
     def draw(self, file_path):
         """
         The main MIDI file playback function.
         """
         self.midi_file.current_page = "play"
         self.file_path = file_path
-
-        # Dynamically create rotary_X methods based on NUMBER_OF_COILS.
-        # for i in range(self.init.NUMBER_OF_COILS):
-        #     print('creating dynamic rotary function for ', i)
-        #     setattr(self, f"rotary_{i + 1}", lambda direction, idx=i: self.rotary(idx, direction))
 
         # Show a loading message.
         self.display.loading_screen()
@@ -83,12 +90,13 @@ class MIDIFilePlay:
         # Start playback in a separate thread.
         _thread.start_new_thread(self.player, (self.file_path,))
 
-        # Start the update display, RGB LED, and playback monitor tasks.
+        # Start the update display and playback monitor tasks.
         asyncio.create_task(self._update_display_task())
         asyncio.create_task(self._monitor_playback_end_task())
 
+        # Start the global RGB LED tasks if RGB LED asynchronous polling is enabled.
         if self.init.RGB_LED_ASYNCIO_POLLING:
-            asyncio.create_task(self._update_rgb_led_task())
+            self.init.rgb_led_tasks.start(lambda: self.playback_active)
 
     def player(self, file_path):
         """
@@ -179,21 +187,6 @@ class MIDIFilePlay:
                 self.last_display_update = time.ticks_ms()
             await asyncio.sleep(0.1)
 
-    async def _update_rgb_led_task(self):
-        """
-        Asyncio task to update the RGB LEDs during playback.
-        """
-        while self.playback_active:
-            for output, color in self.init.rgb_led_color.items():
-                if color:
-                    r, g, b = color
-                    try:
-                        self.init.rgb_led[output].setColor(r, g, b)
-                    except Exception as e:
-                        print(f"Error updating RGB LED {output}: {e}")
-                    self.init.rgb_led_color[output] = None
-            await asyncio.sleep(0.1)
-
     async def _monitor_playback_end_task(self):
         """
         Asyncio task to monitor playback_ended and call stop_playback() when it becomes True.
@@ -208,29 +201,20 @@ class MIDIFilePlay:
         """
         Stop MIDI playback and clean up resources.
         """
-        # Clear the RGB LED color dictionary.
         if self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_color.clear()
-
+            self.init.rgb_led_tasks.stop()
+        # Turn off all outputs.
         self.output.set_all_outputs()
 
-        # Explicitly set all RGB LEDs to off.
-        for rgb_led in self.init.rgb_led:
-            try:
-                rgb_led.off()
-            except Exception as e:
-                print(f"Error turning off RGB LED: {e}")
-
-        if (self.save_levels or self.config.get("midi_file_save_levels_on_end")):
-            # Save the current levels to the .map file.
+        # Save levels if necessary.
+        if self.save_levels or self.config.get("midi_file_save_levels_on_end"):
             self.save_levels = False
             self.midi_file.levels = self.levels
             self.midi_file.save_map_file(self.file_path, False)
-
-            # Display "Levels saved" message.
             self.display.clear()
             self.display.alert_screen("Levels saved")
 
+        # Deinitialize the SD card reader.
         self.init.sd_card_reader.deinit_sd()
 
         # Return to the file listing.

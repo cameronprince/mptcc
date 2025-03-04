@@ -19,6 +19,18 @@ General Settings
 # is required. Valid values are currently 4-8.
 init.NUMBER_OF_COILS = 4
 
+# Asyncio RGB LED updates are available in cases where both threads update
+# I2C devices on the same bus. This setting causes LED colors to be stored
+# instead of calling the hardware directly. Then an asynchronous function
+# detects the values being updated and triggers the hardware update. This is
+# because both threads can't reliably communicate with the same bus at the
+# same time. This setting is most needed with I2CEncoders where the integrated
+# RGB LED shares the same interface with the encoder. Without this setting
+# enabled, operating encoders during output/playback can cause freezes.
+# This feature should work on any RGB LED hardware, but keep in mind it does
+# have latency. RGB LEDs should have a dedicated bus instead, if possible.
+init.RGB_LED_ASYNCIO_POLLING = False
+
 # Enable mutex debugging.
 init.MUTEX_DEBUGGING = False
 
@@ -32,15 +44,15 @@ reader. The SD card is read incrementally during MIDI playback. It must have a
 dedicated bus.
 """
 # I2C bus 1 pin assignments and settings.
-init.PIN_I2C_1_SCL = 17
-init.PIN_I2C_1_SDA = 16
+init.PIN_I2C_1_SCL = 13
+init.PIN_I2C_1_SDA = 12
 init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-init.PIN_I2C_2_SCL = 19
-init.PIN_I2C_2_SDA = 18
+init.PIN_I2C_2_SCL = 11
+init.PIN_I2C_2_SDA = 10
 init.I2C_2_INTERFACE = 1
 init.I2C_2_FREQ = 400000
 init.I2C_2_TIMEOUT = 50000
@@ -138,7 +150,7 @@ init.PIN_ROTARY_4_SW = 15
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
 
-from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+# from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
@@ -148,7 +160,7 @@ init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44] # 80, 48, 96, 68
 init.I2CENCODER_INTERRUPT_PIN = 0
 
-# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://www.duppa.net/shop/i2cencoder-mini-with-soldered-accessory
 # Requires: https://github.com/cameronprince/I2CEncoderMini
@@ -173,16 +185,10 @@ RGB LEDs with the I2C bus, saving at least six GPIO pins. It also negates the
 need for current limiting resistors for the LEDs.
 """
 
-# Shared RGB LED settings.
-# Asyncio RGB LED updates are available in cases where both threads update
-# I2C devices on the same bus. This setting causes LED colors to be stored
-# instead of calling the hardware directly.
-init.RGB_LED_ASYNCIO_POLLING = True
-
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
 
-init.RGB_PCA9685_I2C_INSTANCE = 1
+init.RGB_PCA9685_I2C_INSTANCE = 2
 init.RGB_PCA9685_ADDR = 0x40
 init.RGB_PCA9685_FREQ = 1000
 
@@ -202,11 +208,11 @@ init.RGB_PCA9685_LED4_RED = 9
 init.RGB_PCA9685_LED4_GREEN = 10
 init.RGB_PCA9685_LED4_BLUE = 11
 
-from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 # RGB LED Ring Small - https://www.duppa.net/shop/rgb-led-ring-small/
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small

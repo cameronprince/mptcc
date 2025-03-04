@@ -7,6 +7,7 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
+import uasyncio as asyncio
 from ...lib.utils import status_color
 from ..hardware import Hardware
 
@@ -16,6 +17,7 @@ class RGBLED(Hardware):
     """
     def __init__(self):
         super().__init__()
+
 
 class RGB:
     """
@@ -27,7 +29,7 @@ class RGB:
         """
         color = (0, 0, 0)
         if output is not None and self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_color[output] = (color)
+            self.init.rgb_led_color[output] = color
         else:
             self.setColor(*color)
 

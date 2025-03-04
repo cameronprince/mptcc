@@ -1,3 +1,12 @@
+"""
+MicroPython Tesla Coil Controller (MPTCC)
+by Cameron Prince
+teslauniverse.com
+
+hardware/rgb_led/rgb_led.py
+Parent class for RGB LEDs.
+"""
+
 import time
 from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init

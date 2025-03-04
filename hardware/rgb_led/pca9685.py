@@ -43,12 +43,13 @@ class PCA9685(RGBLED):
         self.driver.freq(self.init.RGB_PCA9685_FREQ)
 
         # Print initialization details.
-        print(f"PCA9685 driver initialized on I2C instance {self.init.RGB_PCA9685_I2C_INSTANCE} at address: 0x{self.init.RGB_PCA9685_ADDR:02X}")
+        print(f"PCA9685 RGB LED driver initialized on I2C_{self.init.RGB_PCA9685_I2C_INSTANCE} at address: 0x{self.init.RGB_PCA9685_ADDR:02X}")
         for i in range(self.init.NUMBER_OF_COILS):
             red_channel = getattr(self.init, f"RGB_PCA9685_LED{i + 1}_RED")
             green_channel = getattr(self.init, f"RGB_PCA9685_LED{i + 1}_GREEN")
             blue_channel = getattr(self.init, f"RGB_PCA9685_LED{i + 1}_BLUE")
-            print(f"  LED {i + 1}: R={red_channel}, G={green_channel}, B={blue_channel}")
+            print(f"- LED {i + 1}: R={red_channel}, G={green_channel}, B={blue_channel}")
+        print(f"- Asyncio polling: {self.init.RGB_LED_ASYNCIO_POLLING}")
 
         # Dynamically initialize RGB LEDs based on NUMBER_OF_COILS.
         self.init.rgb_led = [
