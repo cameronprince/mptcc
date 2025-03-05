@@ -64,6 +64,8 @@ class SSD1322(Display):
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 
+        print(f"SSD1322 display driver initialized on {self.init.DISPLAY_INTERFACE}")
+
     def clear(self):
         """
         Clears the display.

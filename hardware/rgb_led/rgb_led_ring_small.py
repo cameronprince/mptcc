@@ -9,10 +9,39 @@ RGB LED Ring Small driver.
 
 import time
 import _thread
-from RGBLEDRingSmall import RGBLEDRingSmall as LEDRingSmall
+from ...lib.duppa import DuPPa
 from ...lib.utils import calculate_percent, status_color, hex_to_rgb
 from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init
+
+# Constants and register definitions
+CONSTANTS = {
+    # ISSI3746-specific registers
+    "ISSI3746_PAGE0": 0x00,
+    "ISSI3746_PAGE1": 0x01,
+
+    "ISSI3746_COMMANDREGISTER": 0xFD,
+    "ISSI3746_COMMANDREGISTER_LOCK": 0xFE,
+    "ISSI3746_ID_REGISTER": 0xFC,
+    "ISSI3746_ULOCK_CODE": 0xC5,
+
+    "ISSI3746_CONFIGURATION": 0x50,
+    "ISSI3746_GLOBALCURRENT": 0x51,
+    "ISSI3746_PULLUPDOWM": 0x52,
+    "ISSI3746_OPENSHORT": 0x53,
+    "ISSI3746_TEMPERATURE": 0x5F,
+    "ISSI3746_SPREADSPECTRUM": 0x60,
+    "ISSI3746_RESET_REG": 0x8F,
+    "ISSI3746_PWM_FREQUENCY_ENABLE": 0xE0,
+    "ISSI3746_PWM_FREQUENCY_SET": 0xE2,
+
+    # LED mapping for the RGB LED ring
+    "ISSI_LED_MAP": [
+        [0x48, 0x36, 0x24, 0x12, 0x45, 0x33, 0x21, 0x0F, 0x42, 0x30, 0x1E, 0x0C, 0x3F, 0x2D, 0x1B, 0x09, 0x3C, 0x2A, 0x18, 0x06, 0x39, 0x27, 0x15, 0x03],
+        [0x47, 0x35, 0x23, 0x11, 0x44, 0x32, 0x20, 0x0E, 0x41, 0x2F, 0x1D, 0x0B, 0x3E, 0x2C, 0x1A, 0x08, 0x3B, 0x29, 0x17, 0x05, 0x38, 0x26, 0x14, 0x02],
+        [0x46, 0x34, 0x22, 0x10, 0x43, 0x31, 0x1F, 0x0D, 0x40, 0x2E, 0x1C, 0x0A, 0x3D, 0x2B, 0x19, 0x07, 0x3A, 0x28, 0x16, 0x04, 0x37, 0x25, 0x13, 0x01]
+    ]
+}
 
 class RGBLEDRingSmall(RGBLED):
     """
@@ -53,6 +82,12 @@ class RGBLEDRingSmall(RGBLED):
             RGB_RGBLEDRingSmall(self.i2c, address, self.mutex)
             for address in self.init.RGB_LED_RING_SMALL_ADDRESSES
         ]
+
+        # Print initialization details.
+        print(f"RGBLEDRingSmall initialized on I2C_{self.init.RGB_LED_RING_SMALL_I2C_INSTANCE} with {self.init.NUMBER_OF_COILS} objects:")
+        for i, addr in enumerate(self.init.RGB_LED_RING_SMALL_ADDRESSES):
+            print(f"- RGBLEDRingSmall {i + 1}: I2C address 0x{addr:02X}")
+        print(f"- Asyncio polling: {self.init.RGB_LED_ASYNCIO_POLLING}")
 
 class RGB_RGBLEDRingSmall(RGB):
     """
@@ -168,7 +203,7 @@ class RGB_RGBLEDRingSmall(RGB):
         """
         self.init.mutex_acquire(self.mutex, "rgb_led_ring_small:_initialize_led_ring")
         try:
-            self.led_ring = LEDRingSmall(self.i2c, self.address)
+            self.led_ring = DuPPa(self.i2c, self.address, CONSTANTS)
             self.led_ring.reset()
             time.sleep(0.01)
             self.led_ring.configuration(0x01)  # Normal operation
