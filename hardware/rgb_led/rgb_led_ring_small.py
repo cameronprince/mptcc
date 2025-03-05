@@ -10,7 +10,7 @@ RGB LED Ring Small driver.
 import time
 import _thread
 from RGBLEDRingSmall import RGBLEDRingSmall as LEDRingSmall
-from ...lib.utils import calculate_percent, status_color
+from ...lib.utils import calculate_percent, status_color, hex_to_rgb
 from ..rgb_led.rgb_led import RGB, RGBLED
 from ...hardware.init import init
 
@@ -86,24 +86,7 @@ class RGB_RGBLEDRingSmall(RGB):
         if self.init.RGB_LED_RING_SMALL_DEFAULT_COLOR == "vu_meter":
             return None
         else:
-            return self._hex_to_rgb(self.init.RGB_LED_RING_SMALL_DEFAULT_COLOR)
-
-    def _hex_to_rgb(self, hex_color):
-        """
-        Convert a hex color code to an RGB tuple.
-
-        Parameters:
-        ----------
-        hex_color : str
-            The hex color code (e.g., "#326400").
-
-        Returns:
-        -------
-        tuple
-            The RGB color as a tuple (R, G, B).
-        """
-        hex_color = hex_color.lstrip('#')
-        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+            return hex_to_rgb(self.init.RGB_LED_RING_SMALL_DEFAULT_COLOR)
 
     def _generate_vu_colors(self):
         """

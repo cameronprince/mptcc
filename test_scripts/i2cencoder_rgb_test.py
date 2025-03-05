@@ -4,7 +4,7 @@ from machine import Pin, I2C
 import i2cEncoderLibV2
 
 # Initialize the device.
-i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
+i2c = I2C(0, scl=Pin(13), sda=Pin(12), freq=400000)
 
 encconfig = (i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE
              | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE

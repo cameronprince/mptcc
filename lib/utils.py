@@ -205,3 +205,20 @@ def status_color(freq, on_time, max_duty=None, max_on_time=None):
     # print(f"[DEBUG] status_color: RGB=({red}, {green}, {blue})")
 
     return red, green, blue
+
+def hex_to_rgb(hex_color):
+    """
+    Convert a hex color code to an RGB tuple.
+
+    Parameters:
+    ----------
+    hex_color : str
+        The hex color code (e.g., "#326400").
+
+    Returns:
+    -------
+    tuple
+        The RGB color as a tuple (R, G, B).
+    """
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))

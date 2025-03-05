@@ -30,11 +30,11 @@ init.NUMBER_OF_COILS = 4
 # This feature should work on any RGB LED hardware, but keep in mind it does
 # have latency. RGB LEDs should have a dedicated bus instead, if possible.
 # Default is False as the default RGB LEDs are on a dedicated bus.
-init.RGB_LED_ASYNCIO_POLLING = False
+init.RGB_LED_ASYNCIO_POLLING = True
 
 # Enable mutex debugging. When enabled, print statements are issued each time
 # a mutex is acquired or released.
-init.MUTEX_DEBUGGING = False
+init.MUTEX_DEBUGGING = True
 
 
 """
@@ -46,18 +46,18 @@ interface dedicated to the SD card reader. The SD card is read incrementally
 during MIDI playback. It must have a dedicated bus.
 """
 # I2C bus 1 pin assignments and settings.
-init.PIN_I2C_1_SCL = 17
-init.PIN_I2C_1_SDA = 16
+init.PIN_I2C_1_SCL = 13
+init.PIN_I2C_1_SDA = 12
 init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-init.PIN_I2C_2_SCL = 19
-init.PIN_I2C_2_SDA = 18
-init.I2C_2_INTERFACE = 1
-init.I2C_2_FREQ = 400000
-init.I2C_2_TIMEOUT = 50000
+# init.PIN_I2C_2_SCL = 19
+# init.PIN_I2C_2_SDA = 18
+# init.I2C_2_INTERFACE = 1
+# init.I2C_2_FREQ = 400000
+# init.I2C_2_TIMEOUT = 50000
 
 # SPI bus 1 pin assignments and settings.
 init.SPI_1_INTERFACE = 0
@@ -152,7 +152,7 @@ init.PIN_ROTARY_4_SW = 26
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
 
-from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+# from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
@@ -161,8 +161,11 @@ init.I2CENCODER_I2C_INSTANCE = 1
 init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44] # 80, 48, 96, 68
 init.I2CENCODER_INTERRUPT_PIN = 0
+init.I2CENCODER_DEFAULT_COLOR = "#326400"
+init.I2CENCODER_THRESHOLD_BRIGHTNESS = 32
+init.I2CENCODER_FULL_BRIGHTNESS = 255
 
-# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://www.duppa.net/shop/i2cencoder-mini-with-soldered-accessory
 # Requires: https://github.com/cameronprince/I2CEncoderMini
@@ -210,11 +213,12 @@ init.RGB_PCA9685_LED4_RED = 9
 init.RGB_PCA9685_LED4_GREEN = 10
 init.RGB_PCA9685_LED4_BLUE = 11
 
-from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+
+from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 # RGB LED Ring Small - https://www.duppa.net/shop/rgb-led-ring-small/
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small

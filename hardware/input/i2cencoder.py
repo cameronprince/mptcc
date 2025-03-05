@@ -12,6 +12,7 @@ from machine import Pin
 from ...lib.duppa import DuPPa
 from ...hardware.init import init
 from ..input.input import Input
+from ...lib.utils import hex_to_rgb
 import uasyncio as asyncio
 
 # Constants and register definitions
@@ -135,10 +136,22 @@ class I2CEncoder(Input):
         encoder.writeEncoder8(encoder.constants["REG_GCONF2"], new_gconf2)
 
         if self.init.I2CENCODER_TYPE == 'RGB':
+            # Set gamma correction for RGB LEDs
             encoder.writeGammaRLED(encoder.constants["GAMMA_2"])
             encoder.writeGammaGLED(encoder.constants["GAMMA_2"])
             encoder.writeGammaBLED(encoder.constants["GAMMA_2"])
-            encoder.writeGammaBLED(encoder.constants["GAMMA_2"])
+            
+            # Set the default color with default brightness
+            default_color = self.init.I2CENCODER_DEFAULT_COLOR
+            r, g, b = hex_to_rgb(default_color)
+            
+            # Apply the default brightness
+            dimmed_r = r * self.init.I2CENCODER_THRESHOLD_BRIGHTNESS // 255
+            dimmed_g = g * self.init.I2CENCODER_THRESHOLD_BRIGHTNESS // 255
+            dimmed_b = b * self.init.I2CENCODER_THRESHOLD_BRIGHTNESS // 255
+            
+            # Write the dimmed color to the encoder
+            encoder.writeRGBCode((dimmed_r << 16) | (dimmed_g << 8) | dimmed_b)
 
         self.init.mutex_release(self.mutex, "i2cencoder:init_encoder")
 
@@ -161,7 +174,14 @@ class I2CEncoder(Input):
                 self.active_interrupt = False
 
                 for idx, encoder in enumerate(self.encoders):
-                    status = encoder.readEncoder8(encoder.constants["REG_ESTATUS"])
+                    self.init.mutex_acquire(self.mutex, "i2cencoder:process_interrupt")
+                    try:
+                        status = encoder.readEncoder8(encoder.constants["REG_ESTATUS"])
+                    except OSError as e:
+                        print(f"I2CEncoder error in process_interrupt: {e}")
+                        continue
+                    finally:
+                        self.init.mutex_release(self.mutex, "i2cencoder:process_interrupt")
 
                     if status:
                         if status & (encoder.constants["REG_RINC"] | encoder.constants["REG_RDEC"]):
