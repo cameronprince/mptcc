@@ -29,30 +29,32 @@ init.NUMBER_OF_COILS = 4
 # enabled, operating encoders during output/playback can cause freezes.
 # This feature should work on any RGB LED hardware, but keep in mind it does
 # have latency. RGB LEDs should have a dedicated bus instead, if possible.
+# Default is False as the default RGB LEDs are on a dedicated bus.
 init.RGB_LED_ASYNCIO_POLLING = False
 
-# Enable mutex debugging.
+# Enable mutex debugging. When enabled, print statements are issued each time
+# a mutex is acquired or released.
 init.MUTEX_DEBUGGING = False
 
 
 """
 Interface Settings
 
-Defaults to a single I2C interface shared with the SSD1306 display and PCA9685
-RGB LED driver, along with a single SPI interface dedicated to the SD card
-reader. The SD card is read incrementally during MIDI playback. It must have a
-dedicated bus.
+Defaults to two I2C interfaces the first dedicated to the SSD1306 display and
+the second dedicated to the PCA9685 RGB LED driver, along with a single SPI
+interface dedicated to the SD card reader. The SD card is read incrementally
+during MIDI playback. It must have a dedicated bus.
 """
 # I2C bus 1 pin assignments and settings.
-init.PIN_I2C_1_SCL = 13
-init.PIN_I2C_1_SDA = 12
+init.PIN_I2C_1_SCL = 17
+init.PIN_I2C_1_SDA = 16
 init.I2C_1_INTERFACE = 0
 init.I2C_1_FREQ = 400000
 init.I2C_1_TIMEOUT = 50000
 
 # I2C bus 2 pin assignments and settings.
-init.PIN_I2C_2_SCL = 11
-init.PIN_I2C_2_SDA = 10
+init.PIN_I2C_2_SCL = 19
+init.PIN_I2C_2_SDA = 18
 init.I2C_2_INTERFACE = 1
 init.I2C_2_FREQ = 400000
 init.I2C_2_TIMEOUT = 50000
@@ -68,14 +70,14 @@ init.PIN_SPI_1_DC = None
 init.PIN_SPI_1_RST = None
 
 # SPI bus 2 pin assignments and settings.
-init.SPI_2_INTERFACE = 1
-init.SPI_2_BAUD = 10000000
-init.PIN_SPI_2_SCK = 10
-init.PIN_SPI_2_MOSI = 11
-init.PIN_SPI_2_MISO = None
-init.PIN_SPI_2_CS = 13
-init.PIN_SPI_2_DC = 12
-init.PIN_SPI_2_RST = 14
+# init.SPI_2_INTERFACE = 1
+# init.SPI_2_BAUD = 10000000
+# init.PIN_SPI_2_SCK = 10
+# init.PIN_SPI_2_MOSI = 11
+# init.PIN_SPI_2_MISO = None
+# init.PIN_SPI_2_CS = 13
+# init.PIN_SPI_2_DC = 12
+# init.PIN_SPI_2_RST = 14
 
 
 """
@@ -130,27 +132,27 @@ reliable input method, but consumes twelve GPIO pins.
 # Requires: https://github.com/miketeachman/micropython-rotary
 
 # Rotary encoder pin assignments.
-init.PIN_ROTARY_1_CLK = 27
-init.PIN_ROTARY_1_DT = 0
-init.PIN_ROTARY_1_SW = 26
+init.PIN_ROTARY_1_CLK = 14
+init.PIN_ROTARY_1_DT = 13
+init.PIN_ROTARY_1_SW = 15
 
-init.PIN_ROTARY_2_CLK = 21
-init.PIN_ROTARY_2_DT = 22
-init.PIN_ROTARY_2_SW = 20
+init.PIN_ROTARY_2_CLK = 10
+init.PIN_ROTARY_2_DT = 9
+init.PIN_ROTARY_2_SW = 11
 
-init.PIN_ROTARY_3_CLK = 11
-init.PIN_ROTARY_3_DT = 10
-init.PIN_ROTARY_3_SW = 12
+init.PIN_ROTARY_3_CLK = 21
+init.PIN_ROTARY_3_DT = 22
+init.PIN_ROTARY_3_SW = 20
 
-init.PIN_ROTARY_4_CLK = 14
-init.PIN_ROTARY_4_DT = 13
-init.PIN_ROTARY_4_SW = 15
+init.PIN_ROTARY_4_CLK = 27
+init.PIN_ROTARY_4_DT = 0
+init.PIN_ROTARY_4_SW = 26
 
 # Enable/disable encoder pin pull-up resistors.
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
 
-# from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
@@ -160,7 +162,7 @@ init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
 init.I2CENCODER_ADDRESSES = [0x50, 0x30, 0x60, 0x44] # 80, 48, 96, 68
 init.I2CENCODER_INTERRUPT_PIN = 0
 
-from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://www.duppa.net/shop/i2cencoder-mini-with-soldered-accessory
 # Requires: https://github.com/cameronprince/I2CEncoderMini
@@ -208,11 +210,11 @@ init.RGB_PCA9685_LED4_RED = 9
 init.RGB_PCA9685_LED4_GREEN = 10
 init.RGB_PCA9685_LED4_BLUE = 11
 
-# from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # Requires: https://github.com/cameronprince/i2cEncoderLibV2
-from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 # RGB LED Ring Small - https://www.duppa.net/shop/rgb-led-ring-small/
 # Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
@@ -268,7 +270,7 @@ Default is the hardware PWM, for now. More testing is required.
 """
 
 # Output pin assignments.
-init.PIN_OUTPUT_1 = 9
+init.PIN_OUTPUT_1 = 1
 init.PIN_OUTPUT_2 = 8
 init.PIN_OUTPUT_3 = 7
 init.PIN_OUTPUT_4 = 6

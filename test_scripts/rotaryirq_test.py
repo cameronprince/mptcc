@@ -4,10 +4,10 @@ import time
 
 # Define the pins for each encoder
 encoders = [
-    {'clk': 27, 'dt': 0, 'sw': 26},
+    {'clk': 14, 'dt': 13, 'sw': 15},
+    {'clk': 10, 'dt': 9, 'sw': 11},
     {'clk': 21, 'dt': 22, 'sw': 20},
-    {'clk': 11, 'dt': 10, 'sw': 12},
-    {'clk': 14, 'dt': 13, 'sw': 15}
+    {'clk': 27, 'dt': 0, 'sw': 26}
 ]
 
 # Initialize the encoders

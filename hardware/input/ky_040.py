@@ -46,7 +46,7 @@ class KY040(Input):
         # Initialize rotary encoders and switches dynamically.
         self.rotary_encoders = []
         self.last_rotations = []
-        self.active_interrupt = None  # Use None to indicate no active interrupt
+        self.active_interrupt = None
 
         for i in range(self.init.NUMBER_OF_COILS):
             clk_pin = rotary_pins[i][0]
@@ -90,42 +90,36 @@ class KY040(Input):
 
     def create_listener(self, idx):
         def listener():
-            # Set the active_interrupt to the index of the encoder that triggered the interrupt
+            # Set the active_interrupt to the index of the encoder that triggered the interrupt.
             self.active_interrupt = idx
         return listener
 
     async def process_interrupt(self):
         """
         Asyncio task to process rotary encoder changes.
-        This method processes the encoder change indicated by self.active_interrupt.
         """
         while True:
             if self.active_interrupt is not None:
-                idx = self.active_interrupt  # Get the index of the encoder that triggered the interrupt
-                self.active_interrupt = None  # Reset the active interrupt
+                idx = self.active_interrupt
+                self.active_interrupt = None
 
                 encoder = self.rotary_encoders[idx]
                 new_value = encoder.value()
 
                 if new_value is None:
-                    continue  # Skip if the value is invalid
+                    continue
 
                 if self.last_rotations[idx] != new_value:
-                    # Determine the direction of rotation
                     if self.last_rotations[idx] == 0 and new_value == 100:
-                        direction = -1  # Wrapped around from 0 to 100 (counter-clockwise)
+                        direction = -1
                     elif self.last_rotations[idx] == 100 and new_value == 0:
-                        direction = 1  # Wrapped around from 100 to 0 (clockwise)
+                        direction = 1
                     else:
                         direction = 1 if new_value > self.last_rotations[idx] else -1
 
-                    # Update the last rotation value
                     self.last_rotations[idx] = new_value
-
-                    # Call the rotary encoder change handler
                     super().rotary_encoder_change(idx, direction)
 
-            # Sleep briefly to avoid busy-waiting
             await asyncio.sleep(0.01)
 
     def switch_click(self, switch):
