@@ -8,13 +8,16 @@ Parent class for input devices.
 """
 
 from ..hardware import Hardware
+from ..init import init
 from ...lib.menu import Screen
 import time
 
 class Input(Hardware):
     def __init__(self):
         super().__init__()
+        self.init = init
         self.switch_disabled = False
+        self.init.integrated_switches = True
 
     def switch_click(self, switch):
         """
@@ -45,7 +48,7 @@ class Input(Hardware):
                     self.init.menu.set_screen(parent_screen)
                     self.init.menu.draw()
 
-    def rotary_encoder_change(self, idx, direction):
+    def encoder_change(self, idx, direction):
         """
         The primary rotary encoder callback function.
         """

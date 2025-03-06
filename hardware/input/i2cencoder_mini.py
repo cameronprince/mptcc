@@ -76,7 +76,7 @@ class I2CEncoderMini(Input):
         # Initialize encoders.
         for i in range(self.init.NUMBER_OF_COILS):
             addr = self.init.I2CENCODER_MINI_ADDRESSES[i]
-            encoder = DuPPa(self.i2c, addr, CONSTANTS)  # Pass all constants
+            encoder = DuPPa(self.i2c, addr, CONSTANTS)
             self.encoders.append(encoder)
             self.init_encoder(encoder)
 
@@ -128,6 +128,7 @@ class I2CEncoderMini(Input):
         """
         Asyncio task to process rotary and switch interrupts.
         """
+        print("self.init.integrated_switches: ", self.init.integrated_switches)
         while True:
             if self.active_interrupt:
                 self.active_interrupt = False
@@ -139,9 +140,9 @@ class I2CEncoderMini(Input):
                             status = encoder.readStatusRaw()
                             if status & (CONSTANTS["RINC"] | CONSTANTS["RDEC"]):
                                 direction = 1 if status & CONSTANTS["RINC"] else -1
-                                super().rotary_encoder_change(idx, direction)
+                                super().encoder_change(idx, direction)
                                 break
-                            if status & CONSTANTS["PUSHP"]:
+                            if status & CONSTANTS["PUSHP"] and self.init.integrated_switches:
                                 super().switch_click(idx + 1)
                                 break
                     finally:

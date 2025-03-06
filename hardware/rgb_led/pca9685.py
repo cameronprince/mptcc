@@ -63,6 +63,7 @@ class PCA9685(RGBLED):
             for i in range(self.init.NUMBER_OF_COILS)
         ]
 
+
 class RGB_PCA9685(RGB):
     """
     A class for handling RGB LEDs with a PCA9685 driver.
@@ -80,11 +81,15 @@ class RGB_PCA9685(RGB):
     def setColor(self, r, g, b):
         """
         Sets the color of the RGB LED using the PCA9685 driver.
+        If any channel (red, green, or blue) is None, it will be skipped.
         """
         self.init.mutex_acquire(self.mutex, "pca9685:set_color")
         try:
-            self.driver.duty(self.red_channel, r * 16)
-            self.driver.duty(self.green_channel, g * 16)
-            self.driver.duty(self.blue_channel, b * 16)
+            if self.red_channel is not None:  # Skip if red channel is None
+                self.driver.duty(self.red_channel, r * 16)
+            if self.green_channel is not None:  # Skip if green channel is None
+                self.driver.duty(self.green_channel, g * 16)
+            if self.blue_channel is not None:  # Skip if blue channel is None
+                self.driver.duty(self.blue_channel, b * 16)
         finally:
             self.init.mutex_release(self.mutex, "pca9685:set_color")

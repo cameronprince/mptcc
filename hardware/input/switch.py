@@ -3,19 +3,17 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-hardware/input/ky_040.py
-Input module for standard KY-040 rotary encoders.
+hardware/input/switch.py
+Generic switch input driver.
 """
 
 import time
 from machine import Pin
-import uasyncio as asyncio
-from rotary_irq_rp2 import RotaryIRQ
 from ...hardware.init import init
 from ..input.input import Input
 from ...lib.menu import Screen
 
-class KY040(Input):
+class Switch(Input):
     def __init__(self):
         super().__init__()
 
@@ -85,44 +83,7 @@ class KY040(Input):
                 switch_pin.irq(create_switch_callback(i), Pin.IRQ_FALLING)
                 setattr(self.init, f"switch_{i + 1}", switch_pin)
 
-            print(f"KY-040 rotary encoder {i + 1} initialized: CLK={clk_pin}, DT={dt_pin}, SW={sw_pin}, pull_up={init.ROTARY_PULL_UP}")
-
-        # Start the asyncio task to process interrupts.
-        asyncio.create_task(self.process_interrupt())
-
-    def create_listener(self, idx):
-        def listener():
-            # Set the active_interrupt to the index of the encoder that triggered the interrupt.
-            self.active_interrupt = idx
-        return listener
-
-    async def process_interrupt(self):
-        """
-        Asyncio task to process rotary encoder changes.
-        """
-        while True:
-            if self.active_interrupt is not None:
-                idx = self.active_interrupt
-                self.active_interrupt = None
-
-                encoder = self.encoders[idx]
-                new_value = encoder.value()
-
-                if new_value is None:
-                    continue
-
-                if self.last_rotations[idx] != new_value:
-                    if self.last_rotations[idx] == 0 and new_value == 100:
-                        direction = -1
-                    elif self.last_rotations[idx] == 100 and new_value == 0:
-                        direction = 1
-                    else:
-                        direction = 1 if new_value > self.last_rotations[idx] else -1
-
-                    self.last_rotations[idx] = new_value
-                    super().encoder_change(idx, direction)
-
-            await asyncio.sleep(0.01)
+            print(f"Generic switch {i + 1} initialized: pin={sw_pin}, pull_up={init.SWITCH_PULL_UP}")
 
     def switch_click(self, switch):
         current_time = time.ticks_ms()

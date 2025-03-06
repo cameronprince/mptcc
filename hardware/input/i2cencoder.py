@@ -92,7 +92,7 @@ class I2CEncoder(Input):
         # Initialize encoders.
         for i in range(self.init.NUMBER_OF_COILS):
             addr = self.init.I2CENCODER_ADDRESSES[i]
-            encoder = DuPPa(self.i2c, addr, CONSTANTS)  # Pass all constants
+            encoder = DuPPa(self.i2c, addr, CONSTANTS)
             self.encoders.append(encoder)
             self.init_encoder(encoder)
 
@@ -186,10 +186,10 @@ class I2CEncoder(Input):
                     if status:
                         if status & (encoder.constants["REG_RINC"] | encoder.constants["REG_RDEC"]):
                             direction = 1 if status & encoder.constants["REG_RINC"] else -1
-                            super().rotary_encoder_change(idx, direction)
+                            super().encoder_change(idx, direction)
                             break
 
-                        if status & encoder.constants["REG_PUSHP"]:
+                        if status & encoder.constants["REG_PUSHP"] and self.init.integrated_switches:
                             super().switch_click(idx + 1)
                             break
 

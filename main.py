@@ -8,6 +8,9 @@ Defines and initializes the hardware and menu.
 """
 
 # Prepare the init object to store configuration and initialized hardware.
+# The init class is mostly comprised of methods for interacting with
+# hardware. As hardware is initialized, it's added to the init class for
+# use in menu screens.
 from mptcc.hardware.init import init
 
 
@@ -21,8 +24,8 @@ init.NUMBER_OF_COILS = 8
 
 # Asyncio RGB LED updates are available in cases where both threads update
 # I2C devices on the same bus. This setting causes LED colors to be stored
-# instead of calling the hardware directly. Then an asynchronous function
-# detects the values being updated and triggers the hardware update. This is
+# instead of calling the hardware directly. Then an asynchronous function in
+# the main thread detects the colors and triggers the hardware call. This is
 # because both threads can't reliably communicate with the same bus at the
 # same time. This setting is most needed with I2CEncoders where the integrated
 # RGB LED shares the same interface with the encoder. Without this setting
@@ -33,7 +36,8 @@ init.NUMBER_OF_COILS = 8
 init.RGB_LED_ASYNCIO_POLLING = False
 
 # Enable mutex debugging. When enabled, print statements are issued each time
-# a mutex is acquired or released.
+# a mutex is acquired or released. This is very useful in following the flow
+# of I2C communications.
 init.MUTEX_DEBUGGING = False
 
 
@@ -124,9 +128,25 @@ Input Devices
 Select one of the input device options below by commenting out the default option
 and removing the comment for the desired, alternate option.
 
-Defaults to generic KY-040 quadrature encoders with switches. This is the most
-reliable input method, but consumes twelve GPIO pins.
+Defaults to generic KY-040 quadrature encoders with integrated switches. This is
+a reliable input method, but consumes twelve GPIO pins.
 """
+
+# Generic Switch - The MPTCC menu system can be operated using four switches in
+# place of the default configuration which uses rotary encoders with integrated
+# switches. This is useful with precision encoders or when using potentiometers
+# in place of rotary encoders. When the generic switch driver is used, integrated
+# encoder switches are ignored.
+
+# Swtich pin assignments.
+# init.PIN_SWITCH_1 = 9
+# init.PIN_SWITCH_2 = 8
+# init.PIN_SWITCH_3 = 7
+# init.PIN_SWITCH_4 = 6
+# init.SWITCH_PULL_UP = True
+
+# from mptcc.hardware.input.switch import Switch as switch
+# init.switch = switch()
 
 # KY-040 Rotary Encoder - https://amzn.to/42E63l1 or https://amzn.to/3CdzIqi
 # Requires: https://github.com/miketeachman/micropython-rotary
@@ -152,10 +172,9 @@ init.PIN_ROTARY_4_SW = 26
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
 
-# from mptcc.hardware.input.ky_040 import KY040 as inputs  # Default option.
+# from mptcc.hardware.input.ky_040 import KY040 as encoder  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
-# Requires: https://github.com/cameronprince/i2cEncoderLibV2
 
 init.I2CENCODER_I2C_INSTANCE = 1
 init.I2CENCODER_TYPE = 'RGB' # STANDARD or RGB
@@ -165,18 +184,17 @@ init.I2CENCODER_DEFAULT_COLOR = "#326400"
 init.I2CENCODER_THRESHOLD_BRIGHTNESS = 32
 init.I2CENCODER_FULL_BRIGHTNESS = 255
 
-# from mptcc.hardware.input.i2cencoder import I2CEncoder as inputs  # Alternate option.
+# from mptcc.hardware.input.i2cencoder import I2CEncoder as encoder  # Alternate option.
 
 # I2CEncoderMini V1.2 - https://www.duppa.net/shop/i2cencoder-mini-with-soldered-accessory
-# Requires: https://github.com/cameronprince/I2CEncoderMini
 
 init.I2CENCODER_MINI_I2C_INSTANCE = 1
 init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28]
 init.I2CENCODER_MINI_INTERRUPT_PIN = 20
 
-from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as inputs  # Alternate option.
+from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as encoder  # Alternate option.
 
-init.inputs = inputs()
+init.encoder = encoder()
 
 
 """
@@ -216,12 +234,9 @@ init.RGB_PCA9685_LED4_BLUE = 11
 # from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
-# Requires: https://github.com/cameronprince/i2cEncoderLibV2
-
 # from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
 
 # RGB LED Ring Small - https://www.duppa.net/shop/rgb-led-ring-small/
-# Requires: https://github.com/cameronprince/RGB_LED_Ring_Small
 
 init.RGB_LED_RING_SMALL_I2C_INSTANCE = 2
 init.RGB_LED_RING_SMALL_ADDRESSES = [0x6A, 0x68, 0x6B, 0x69, 0x67, 0x66, 0x64, 0x63]

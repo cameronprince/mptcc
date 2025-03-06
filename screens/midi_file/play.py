@@ -149,7 +149,7 @@ class MIDIFilePlay:
 
         # Calculate the maximum number of columns that fit on the screen.
         level_text_width = len("1:100%") * self.display.DISPLAY_FONT_WIDTH  # Width of one level entry
-        max_columns = self.display.DISPLAY_WIDTH // level_text_width  # Maximum columns per row
+        max_columns = min(self.display.DISPLAY_WIDTH // level_text_width, 4)  # Max 4 columns per row
 
         # Calculate the number of rows needed to display all levels.
         num_rows = (self.init.NUMBER_OF_COILS + max_columns - 1) // max_columns
