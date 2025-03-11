@@ -47,6 +47,9 @@ CONSTANTS = {
     "DIRE_RIGHT": 0x0000,
     "IPUP_ENABLE": 0x0000,
     "RMOD_X1": 0x0000,
+
+    # Reset constant
+    "RESET": 0x80,
 }
 
 class I2CEncoder(Input):

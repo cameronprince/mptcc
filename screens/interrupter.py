@@ -8,7 +8,6 @@ Provides functionality for the standard interrupter.
 
 import _thread
 import time
-import uasyncio as asyncio
 from ..hardware.init import init
 from ..lib.menu import Screen
 from ..lib.config import Config as config
@@ -47,7 +46,7 @@ class Interrupter(Screen):
 
     def draw(self):
         """
-        Draws the initial interrupter screen.
+        Draws the initial interrupter screen and starts potentiometer polling.
         """
         self.init_settings()
         self.display.clear()
@@ -61,6 +60,11 @@ class Interrupter(Screen):
         # Start the RGB LED update task if RGB LED asynchronous polling is enabled.
         if self.init.RGB_LED_ASYNCIO_POLLING:
             self.init.rgb_led_tasks.start(lambda: self.active)
+
+        # Start potentiometer polling if the ADS1115 driver is initialized
+        if hasattr(self.init, "pot") and hasattr(self.init.pot, "start_polling"):
+            self.init.pot.start_polling()
+            print("Potentiometer polling started")
 
     def update_display(self, update_on_time=True, update_frequency=True, update_ten_x=False, update_active=False, initial=False):
         """
@@ -154,11 +158,18 @@ class Interrupter(Screen):
 
     def switch_2(self):
         """
-        Handles the second switch input to deactivate the interrupter and return to the parent screen.
+        Handles the second switch input to deactivate the interrupter, stop potentiometer polling, and return to the parent screen.
         """
         self.active = False
         if self.init.RGB_LED_ASYNCIO_POLLING:
             self.init.rgb_led_tasks.stop()
+
+        # Stop potentiometer polling if the ADS1115 driver is initialized
+        if hasattr(self.init, "pot") and hasattr(self.init.pot, "stop_polling"):
+            self.init.pot.stop_polling()
+            print("Potentiometer polling stopped")
+
+        # Return to the parent screen
         parent_screen = self.parent
         if parent_screen:
             self.init.menu.set_screen(parent_screen)

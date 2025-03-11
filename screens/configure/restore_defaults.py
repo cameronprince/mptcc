@@ -119,7 +119,7 @@ class RestoreDefaults(Screen):
         or return to the configuration menu if "No" is selected.
         """
         if self.selection == "Yes":
-            self.init.inputs.switch_disabled = True
+            self.init.switch_disabled = True
             self.restore_defaults()
         else:
             self.switch_2()

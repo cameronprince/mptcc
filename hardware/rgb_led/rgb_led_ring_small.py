@@ -4,7 +4,7 @@ by Cameron Prince
 teslauniverse.com
 
 hardware/rgb_led/rgb_led_ring_small.py
-RGB LED Ring Small driver.
+RGB LED Ring Small driver with batch updates.
 """
 
 import time
@@ -34,29 +34,14 @@ CONSTANTS = {
     "ISSI3746_RESET_REG": 0x8F,
     "ISSI3746_PWM_FREQUENCY_ENABLE": 0xE0,
     "ISSI3746_PWM_FREQUENCY_SET": 0xE2,
-
-    # LED mapping for the RGB LED ring
-    "ISSI_LED_MAP": [
-        [0x48, 0x36, 0x24, 0x12, 0x45, 0x33, 0x21, 0x0F, 0x42, 0x30, 0x1E, 0x0C, 0x3F, 0x2D, 0x1B, 0x09, 0x3C, 0x2A, 0x18, 0x06, 0x39, 0x27, 0x15, 0x03],
-        [0x47, 0x35, 0x23, 0x11, 0x44, 0x32, 0x20, 0x0E, 0x41, 0x2F, 0x1D, 0x0B, 0x3E, 0x2C, 0x1A, 0x08, 0x3B, 0x29, 0x17, 0x05, 0x38, 0x26, 0x14, 0x02],
-        [0x46, 0x34, 0x22, 0x10, 0x43, 0x31, 0x1F, 0x0D, 0x40, 0x2E, 0x1C, 0x0A, 0x3D, 0x2B, 0x19, 0x07, 0x3A, 0x28, 0x16, 0x04, 0x37, 0x25, 0x13, 0x01]
-    ]
 }
 
 class RGBLEDRingSmall(RGBLED):
     """
-    A class to control the RGB LED Ring Small device.
-
-    Attributes:
-    -----------
-    init : object
-        The initialization object containing configuration and hardware settings.
+    A class to control the RGB LED Ring Small device with batch updates.
     """
 
     def __init__(self):
-        """
-        Constructs all the necessary attributes for the RGBLEDRingSmall object.
-        """
         super().__init__()
         self.init = init
 
@@ -91,7 +76,7 @@ class RGBLEDRingSmall(RGBLED):
 
 class RGB_RGBLEDRingSmall(RGB):
     """
-    A class for handling the RGB LED Ring Small device.
+    A class for handling the RGB LED Ring Small device with batch updates.
     """
     def __init__(self, i2c, address, mutex):
         super().__init__()
@@ -104,19 +89,36 @@ class RGB_RGBLEDRingSmall(RGB):
         self.full_brightness = self.init.RGB_LED_RING_SMALL_FULL_BRIGHTNESS
         self.default_color = self._get_default_color()
         self.step_delay = self.init.RGB_LED_RING_SMALL_DELAY_BETWEEN_STEPS
-        self.vu_colors = self._generate_vu_colors()
-        self.led_indexes = self._generate_led_indexes()
         self.led_ring = None
+
+        # Define the base logical-to-physical index mapping
+        base_logical_to_physical_index = [23, 17, 11, 5, 22, 16, 10, 4, 21, 15, 9, 3, 20, 14, 8, 2, 19, 13, 7, 1, 18, 12, 6, 0]
+
+        # Define the logical order of LEDs
+        logical_order = list(range(self.num_leds))  # [0, 1, 2, ..., 23]
+
+        # Apply rotation to the logical order
+        rotation_leds = int((self.init.RGB_LED_RING_SMALL_ROTATION / 360) * self.num_leds)
+        rotated_logical_order = logical_order[-rotation_leds:] + logical_order[:-rotation_leds]
+
+        # Reverse the logical order to make the VU meter progress in reverse
+        reversed_logical_order = rotated_logical_order[::-1]
+
+        # Apply an offset to ensure L13 is the first LED
+        offset = 1  # Adjust this value if needed
+        offset_logical_order = reversed_logical_order[-offset:] + reversed_logical_order[:-offset]
+
+        # Map the offset logical order to physical indices
+        self.logical_to_physical_index = [base_logical_to_physical_index[i] for i in offset_logical_order]
+
+        # Generate VU meter colors, accounting for rotation
+        self.vu_colors = self._generate_vu_colors()
+
         self._initialize_led_ring()
 
     def _get_default_color(self):
         """
         Get the default color or handle the "vu_meter" case.
-
-        Returns:
-        -------
-        tuple
-            The default color as an RGB tuple or None if "vu_meter" is set.
         """
         if self.init.RGB_LED_RING_SMALL_DEFAULT_COLOR == "vu_meter":
             return None
@@ -125,8 +127,9 @@ class RGB_RGBLEDRingSmall(RGB):
 
     def _generate_vu_colors(self):
         """
-        Generate the VU meter colors for the LED ring.
+        Generate the VU meter colors for the LED ring, accounting for rotation.
         """
+        # Define the base VU meter colors
         vu_colors = [
             (0, 255, 0),   # Green
             (85, 255, 0),  # Yellow-green
@@ -136,57 +139,29 @@ class RGB_RGBLEDRingSmall(RGB):
             (255, 0, 0)    # Red
         ]
 
-        # Generate smooth color transitions.
+        # Generate smooth color transitions
         vu_meter_colors = []
         for i in range(len(vu_colors) - 1):
             steps = self.num_leds // (len(vu_colors) - 1)
             gradient = self._get_color_gradient(vu_colors[i], vu_colors[i + 1], steps)
             vu_meter_colors.extend(gradient)
 
-        # Ensure the list has exactly 24 colors.
+        # Ensure the list has exactly 24 colors
         if len(vu_meter_colors) < self.num_leds:
             vu_meter_colors.extend([vu_colors[-1]] * (self.num_leds - len(vu_meter_colors)))
 
-        # Reverse the order of LEDs to go in the correct direction from green to red.
-        vu_meter_colors.reverse()
+        # Reverse the order of LEDs to go in the correct direction from green to red
+        # vu_meter_colors.reverse()
 
-        # Shift starting LED by the configured rotation.
-        rotation_leds = int((self.init.RGB_LED_RING_SMALL_ROTATION / 360) * self.num_leds)
-        vu_meter_colors = vu_meter_colors[-rotation_leds:] + vu_meter_colors[:-rotation_leds]
-
-        # Apply the additional shift by one position.
-        vu_meter_colors = vu_meter_colors[-1:] + vu_meter_colors[:-1]
+        # Apply rotation to the color array
+        # rotation_leds = int((self.init.RGB_LED_RING_SMALL_ROTATION / 360) * self.num_leds)
+        # vu_meter_colors = vu_meter_colors[-rotation_leds:] + vu_meter_colors[:-rotation_leds]
 
         return vu_meter_colors
-
-    def _generate_led_indexes(self):
-        """
-        Generate the LED indexes to account for the configured rotation.
-        """
-        led_indexes = list(range(self.num_leds))
-        rotation_leds = int((self.init.RGB_LED_RING_SMALL_ROTATION / 360) * self.num_leds)
-        skewed_indexes = led_indexes[-rotation_leds:] + led_indexes[:-rotation_leds]
-        skewed_indexes.reverse()
-        skewed_indexes = skewed_indexes[-1:] + skewed_indexes[:-1]
-        return skewed_indexes
 
     def _get_color_gradient(self, color1, color2, steps):
         """
         Generate a color gradient between two colors.
-
-        Parameters:
-        ----------
-        color1 : tuple
-            The starting color (R, G, B).
-        color2 : tuple
-            The ending color (R, G, B).
-        steps : int
-            The number of steps in the gradient.
-
-        Returns:
-        -------
-        list
-            A list of colors representing the gradient.
         """
         gradient = []
         for i in range(steps):
@@ -216,93 +191,88 @@ class RGB_RGBLEDRingSmall(RGB):
             self.init.mutex_release(self.mutex, "rgb_led_ring_small:_initialize_led_ring")
             self.off()
 
-    def _set_rgb(self, led_n, color, brightness, no_delay=False):
+    def _set_rgb_batch(self, colors, brightness):
         """
-        Set the color and brightness of a specific LED with mutex and a small delay.
-
-        Parameters:
-        ----------
-        led_n : int
-            The LED index (0-23).
-        color : tuple
-            The RGB color (R, G, B).
-        brightness : int
-            The brightness level (0-255).
+        Set the color and brightness of all LEDs in a batch update.
         """
-        self.init.mutex_acquire(self.mutex, "rgb_led_ring_small:_set_rgb")
+        self.init.mutex_acquire(self.mutex, "rgb_led_ring_small:_set_rgb_batch")
         try:
-            if led_n < self.num_leds:
+            buffer = bytearray(72)  # 24 LEDs * 3 channels
+            for i, physical_index in enumerate(self.logical_to_physical_index):
                 dimmed_color = (
-                    color[0] * brightness // 0xFF,
-                    color[1] * brightness // 0xFF,
-                    color[2] * brightness // 0xFF
+                    colors[i][0] * brightness // 0xFF,  # Red
+                    colors[i][1] * brightness // 0xFF,  # Green
+                    colors[i][2] * brightness // 0xFF   # Blue
                 )
-                color_code = (dimmed_color[0] << 16) | (dimmed_color[1] << 8) | dimmed_color[2]
-                self.led_ring.set_rgb(led_n, color_code)
-                if not no_delay and self.step_delay > 0:
-                    time.sleep(self.step_delay)
+                buffer[3 * physical_index] = dimmed_color[2]  # Blue
+                buffer[3 * physical_index + 1] = dimmed_color[1]  # Green
+                buffer[3 * physical_index + 2] = dimmed_color[0]  # Red
+            self.led_ring.set_rgb_batch(buffer)
         finally:
-            self.init.mutex_release(self.mutex, "rgb_led_ring_small:_set_rgb")
+            self.init.mutex_release(self.mutex, "rgb_led_ring_small:_set_rgb_batch")
 
     def off(self, output=None):
         """
         Set all LEDs to the threshold brightness (default off state).
         """
-        for i in self.led_indexes:
+        colors = []
+        for i in range(self.num_leds):
             if self.default_color is None:
-                color = self.vu_colors[i]
+                colors.append(self.vu_colors[i])
             else:
-                color = self.default_color
-            self._set_rgb(i, color, self.threshold_brightness, no_delay=True)
+                colors.append(self.default_color)
+        self._set_rgb_batch(colors, self.threshold_brightness)
 
     def set_status(self, output, frequency, on_time, max_duty=None, max_on_time=None):
         """
         Calculates the RGB color based on frequency, on_time, and optional constraints.
-
-        Parameters:
-        ----------
-        output: int
-            The index of the output for which the LED should be updated.
-        frequency : int
-            The frequency of the signal.
-        on_time : int
-            The on time of the signal in microseconds.
-        max_duty : int, optional
-            The maximum duty cycle.
-        max_on_time : int, optional
-            The maximum on time.
         """
         if self.init.RGB_LED_RING_SMALL_MODE == "status":
+            # Use status_color to determine the color for all LEDs
             color = status_color(frequency, on_time, max_duty, max_on_time)
-            self._set_all_leds(color, self.full_brightness)
+            colors = [color] * self.num_leds
+            brightness = self.full_brightness
+            self._set_rgb_batch(colors, brightness)
         else:
-            # Use the updated calculate_percent function to handle both cases.
+            # Use calculate_percent to determine the number of LEDs to brighten
             value = calculate_percent(frequency, on_time, max_duty, max_on_time)
-
-            # Calculate the number of LEDs to brighten.
             num_bright_leds = int(self.num_leds * value / 100)
 
-            # Brighten the first `num_bright_leds` LEDs.
-            for i in range(num_bright_leds):
-                index = self.led_indexes[i]
-                self._set_rgb(index, self.vu_colors[index], self.full_brightness)
-            for i in range(num_bright_leds, self.num_leds):
-                index = self.led_indexes[i]
-                if self.default_color is None:
-                    self._set_rgb(index, self.vu_colors[index], self.threshold_brightness)
+            # Prepare the colors and brightness values
+            colors = []
+            brightness_values = []
+            for i in range(self.num_leds):
+                if i < num_bright_leds:
+                    # Use the VU meter color and full brightness
+                    colors.append(self.vu_colors[i])
+                    brightness_values.append(self.full_brightness)
                 else:
-                    self._set_rgb(index, self.default_color, self.threshold_brightness)
+                    # Use the default color and threshold brightness
+                    if self.default_color is None:
+                        colors.append(self.vu_colors[i])
+                    else:
+                        colors.append(self.default_color)
+                    brightness_values.append(self.threshold_brightness)
 
-    def _set_all_leds(self, color, brightness):
-        """
-        Set all LEDs to the same color and brightness.
+            # Set the colors and brightness values
+            self._set_rgb_batch_with_brightness(colors, brightness_values)
 
-        Parameters:
-        ----------
-        color : tuple
-            The RGB color (R, G, B).
-        brightness : int
-            The brightness level (0-255).
+    def _set_rgb_batch_with_brightness(self, colors, brightness_values):
         """
-        for i in self.led_indexes:
-            self._set_rgb(i, color, brightness, no_delay=True)
+        Set the color and brightness of all LEDs in a batch update, with individual brightness values.
+        """
+        self.init.mutex_acquire(self.mutex, "rgb_led_ring_small:_set_rgb_batch_with_brightness")
+        try:
+            buffer = bytearray(72)  # 24 LEDs * 3 channels
+            for i, (physical_index, brightness) in enumerate(zip(self.logical_to_physical_index, brightness_values)):
+                dimmed_color = (
+                    colors[i][0] * brightness // 0xFF,  # Red
+                    colors[i][1] * brightness // 0xFF,  # Green
+                    colors[i][2] * brightness // 0xFF   # Blue
+                )
+                buffer[3 * physical_index] = dimmed_color[2]  # Blue
+                buffer[3 * physical_index + 1] = dimmed_color[1]  # Green
+                buffer[3 * physical_index + 2] = dimmed_color[0]  # Red
+            self.led_ring.set_rgb_batch(buffer)
+        finally:
+            self.init.mutex_release(self.mutex, "rgb_led_ring_small:_set_rgb_batch_with_brightness")

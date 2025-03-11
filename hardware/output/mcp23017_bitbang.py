@@ -213,31 +213,13 @@ class Output_MCP23017:
         """
         with self.task_mutex:
             if self.task is not None:
-                # Schedule the task cancellation in the asyncio event loop.
-                init.task_queue.put(self._cancel_task())
+                # Cancel the existing task.
+                self.task.cancel()
                 self.task = None
 
             self.running = True
-            # Schedule the PWM task in the asyncio event loop.
-            init.task_queue.put(self._start_pwm(frequency, on_time))
-
-    async def _start_pwm(self, frequency, on_time):
-        """
-        Coroutine to start the PWM task.
-        """
-        self.task = asyncio.create_task(self._bitbang_pwm(frequency, on_time))
-
-    async def _cancel_task(self):
-        """
-        Coroutine to cancel the current task.
-        """
-        if self.task is not None:
-            self.task.cancel()
-            try:
-                await self.task
-            except asyncio.CancelledError:
-                pass
-            self.task = None
+            # Start the PWM task.
+            self.task = asyncio.create_task(self._bitbang_pwm(frequency, on_time))
 
     def off(self):
         """
@@ -246,14 +228,8 @@ class Output_MCP23017:
         with self.task_mutex:
             self.running = False
             if self.task is not None:
-                # Schedule the task cancellation in the asyncio event loop.
-                init.task_queue.put(self._cancel_task())
+                # Cancel the existing task.
+                self.task.cancel()
                 self.task = None
-            # Schedule setting the pin low in the asyncio event loop.
-            init.task_queue.put(self._set_pin_low())
-
-    async def _set_pin_low(self):
-        """
-        Coroutine to set the pin low.
-        """
-        self._set_pin_value(0)
+            # Set the pin low.
+            self._set_pin_value(0)

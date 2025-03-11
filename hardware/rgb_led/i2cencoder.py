@@ -28,7 +28,7 @@ class I2CEncoder(RGBLED):
         """
         super().__init__()
         self.init = init
-        self.encoders = self.init.inputs.encoders
+        self.encoders = self.init.encoder.encoders
         self.init.rgb_led = [RGB_I2CEncoder(encoder) for encoder in self.encoders]
 
 class RGB_I2CEncoder(RGB):

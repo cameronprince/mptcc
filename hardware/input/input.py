@@ -16,7 +16,7 @@ class Input(Hardware):
     def __init__(self):
         super().__init__()
         self.init = init
-        self.switch_disabled = False
+        self.init.switch_disabled = False
         self.init.integrated_switches = True
 
     def switch_click(self, switch):
@@ -30,8 +30,8 @@ class Input(Hardware):
         """
         # Allows screens to skip the next switch click.
         # Used by restore defaults to return to main menu.
-        if self.switch_disabled:
-            self.switch_disabled = False
+        if self.init.switch_disabled:
+            self.init.switch_disabled = False
             return
 
         current_screen = self.init.menu.get_current_screen()

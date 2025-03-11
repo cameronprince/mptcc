@@ -72,12 +72,11 @@ class GPIO_BitBang(Output):
 
             # Stop any existing task for this output.
             if self.tasks[output] is not None:
-                self.init.task_queue.put(("func", self._cancel_task, (output,)))
+                self._cancel_task(output)
 
             # Start a new task for the PWM generation.
             self.running[output] = True
-            # Pass the coroutine itself to the queue.
-            self.init.task_queue.put(("coro", self._start_task(output, frequency, on_time)))
+            self._start_task(output, frequency, on_time)
 
             # Handle LED updates.
             self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
@@ -85,24 +84,20 @@ class GPIO_BitBang(Output):
             # Stop the PWM generation for this output.
             self.running[output] = False
             if self.tasks[output] is not None:
-                self.init.task_queue.put(("func", self._cancel_task, (output,)))
+                self._cancel_task(output)
             self.output[output].value(0)  # Set the pin low.
             self.init.rgb_led[output].off(output)  # Extinguish the LED.
 
-    async def _start_task(self, output, frequency, on_time):
+    def _start_task(self, output, frequency, on_time):
         """
         Starts the PWM task for the specified output.
         """
         self.tasks[output] = asyncio.create_task(self._bitbang_pwm(output, frequency, on_time))
 
-    async def _cancel_task(self, output):
+    def _cancel_task(self, output):
         """
         Cancels the PWM task for the specified output.
         """
         if self.tasks[output] is not None:
             self.tasks[output].cancel()
-            try:
-                await self.tasks[output]  # Await the task to ensure it is properly canceled.
-            except asyncio.CancelledError:
-                pass
             self.tasks[output] = None

@@ -94,6 +94,11 @@ class MIDIFilePlay:
         asyncio.create_task(self._update_display_task())
         asyncio.create_task(self._monitor_playback_end_task())
 
+        # Start potentiometer polling if the ADS1115 driver is initialized
+        if hasattr(self.init, "pot") and hasattr(self.init.pot, "start_polling"):
+            self.init.pot.start_polling()
+            print("Potentiometer polling started")
+
         # Start the global RGB LED tasks if RGB LED asynchronous polling is enabled.
         if self.init.RGB_LED_ASYNCIO_POLLING:
             self.init.rgb_led_tasks.start(lambda: self.playback_active)
@@ -205,6 +210,11 @@ class MIDIFilePlay:
             self.init.rgb_led_tasks.stop()
         # Turn off all outputs.
         self.output.set_all_outputs()
+
+        # Stop potentiometer polling if the ADS1115 driver is initialized
+        if hasattr(self.init, "pot") and hasattr(self.init.pot, "stop_polling"):
+            self.init.pot.stop_polling()
+            print("Potentiometer polling stopped")
 
         # Save levels if necessary.
         if self.save_levels or self.config.get("midi_file_save_levels_on_end"):

@@ -4,7 +4,7 @@ by Cameron Prince
 teslauniverse.com
 
 lib/duppa.py
-Utility library for interfacing with hardware from DuPPa.net.
+Utility library for interfacing with hardware from DuPPa.net with batch updates.
 """
 
 import struct
@@ -13,11 +13,6 @@ class DuPPa:
     def __init__(self, i2c, address, constants):
         """
         Initialize the DuPPa hardware.
-
-        Args:
-            i2c: I2C bus object.
-            address: I2C address of the device.
-            constants: Dictionary of constants and register definitions.
         """
         self.i2c = i2c
         self.address = address
@@ -34,10 +29,8 @@ class DuPPa:
         Reset the device.
         """
         if "ISSI3746_RESET_REG" in self.constants:
-            # Reset the RGB LED ring
             self.writeEncoder8(self.constants["ISSI3746_RESET_REG"], 0xAE)
         elif "REG_GCONF" in self.constants:
-            # Reset the encoder
             self.writeEncoder8(self.constants["REG_GCONF"], self.constants["RESET"])
         else:
             raise KeyError("No valid reset constant found in CONSTANTS dictionary.")
@@ -100,12 +93,9 @@ class DuPPa:
         """
         Write a 24-bit RGB color code to the encoder's RGB LED registers.
         """
-        # Extract the red, green, and blue components from the 24-bit RGB value
         red = (rgb >> 16) & 0xFF
         green = (rgb >> 8) & 0xFF
         blue = rgb & 0xFF
-
-        # Write the RGB values to their respective registers
         self.writeEncoder8(self.constants["REG_RLED"], red)
         self.writeEncoder8(self.constants["REG_GLED"], green)
         self.writeEncoder8(self.constants["REG_BLED"], blue)
@@ -234,15 +224,9 @@ class DuPPa:
         self.select_bank(self.constants["ISSI3746_PAGE1"])
         self.writeEncoder8(self.constants["ISSI3746_PWM_FREQUENCY_ENABLE"], enable)
 
-    def set_rgb(self, led_n, color):
+    def set_rgb_batch(self, buffer):
         """
-        Set the RGB color for a specific LED.
-
-        Args:
-            led_n: The LED index (0-23).
-            color: The 24-bit RGB color code.
+        Set the RGB color for all LEDs in a batch update.
         """
-        if led_n < len(self.constants["ISSI_LED_MAP"][0]):
-            self.writeEncoder8(self.constants["ISSI_LED_MAP"][0][led_n], (color >> 16) & 0xFF)
-            self.writeEncoder8(self.constants["ISSI_LED_MAP"][1][led_n], (color >> 8) & 0xFF)
-            self.writeEncoder8(self.constants["ISSI_LED_MAP"][2][led_n], color & 0xFF)
+        self.select_bank(self.constants["ISSI3746_PAGE0"])
+        self.i2c.writeto_mem(self.address, 0x01, buffer)

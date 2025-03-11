@@ -15,7 +15,7 @@ INT_pins = [
 i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 
 # Encoder addresses and empty encoders list
-encoder_addresses = [0x50, 0x30, 0x60, 0x48]
+encoder_addresses = [0x50, 0x30, 0x60, 0x44]
 encoders = [i2cEncoderLibV2.i2cEncoderLibV2(i2c, address) for address in encoder_addresses]
 
 def EncoderChange(idx):

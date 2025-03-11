@@ -7,7 +7,6 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
-import uasyncio as asyncio
 from ...lib.utils import status_color
 from ..hardware import Hardware
 

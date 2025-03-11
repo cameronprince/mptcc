@@ -42,9 +42,7 @@ class Display(Hardware):
         """
         Helper to display a loading message.
         """
-        # Clear the display.
         self.clear()
-        # Add the loading text.
         self.center_text("Loading...", 20)
         self.show()
 
@@ -71,25 +69,20 @@ class Display(Hardware):
         """
         self.clear()
 
-        # Wrap the text if it's too wide for the display.
         font_width = self.DISPLAY_FONT_WIDTH
-        # Add a small amount of padding.
         max_width = self.width - (font_width * 2)
         wrapped_lines = self.wrap_text(text, max_width)
 
-        # Calculate the starting y position to center the text vertically.
         total_text_height = len(wrapped_lines) * self.DISPLAY_LINE_HEIGHT
         y_start = (self.height - total_text_height) // 2
 
-        # Display each line of the wrapped text.
         y = y_start
         for line in wrapped_lines:
-            # Center the text if it fits within the display width.
             if len(line) * font_width <= max_width:
                 self.center_text(line, y)
             else:
-                self.text(line.strip(), 0, y, 1)  # Left-align the text.
-            y += self.DISPLAY_LINE_HEIGHT  # Use line height from init.
+                self.text(line.strip(), 0, y, 1)
+            y += self.DISPLAY_LINE_HEIGHT
 
         init.display.show()
 
@@ -151,21 +144,16 @@ class Display(Hardware):
         current_line = ""
 
         for word in words:
-            # Calculate the width of the current line if the word is added.
             new_line = current_line + ("" if not current_line else " ") + word
             new_line_width = len(new_line) * self.DISPLAY_FONT_WIDTH
 
-            # Check if adding the next word exceeds the max width.
             if new_line_width <= max_width:
-                # Add the word to the current line.
                 current_line = new_line
             else:
-                # Add the current line to lines and start a new line.
                 if current_line:
                     lines.append(current_line)
                 current_line = word
 
-        # Add the last line.
         if current_line:
             lines.append(current_line)
 
@@ -189,23 +177,19 @@ class Display(Hardware):
         background_color : int, optional
             The background color for the text (0 for inactive, 1 for active). Defaults to 1 (active).
         """
-        # Stop any existing scrolling task.
         self.stop_scroll_task()
 
-        # Start a new scrolling task if the text requires scrolling.
         text_width = len(text) * self.DISPLAY_FONT_WIDTH
         if text_width > self.width:
-            self.scroll_flag = identifier  # Set the unique identifier.
+            self.scroll_flag = identifier
             self.scroll_text = text
             self.scroll_y_position = y_position
 
-            # Immediately update the display with the new filename.
-            self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, background_color)  # Set background color.
+            self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, background_color)
             v_padding = int((self.DISPLAY_LINE_HEIGHT - self.DISPLAY_FONT_HEIGHT) / 2)
-            self.text(text, 0, y_position + v_padding, not background_color)  # Set text color.
+            self.text(text, 0, y_position + v_padding, not background_color)
             self.show()
 
-            # Create the scrolling task.
             self.scroll_task = asyncio.create_task(self._scroll_task(text, y_position, identifier, background_color))
 
     def stop_scroll_task(self):
@@ -213,23 +197,20 @@ class Display(Hardware):
         Helper to stop scrolling text and reset the scroll state.
         """
         if self.scroll_task:
-            self.scroll_flag = None  # Reset the unique identifier.
-            task_to_cancel = self.scroll_task  # Store the task reference.
-            self.scroll_task = None  # Reset the task reference immediately.
+            self.scroll_flag = None
+            task_to_cancel = self.scroll_task
+            self.scroll_task = None
 
             try:
-                if not task_to_cancel.done():
-                    task_to_cancel.cancel()  # Cancel the task.
+                task_to_cancel.cancel()
             except Exception as e:
-                # Ignore the "can't cancel self" error.
                 if "can't cancel self" not in str(e):
                     print(f"[ERROR] Failed to cancel scroll task: {e}")
 
-            # Clear the previous scrolling text and redraw it in a non-scrolling state.
             if self.scroll_text and self.scroll_y_position is not None:
-                self.fill_rect(0, self.scroll_y_position, self.width, self.DISPLAY_LINE_HEIGHT, 0)  # Clear the line.
+                self.fill_rect(0, self.scroll_y_position, self.width, self.DISPLAY_LINE_HEIGHT, 0)
                 v_padding = int((self.DISPLAY_LINE_HEIGHT - self.DISPLAY_FONT_HEIGHT) / 2)
-                self.text(self.scroll_text, 0, self.scroll_y_position + v_padding, 1)  # Redraw the text.
+                self.text(self.scroll_text, 0, self.scroll_y_position + v_padding, 1)
                 self.show()
             self.scroll_text = None
             self.scroll_y_position = None
@@ -253,25 +234,21 @@ class Display(Hardware):
         delay_interval = 0.1
         elapsed_time = 0
 
-        # Initial delay before scrolling starts.
         while self.scroll_flag == identifier and elapsed_time < delay_seconds:
             await asyncio.sleep(delay_interval)
             elapsed_time += delay_interval
 
         v_padding = int((self.DISPLAY_LINE_HEIGHT - self.DISPLAY_FONT_HEIGHT) / 2)
 
-        # Main scrolling loop.
         while self.scroll_flag == identifier:
             for i in range(len(text) + self.DISPLAY_ITEMS_PER_PAGE):
                 if self.scroll_flag != identifier:
-                    return  # Exit if the identifier no longer matches.
+                    return
 
-                # Generate the scrolling text.
                 scroll_text = (text + "    ")[i:] + (text + "    ")[:i]
-                self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, background_color)  # Set background color.
-                self.text(scroll_text[:20], 0, y_position + v_padding, not background_color)  # Set text color.
+                self.fill_rect(0, y_position, self.width, self.DISPLAY_LINE_HEIGHT, background_color)
+                self.text(scroll_text[:20], 0, y_position + v_padding, not background_color)
                 self.show()
-                await asyncio.sleep(0.2)  # Adjust the scroll speed as needed.
+                await asyncio.sleep(0.2)
 
-        # Ensure the task exits cleanly.
         return

@@ -207,8 +207,8 @@ class ARSG(Screen):
                 self.enable_task = asyncio.create_task(self.toggle_enable_flag())
         else:
             if self.enable_task:
-                # Schedule the cancellation of the enable_task.
-                init.task_queue.put(("cancel", self.enable_task))
+                # Cancel the enable_task directly.
+                self.enable_task.cancel()
                 self.enable_task = None
             if self.output_thread:
                 self.output_thread = None
