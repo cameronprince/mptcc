@@ -20,7 +20,7 @@ General Settings
 # The number of coils the controller is to support. An equal number of encoders,
 # RGB LEDs and outputs is expected. When going beyond four coils, a wider display
 # is required. Valid values are currently 4-8.
-init.NUMBER_OF_COILS = 8
+init.NUMBER_OF_COILS = 4
 
 # Asyncio RGB LED updates are available in cases where both threads update
 # I2C devices on the same bus. This setting causes LED colors to be stored
@@ -96,14 +96,14 @@ contiguous memory.
 
 # Shared display settings.
 # init.DISPLAY_INTERFACE = "I2C_1" # Either I2C_1, I2C_2, SPI_1 or SPI_2.
-init.DISPLAY_INTERFACE = "SPI_1"
+init.DISPLAY_INTERFACE = "I2C_1"
 init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
 
 # SSD1306 0.96" 128X64 OLED LCD Display (https://amzn.to/40sf11I)
 # Interface: I2C/SPI
 # Requires: https://github.com/TimHanewich/MicroPython-SSD1306
 # Note: This library only supports standard frame buffer commands.
-# from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
+from mptcc.hardware.display.ssd1306 import SSD1306 as display  # Default option.
 
 # SSD1309 2.42" 128x64 OLED LCD Display (https://amzn.to/40wQWbs)
 # Interface: I2C/SPI
@@ -117,7 +117,7 @@ init.DISPLAY_I2C_ADDR = 0x3C     # Required for I2C displays.
 # Requires: https://github.com/rdagger/micropython-ssd1322
 # Note: This library supports custom fonts, shapes, images, and more, beyond
 # the standard frame buffer commands.
-from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
+# from mptcc.hardware.display.ssd1322 import SSD1322 as display  # Alternate option.
 
 init.display = display()
 
@@ -172,7 +172,7 @@ init.PIN_ROTARY_4_SW = 26
 # Most of the PCB-mounted encoders have pull-ups on the boards.
 init.ROTARY_PULL_UP = False
 
-# from mptcc.hardware.input.ky_040 import KY040 as encoder  # Default option.
+from mptcc.hardware.input.ky_040 import KY040 as encoder  # Default option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 
@@ -192,7 +192,7 @@ init.I2CENCODER_MINI_I2C_INSTANCE = 1
 init.I2CENCODER_MINI_ADDRESSES = [0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28]
 init.I2CENCODER_MINI_INTERRUPT_PIN = 20
 
-from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as encoder  # Alternate option.
+# from mptcc.hardware.input.i2cencoder_mini import I2CEncoderMini as encoder  # Alternate option.
 
 init.encoder = encoder()
 
@@ -215,39 +215,31 @@ init.RGB_PCA9685_I2C_INSTANCE = 2
 init.RGB_PCA9685_ADDR = 0x40
 init.RGB_PCA9685_FREQ = 1000
 
-init.RGB_PCA9685_LED1_RED = 14
-init.RGB_PCA9685_LED1_GREEN = 15
-init.RGB_PCA9685_LED1_BLUE = None
+init.RGB_PCA9685_LED1_RED = 0
+init.RGB_PCA9685_LED1_GREEN = 1
+init.RGB_PCA9685_LED1_BLUE = 2
 
-init.RGB_PCA9685_LED2_RED = 12
-init.RGB_PCA9685_LED2_GREEN = 13
-init.RGB_PCA9685_LED2_BLUE = None
+init.RGB_PCA9685_LED2_RED = 3
+init.RGB_PCA9685_LED2_GREEN = 4
+init.RGB_PCA9685_LED2_BLUE = 5
 
-init.RGB_PCA9685_LED3_RED = 10
-init.RGB_PCA9685_LED3_GREEN = 11
-init.RGB_PCA9685_LED3_BLUE = None
+init.RGB_PCA9685_LED3_RED = 6
+init.RGB_PCA9685_LED3_GREEN = 7
+init.RGB_PCA9685_LED3_BLUE = 8
 
-init.RGB_PCA9685_LED4_RED = 8
-init.RGB_PCA9685_LED4_GREEN = 9
-init.RGB_PCA9685_LED4_BLUE = None
-
-init.RGB_PCA9685_LED5_RED = 6
-init.RGB_PCA9685_LED5_GREEN = 7
-init.RGB_PCA9685_LED5_BLUE = None
-
-init.RGB_PCA9685_LED6_RED = 4
-init.RGB_PCA9685_LED6_GREEN = 5
-init.RGB_PCA9685_LED6_BLUE = None
-
-init.RGB_PCA9685_LED7_RED = 2
-init.RGB_PCA9685_LED7_GREEN = 3
-init.RGB_PCA9685_LED7_BLUE = None
-
-init.RGB_PCA9685_LED8_RED = 0
-init.RGB_PCA9685_LED8_GREEN = 1
-init.RGB_PCA9685_LED8_BLUE = None
+init.RGB_PCA9685_LED4_RED = 9
+init.RGB_PCA9685_LED4_GREEN = 10
+init.RGB_PCA9685_LED4_BLUE = 11
 
 # from mptcc.hardware.rgb_led.pca9685 import PCA9685 as rgb_led  # Default option.
+
+# WS2812/Neopixel - https://amzn.to/41NAsuK
+
+init.RGB_NEOPIXEL_PIN = 18
+init.RGB_NEOPIXEL_SEGMENTS = 4
+init.RGB_NEOPIXEL_REVERSE = True
+
+from mptcc.hardware.rgb_led.neopixel import NeoPixel as rgb_led  # Alternate option.
 
 # I2CEncoder V2.1 - https://www.duppa.net/shop/i2cencoder-v2-1-with-soldered-accessory
 # from mptcc.hardware.rgb_led.i2cencoder import I2CEncoder as rgb_led  # Alternate option.
@@ -265,7 +257,7 @@ init.RGB_LED_RING_SMALL_ROTATION = 180
 init.RGB_LED_RING_SMALL_DELAY_BETWEEN_STEPS = 0 # 0.005 is nice, but it does delay playback timing.
 init.RGB_LED_RING_SMALL_MODE = "vu_meter" # Either "status" or "vu_meter"
 
-from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
+# from mptcc.hardware.rgb_led.rgb_led_ring_small import RGBLEDRingSmall as rgb_led  # Alternate option.
 
 # Serial Wombat 18AB - https://amzn.to/4ih0i0X
 # Requires: https://github.com/BroadwellConsultingInc/SerialWombat/tree/main/SerialWombat18A_18B
@@ -305,15 +297,10 @@ Default is the hardware PWM, for now. More testing is required.
 """
 
 # Output pin assignments.
-init.PIN_OUTPUT_1 = 27
-init.PIN_OUTPUT_2 = 26
-init.PIN_OUTPUT_3 = 15
-init.PIN_OUTPUT_4 = 21
-init.PIN_OUTPUT_5 = 9
-init.PIN_OUTPUT_6 = 8
-init.PIN_OUTPUT_7 = 7
-init.PIN_OUTPUT_8 = 6
-
+init.PIN_OUTPUT_1 = 1
+init.PIN_OUTPUT_2 = 8
+init.PIN_OUTPUT_3 = 7
+init.PIN_OUTPUT_4 = 6
 
 # GPIO pin outputs with hardware PWM.
 from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
@@ -330,16 +317,16 @@ from mptcc.hardware.output.gpio_pwm import GPIO_PWM as output # Default option.
 # PCA9685 16-channel 12-bit PWM - https://amzn.to/4jf2E1J
 # Requires: https://github.com/kevinmcaleer/pca9685_for_pico
 
-# init.OUTPUT_PCA9685_I2C_INSTANCE = 1
-# init.OUTPUT_PCA9685_INIT_DELAY = 0.2
-# init.OUTPUT_PCA9685_1_ADDR = 0x50
-# init.OUTPUT_PCA9685_1_CHAN = 0
-# init.OUTPUT_PCA9685_2_ADDR = 0x48
-# init.OUTPUT_PCA9685_2_CHAN = 0
-# init.OUTPUT_PCA9685_3_ADDR = 0x44
-# init.OUTPUT_PCA9685_3_CHAN = 0
-# init.OUTPUT_PCA9685_4_ADDR = 0x42
-# init.OUTPUT_PCA9685_4_CHAN = 0
+init.OUTPUT_PCA9685_I2C_INSTANCE = 2
+init.OUTPUT_PCA9685_INIT_DELAY = 0.2
+init.OUTPUT_PCA9685_1_ADDR = 0x50
+init.OUTPUT_PCA9685_1_CHAN = 0
+init.OUTPUT_PCA9685_2_ADDR = 0x48
+init.OUTPUT_PCA9685_2_CHAN = 0
+init.OUTPUT_PCA9685_3_ADDR = 0x44
+init.OUTPUT_PCA9685_3_CHAN = 0
+init.OUTPUT_PCA9685_4_ADDR = 0x42
+init.OUTPUT_PCA9685_4_CHAN = 0
 
 # from mptcc.hardware.output.pca9685 import PCA9685 as output # Alternate option.
 

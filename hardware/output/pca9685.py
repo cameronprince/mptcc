@@ -78,7 +78,7 @@ class PCA9685(Output):
         ValueError
             If frequency or on_time is not provided when activating the output.
         """
-        output = self.output[output]
+        output_obj = self.output[output]  # Get the Output_PCA9685 object
 
         if active:
             if freq is None or on_time is None:
@@ -87,12 +87,14 @@ class PCA9685(Output):
             freq = int(freq)
             on_time = int(on_time)
 
-            output.enable(freq, on_time)
+            output_obj.enable(freq, on_time)
 
-            self.init.rgb_led[output].status_color(freq, on_time, max_duty, max_on_time)
+            # Use set_status instead of status_color
+            self.init.rgb_led[output].set_status(output, freq, on_time, max_duty, max_on_time)
         else:
-            output.off()
-            self.init.rgb_led[output].off()
+            output_obj.off()
+            # Pass the output index to the off method
+            self.init.rgb_led[output].off(output)
 
 
 class Output_PCA9685:
@@ -117,7 +119,12 @@ class Output_PCA9685:
             The on time of the PWM signal in microseconds.
         """
         self.driver.freq(freq)
-        pass
+        # Calculate duty cycle and set it
+        duty_cycle = int((on_time / (1000000 / freq)) * 4095)  # PCA9685 uses 12-bit resolution
+        self.driver.duty(self.channel, duty_cycle)
 
     def off(self):
-        pass
+        """
+        Turn off the channel's PWM.
+        """
+        self.driver.duty(self.channel, 0)
