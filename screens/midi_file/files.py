@@ -9,7 +9,9 @@ Provides the MIDI file listing screen.
 
 from ...hardware.init import init
 from ...lib.config import Config as config
+from ...hardware.display.tasks import start_scroll, stop_scroll
 import uos
+
 
 class MIDIFileFiles:
     def __init__(self, midi_file):
@@ -56,7 +58,6 @@ class MIDIFileFiles:
         """
         Update the display with the list of MIDI files.
         """
-        self.display.clear()
         self.display.header("MIDI Files")
 
         start = self.midi_file.current_file_index
@@ -76,10 +77,10 @@ class MIDIFileFiles:
                 # Handle scrolling for the new active file.
                 text_width = len(midi_file) * self.midi_file.font_width
                 if text_width > self.display.width:
-                    self.display.start_scroll_task(midi_file, y, i)  # Pass the file index as the unique identifier.
+                    start_scroll(self.display, midi_file, y, i)  # Pass the file index as the unique identifier.
                 else:
                     # If the text doesn't require scrolling, stop the scrolling task.
-                    self.display.stop_scroll_task()
+                    stop_scroll(self.display)
                     # Ensure the display is updated.
                     self.display.fill_rect(0, y, self.display.width, self.midi_file.line_height, background)
                     self.display.text(midi_file, 0, y + v_padding, not is_active)
@@ -151,7 +152,7 @@ class MIDIFileFiles:
         """
         Responds to presses of encoder 1 to select files.
         """
-        self.display.stop_scroll_task()
+        stop_scroll(self.display)
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
         self.midi_file.track_cursor_position = 0
         self.midi_file.outputs = [None] * self.init.NUMBER_OF_COILS
@@ -159,13 +160,13 @@ class MIDIFileFiles:
         self.midi_file.handlers["tracks"].draw()
         # Prevent clicks from propagating to the tracks sub-screen on files with
         # a lot of tracks.
-        self.init.inputs.switch_disabled = True
+        self.init.switch_disabled = True
 
     def switch_2(self):
         """
         Responds to presses of encoder 2 to go back.
         """
-        self.display.stop_scroll_task()
+        stop_scroll(self.display)
         # Clear all positioning so return visits start at the top of the list.
         self.midi_file.current_file_index = 0
         self.midi_file.file_cursor_position = 0
@@ -174,6 +175,7 @@ class MIDIFileFiles:
         # Return to the main menu.
         parent_screen = self.midi_file.parent
         if parent_screen:
+            self.display.clear()
             self.init.menu.set_screen(parent_screen)
             self.init.menu.draw()
 
@@ -181,7 +183,7 @@ class MIDIFileFiles:
         """
         Responds to presses of encoder 3 to play the selected MIDI file.
         """
-        self.display.stop_scroll_task()
+        stop_scroll(self.display)
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
         file_path = self.init.SD_CARD_READER_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
         self.midi_file.handlers["play"].draw(file_path)

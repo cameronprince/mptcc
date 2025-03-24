@@ -24,7 +24,7 @@ class ARSG(Screen):
         self.name = name
         self.init = init
         self.display = self.init.display
-        self.font_width = self.display.DISPLAY_FONT_WIDTH
+        self.font_width = 8
         self.init_settings()
 
     def init_settings(self):
@@ -66,6 +66,10 @@ class ARSG(Screen):
         self.display.text("10x", 100, 56, 0)
         self.display.text("Active", 0, 56, 0)
         self.update_display(update_line_freq=True, update_on_time=True, update_freq=True, initial=True)
+
+        # Start the RGB LED update task if RGB LED asynchronous polling is enabled.
+        if self.init.RGB_LED_ASYNCIO_POLLING:
+            self.init.rgb_led_tasks.start(lambda: self.active)
 
     def update_display(self, update_line_freq=False, update_on_time=False, update_freq=False, update_ten_x=False, update_active=False, initial=False):
         """
@@ -184,6 +188,8 @@ class ARSG(Screen):
         Handles the second switch input to deactivate the ARSG emulator and return to the parent screen.
         """
         self.active = False
+        if self.init.RGB_LED_ASYNCIO_POLLING:
+            self.init.rgb_led_tasks.stop()
         parent_screen = self.parent
         if parent_screen:
             self.init.menu.set_screen(parent_screen)
@@ -201,6 +207,7 @@ class ARSG(Screen):
                 self.enable_task = asyncio.create_task(self.toggle_enable_flag())
         else:
             if self.enable_task:
+                # Cancel the enable_task directly.
                 self.enable_task.cancel()
                 self.enable_task = None
             if self.output_thread:

@@ -16,55 +16,46 @@ class SSD1322(Display):
     """
     A class to interface with the SSD1322 display driver for the 
     MicroPython Tesla Coil Controller (MPTCC).
-
-    Attributes:
-    -----------
-    DISPLAY_WIDTH : int
-        The width of the display.
-    DISPLAY_HEIGHT : int
-        The height of the display.
-    DISPLAY_LINE_HEIGHT : int
-        The height of a line in the display.
-    DISPLAY_FONT_WIDTH : int
-        The width of a character in the display font.
-    DISPLAY_FONT_HEIGHT : int
-        The height of a character in the display font.
-    DISPLAY_HEADER_HEIGHT : int
-        The height of the header in the display.
-    DISPLAY_ITEMS_PER_PAGE : int
-        The number of items displayed per page.
-    driver : driver
-        The SSD1322 display driver instance.
     """
 
     DISPLAY_WIDTH = 256
     DISPLAY_HEIGHT = 64
-    DISPLAY_LINE_HEIGHT = 12
-    DISPLAY_FONT_WIDTH = 8
     DISPLAY_FONT_HEIGHT = 8
-    DISPLAY_HEADER_HEIGHT = 10
-    DISPLAY_ITEMS_PER_PAGE = 4
-    interface = None
+    # DISPLAY_LINE_HEIGHT = 12
+    # DISPLAY_FONT_WIDTH = 8
+    # DISPLAY_HEADER_HEIGHT = 10
+    # DISPLAY_ITEMS_PER_PAGE = 4
 
-    def __init__(self):
+    def __init__(self, spi_instance=None):
         """
         Constructs all the necessary attributes for the SSD1322 object.
         """
-        self.interface == 'spi'
         super().__init__()
         self.init = init
 
-        init.init_spi_2()
+        if spi_instance is None:
+            raise ValueError("SPI instance must be provided.")
 
-        dc = Pin(self.init.PIN_SPI_2_DC, Pin.OUT)
-        cs = Pin(self.init.PIN_SPI_2_CS, Pin.OUT)
-        res = Pin(self.init.PIN_SPI_2_RST, Pin.OUT)
+        if spi_instance == 2:
+            init.init_spi_2()
+            self.dc = Pin(self.init.PIN_SPI_2_DC, Pin.OUT)
+            self.cs = Pin(self.init.PIN_SPI_2_CS, Pin.OUT)
+            self.rst = Pin(self.init.PIN_SPI_2_RST, Pin.OUT)
+            self.spi = self.init.spi_2
+        else:
+            init.init_spi_1()
+            self.dc = Pin(self.init.PIN_SPI_1_DC, Pin.OUT)
+            self.cs = Pin(self.init.PIN_SPI_1_CS, Pin.OUT)
+            self.rst = Pin(self.init.PIN_SPI_1_RST, Pin.OUT)
+            self.spi = self.init.spi_1
 
-        self.driver = driver(self.init.spi_2, dc=dc, cs=cs, rst=res)
+        self.driver = driver(self.spi, dc=self.dc, cs=self.cs, rst=self.rst)
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 
-    def clear(self):
+        print(f"SSD1322 display driver initialized on SPI{spi_instance}")
+
+    def _clear(self):
         """
         Clears the display.
         """
@@ -90,7 +81,7 @@ class SSD1322(Display):
         clamped_y = max(0, min(y, max_y))
         return clamped_y
 
-    def text(self, text, w, h, c):
+    def _text(self, text, w, h, c):
         """
         Displays text on the screen.
 
@@ -110,7 +101,7 @@ class SSD1322(Display):
             c = 15
         self.driver.draw_text8x8(w, h, text, c)
 
-    def hline(self, x, y, w, c):
+    def _hline(self, x, y, w, c):
         """
         Draws a horizontal line on the screen.
 
@@ -130,7 +121,7 @@ class SSD1322(Display):
             c = 15
         self.driver.draw_hline(x, y, w, c)
 
-    def fill_rect(self, x, y, w, h, c):
+    def _fill_rect(self, x, y, w, h, c):
         """
         Draws a filled rectangle on the screen.
 
@@ -156,7 +147,7 @@ class SSD1322(Display):
             c = 15
         self.driver.fill_rectangle(x, y, w, h, c)
 
-    def show(self):
+    def _show(self):
         """
         Updates the display with the current frame buffer content.
         """

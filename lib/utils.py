@@ -7,6 +7,24 @@ lib/utils.py
 Shared utility functions.
 """
 
+def calculate_duty_cycle(on_time, freq):
+    """
+    Calculate the duty cycle for a given on_time and frequency.
+
+    Parameters:
+    ----------
+    on_time : int
+        The on time of the output signal in microseconds.
+    freq : int
+        The frequency of the output signal in Hz.
+
+    Returns:
+    -------
+    int
+        The duty cycle value.
+    """
+    return int((on_time / (1_000_000 / freq)) * 65535)
+
 def calculate_percent(freq, on_time, max_duty=None, max_on_time=None):
     """
     Calculates the percentage value based on frequency, on_time,
@@ -205,3 +223,20 @@ def status_color(freq, on_time, max_duty=None, max_on_time=None):
     # print(f"[DEBUG] status_color: RGB=({red}, {green}, {blue})")
 
     return red, green, blue
+
+def hex_to_rgb(hex_color):
+    """
+    Convert a hex color code to an RGB tuple.
+
+    Parameters:
+    ----------
+    hex_color : str
+        The hex color code (e.g., "#326400").
+
+    Returns:
+    -------
+    tuple
+        The RGB color as a tuple (R, G, B).
+    """
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))

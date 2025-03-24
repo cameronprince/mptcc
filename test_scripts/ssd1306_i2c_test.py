@@ -4,7 +4,9 @@ import _thread
 
 # display address is 0x3c
 # i2c = I2C(0, sda=Pin(12), scl=Pin(13), freq=400000)
-i2c = I2C(1, scl=Pin(11), sda=Pin(10), freq=400000)
+# i2c = I2C(1, scl=Pin(11), sda=Pin(10), freq=400000)
+# i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
+i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 oled = SSD1306_I2C(128, 64, i2c)
 mutex = _thread.allocate_lock()
 

@@ -10,69 +10,73 @@ Class for driving outputs with hardware PWM.
 from machine import Pin, PWM
 from ...hardware.init import init
 from ..output.output import Output
+from ...lib.utils import calculate_duty_cycle
 
-class GPIO_PWM(Output):
+
+class Output_GPIO_PWM(Output):
     """
-    A class to provide hardware PWM outputs for the MPTCC.
-
-    Attributes:
-    -----------
-    init : object
-        The initialization object containing configuration and hardware settings.
-    output : list
-        A list of PWM objects for each output.
+    A class to wrap a single PWM object and provide output control.
     """
-    def __init__(self):
-        super().__init__()
-        self.init = init
+    def __init__(self, pin):
+        """
+        Initialize the Output_GPIO_PWM instance.
 
-        # Initialize outputs dynamically
-        self.output = []
+        Parameters:
+        ----------
+        pin : int
+            The GPIO pin number for the PWM output.
+        """
+        self.pin = pin
+        self.pwm = PWM(Pin(pin)) if pin is not None else None
 
-        for i in range(1, self.init.NUMBER_OF_COILS + 1):
-            # Dynamically get the output pin for the current coil
-            pin_attr = f"PIN_OUTPUT_{i}"
-            if not hasattr(self.init, pin_attr):
-                raise ValueError(
-                    f"Output pin configuration for coil {i} is missing. "
-                    f"Please ensure {pin_attr} is defined in the init module."
-                )
-            pin = getattr(self.init, pin_attr)
-
-            # Initialize the PWM object for the current output pin
-            self.output.append(PWM(Pin(pin)))
-
-    def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None):
         """
         Sets the output based on the provided parameters.
 
         Parameters:
         ----------
-        output : int
-            The index of the output to be set.
-        active : bool
+        active : bool, optional
             Whether the output should be active.
-        frequency : int, optional
+        freq : int, optional
             The frequency of the output signal.
         on_time : int, optional
             The on time of the output signal in microseconds.
-
-        Raises:
-        -------
-        ValueError
-            If frequency or on_time is not provided when activating the output.
         """
+        if self.pwm is None:
+            return  # Skip if the pin is not configured.
+
         if active:
-            if frequency is None or on_time is None:
-                raise ValueError("Frequency and on_time must be provided when activating the output.")
-            
-            frequency = int(frequency)
+            freq = int(freq)
             on_time = int(on_time)
 
-            self.output[output].freq(frequency)
-            duty_cycle = int((on_time / (1000000 / frequency)) * 65535)
-            self.output[output].duty_u16(duty_cycle)
-            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
+            self.pwm.freq(freq)
+            duty_cycle = calculate_duty_cycle(on_time, freq)
+            self.pwm.duty_u16(duty_cycle)
         else:
-            self.output[output].duty_u16(0)
-            self.init.rgb_led[output].off(output)
+            self.pwm.duty_u16(0)
+
+
+class GPIO_PWM():
+    def __init__(self, pins):
+        """
+        Initialize the GPIO_PWM driver.
+
+        Parameters:
+        ----------
+        pins : list of int
+            A list of GPIO pin numbers for PWM outputs.
+        """
+        super().__init__()
+        self.init = init
+
+        # Initialize Output_GPIO_PWM instances for the provided pins.
+        self.instances = [Output_GPIO_PWM(pin) for pin in pins]
+
+        # Assign this instance to the next available key.
+        instance_key = len(self.init.output_instances['gpio_pwm'])
+
+        # Print initialization details.
+        print(f"GPIO_PWM driver {instance_key} initialized")
+        for i, pin in enumerate(pins):
+            if pin is not None:
+                print(f"- Output {i}: GPIO {pin}")

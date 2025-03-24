@@ -7,80 +7,54 @@ hardware/output/gpio_pio.py
 Class for driving outputs with PIO PWM.
 """
 
-from machine import Pin, freq
+from machine import Pin
 from rp2 import PIO, StateMachine, asm_pio
 from ...hardware.init import init
 from ..output.output import Output
 
-@asm_pio(set_init=PIO.OUT_LOW)
-def pwm_program():
-    # Ensure the pin is low when the state machine starts or stops.
-    set(pins, 0)                    # Set the pin to low voltage.
+# PIO program definition.
+@asm_pio(sideset_init=PIO.OUT_LOW)
+def pwm_prog():
+    pull(noblock) .side(0)
+    mov(x, osr)  # Keep most recent pull data stashed in X, for recycling by noblock.
+    mov(y, isr)  # ISR must be preloaded with PWM count max.
+    label("pwmloop")
+    jmp(x_not_y, "skip")
+    nop() .side(1)
+    label("skip")
+    jmp(y_dec, "pwmloop")
 
-    # Rest until a new tone is received.
-    label("rest")
-    pull(block)                     # Wait for a new delay value, keep it in osr.
-    mov(x, osr)                     # Copy the delay into X.
-    jmp(not_x, "rest")              # If new delay is zero, keep resting.
 
-    # Play the tone until a new delay is received.
-    wrap_target()                   # Start of the main loop.
+class Output_GPIO_PIO:
+    """
+    A class to wrap a single PIO PWM object and provide output control.
+    """
+    def __init__(self, pin, sm_id, smf=10_000_000):
+        """
+        Initialize the Output_GPIO_PIO instance.
 
-    set(pins, 1)                    # Set the pin to high voltage.
-    label("high_loop")
-    jmp(x_dec, "high_loop")         # Delay.
+        Parameters:
+        ----------
+        pin : int
+            The GPIO pin number for the PIO PWM output.
+        sm_id : int
+            The state machine ID to use for this output.
+        smf : int, optional
+            The state machine frequency (default is 10 MHz).
+        """
+        self.pin = pin
+        self.smf = smf
+        self.sm = StateMachine(sm_id, pwm_prog, freq=self.smf, sideset_base=Pin(pin)) if pin is not None else None
+        if self.sm is not None:
+            self.sm.active(0)  # Ensure the state machine is initially inactive.
 
-    set(pins, 0)                    # Set the pin to low voltage.
-    mov(x, osr)                     # Load the half period into X.
-    label("low_loop")
-    jmp(x_dec, "low_loop")          # Delay.
-
-    # Read any new delay value. If none, keep the current delay.
-    mov(x, osr)                     # Set x, the default value for "pull(noblock)".
-    pull(noblock)                   # Read a new delay value or use the default.
-
-    # If the new delay is zero, rest. Otherwise, continue playing the tone.
-    mov(x, osr)                     # Copy the delay into X.
-    jmp(not_x, "rest")              # If X is zero, rest.
-    wrap()                          # Continue playing the tone.
-
-class GPIO_PIO(Output):
-    def __init__(self):
-        super().__init__()
-        self.init = init
-
-        # PIO state machine clock frequency (125 MHz).
-        self.smf = freq()
-
-        # Initialize outputs dynamically.
-        self.output = []
-
-        for i in range(1, self.init.NUMBER_OF_COILS + 1):
-            # Dynamically get the output pin for the current coil.
-            pin_attr = f"PIN_OUTPUT_{i}"
-            if not hasattr(self.init, pin_attr):
-                raise ValueError(
-                    f"Pin configuration for output {i} is missing. "
-                    f"Please ensure {pin_attr} is defined in main."
-                )
-            pin = getattr(self.init, pin_attr)
-
-            # Initialize the state machine for the current output pin.
-            sm = StateMachine(i - 1, pwm_program, set_base=Pin(pin))
-            self.output.append(sm)
-
-            # Ensure the state machine is initially inactive.
-            sm.active(0)
-
-    def set_output(self, output, active, freq=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None):
         """
         Sets the output based on the provided parameters.
 
         Parameters:
         ----------
-        output : int
-            The index of the output to be set.
-        active : bool
+        active : bool, optional
             Whether the output should be active.
         freq : int, optional
             The frequency of the output signal.
@@ -92,8 +66,8 @@ class GPIO_PIO(Output):
         ValueError
             If freq or on_time is not provided when activating the output.
         """
-        # Get the state machine for the current output.
-        sm = self.output[output]
+        if self.sm is None:
+            return  # Skip if the pin is not configured.
 
         if active:
             if freq is None or on_time is None:
@@ -102,25 +76,68 @@ class GPIO_PIO(Output):
             freq = int(freq)
             on_time = int(on_time)
 
-            # Calculate the half period.
-            smf = self.smf
-            half_period = int(smf / freq / 2)
+            # Calculate the maximum count for the PWM signal.
+            # Account for the loop running twice per cycle by dividing by 2.
+            max_count = int(self.smf / (freq * 2))
+
+            # Calculate the duty cycle for the desired on_time.
+            # Account for the loop running twice per cycle by dividing by 2.
+            duty_cycle = int((on_time / 2_000_000) * self.smf)  # Convert on_time (µs) to clock cycles
+
+            # Ensure the duty cycle does not exceed the maximum count.
+            if duty_cycle > max_count:
+                duty_cycle = max_count
 
             # Deactivate the state machine to change configuration.
-            sm.active(0)
+            self.sm.active(0)
 
-            # Load the half period into the PIO state machine.
-            sm.put(half_period)
+            # Load the maximum count into the ISR.
+            self.sm.put(max_count)
+            self.sm.exec("pull()")
+            self.sm.exec("mov(isr, osr)")
+
+            # Load the duty cycle into the TX FIFO.
+            self.sm.put(duty_cycle)
 
             # Start the state machine.
-            sm.active(1)
-            self.init.rgb_led[output].set_status(output, freq, on_time, max_duty, max_on_time)     
+            self.sm.active(1)
         else:
             # Stop the state machine.
-            sm.active(0)
+            self.sm.active(0)
 
             # Explicitly set the pin low.
-            sm.exec("set(pins, 0)")
+            self.sm.exec("set(pins, 0)")
 
-            # Turn off the RGB LED.
-            self.init.rgb_led[output].off(output)
+
+class GPIO_PIO(Output):
+    def __init__(self, pins):
+        """
+        Initialize the GPIO_PIO driver.
+
+        Parameters:
+        ----------
+        pins : list of int
+            A list of GPIO pin numbers for PIO PWM outputs.
+        """
+        super().__init__()
+        self.init = init
+
+        # Initialize Output_GPIO_PIO instances for the provided pins.
+        self.instances = []
+        for i, pin in enumerate(pins):
+            if pin is not None:
+                # Assign a unique state machine ID for each output.
+                sm_id = len(self.instances)  # Use the current length of instances as the ID.
+                instance = Output_GPIO_PIO(pin, sm_id)
+                self.instances.append(instance)
+            else:
+                self.instances.append(None)
+
+        # Assign this instance to the next available key.
+        instance_key = len(self.init.output_instances['gpio_pio'])
+
+        # Print initialization details.
+        print(f"GPIO_PIO driver {instance_key} initialized")
+        for i, pin in enumerate(pins):
+            if pin is not None:
+                print(f"- Output {i}: GPIO {pin} (StateMachine {i})")

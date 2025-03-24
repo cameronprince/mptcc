@@ -5,10 +5,10 @@ import time
 # Constants and initialization code remain the same...
 
 # Initialize I2C bus
-i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
+i2c = I2C(1, scl=Pin(19), sda=Pin(18), freq=400000)
 
 # Initialize LED ring
-led_ring = RGBLEDRingSmall(i2c, 0x68)  # Adjust the address as needed
+led_ring = RGBLEDRingSmall(i2c, 0x69)  # Adjust the address as needed
 
 # Reset and configure LED ring
 led_ring.reset()

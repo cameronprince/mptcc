@@ -14,6 +14,7 @@ from mptcc.lib.menu import Screen
 import mptcc.lib.config as config
 import mptcc.lib.utils as utils
 
+
 class MIDIInput(Screen):
     """
     A class to represent and handle the MIDI input feature for the MicroPython Tesla Coil Controller (MPTCC).
@@ -54,7 +55,7 @@ class MIDIInput(Screen):
         self.md.cbNoteOff(self.note_off)
         self.listening = False
         self.midi_thread = None
-        self.header_height = init.display.DISPLAY_HEADER_HEIGHT
+        self.header_height = 10
         self.level = 50
 
         self.init = init

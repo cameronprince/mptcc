@@ -7,6 +7,8 @@ hardware/hardware.py
 The hardware parent class.
 """
 
+import struct
+
 class Hardware:
     def __init__(self):
         pass

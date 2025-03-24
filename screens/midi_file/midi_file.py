@@ -86,12 +86,12 @@ class MIDIFile(Screen):
         self.outputs = [None] * self.init.NUMBER_OF_COILS  # Dynamically sized based on NUMBER_OF_COILS
         self.last_rotary_1_value = 0
         self.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * self.init.NUMBER_OF_COILS  # Dynamically sized
-        self.per_page = self.display.DISPLAY_ITEMS_PER_PAGE
+        self.per_page = 4
         self.output_y = None
-        self.line_height = self.display.DISPLAY_LINE_HEIGHT
-        self.font_width = self.display.DISPLAY_FONT_WIDTH
-        self.font_height = self.display.DISPLAY_FONT_HEIGHT
-        self.header_height = self.display.DISPLAY_HEADER_HEIGHT
+        self.line_height = 12
+        self.font_width = 8
+        self.font_height = 8
+        self.header_height = 10
 
         self.config = config.read_config()
         self.default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_LEVEL)
@@ -110,6 +110,56 @@ class MIDIFile(Screen):
             "assignment": MIDIFileAssignment(self),
             "play": MIDIFilePlay(self),
         }
+
+        # Dynamically create rotary_X and switch_X methods based on NUMBER_OF_COILS.
+        for i in range(self.init.NUMBER_OF_COILS):
+            setattr(self, f"rotary_{i + 1}", self._create_rotary_method(i + 1))
+            setattr(self, f"switch_{i + 1}", self._create_switch_method(i + 1))
+
+    def _create_rotary_method(self, encoder_number):
+        """
+        Factory function to create a rotary method for a specific encoder number.
+        """
+        def rotary_method(direction):
+            self.rotary(encoder_number, direction)
+        return rotary_method
+
+    def _create_switch_method(self, switch_number):
+        """
+        Factory function to create a switch method for a specific switch number.
+        """
+        def switch_method():
+            self.switch(switch_number)
+        return switch_method
+
+    def rotary(self, encoder_number, direction):
+        """
+        Respond to rotation of a rotary encoder.
+
+        Parameters:
+        ----------
+        encoder_number : int
+            The number of the rotary encoder (1, 2, 3, or 4).
+        direction : int
+            The rotary encoder direction.
+        """
+        handler = self.handlers.get(self.current_page)
+        if handler:
+            if hasattr(handler, f"rotary_{encoder_number}"):
+                getattr(handler, f"rotary_{encoder_number}")(direction)
+
+    def switch(self, switch_number):
+        """
+        Respond to presses of a switch.
+
+        Parameters:
+        ----------
+        switch_number : int
+            The number of the switch (1, 2, 3, or 4).
+        """
+        handler = self.handlers.get(self.current_page)
+        if handler and hasattr(handler, f"switch_{switch_number}"):
+            getattr(handler, f"switch_{switch_number}")()
 
     def draw(self):
         """
@@ -181,56 +231,3 @@ class MIDIFile(Screen):
         finally:
             if initsd:
                 self.init.sd_card_reader.deinit_sd()
-
-    def rotary(self, encoder_number, direction):
-        """
-        Respond to rotation of a rotary encoder.
-
-        Parameters:
-        ----------
-        encoder_number : int
-            The number of the rotary encoder (1, 2, 3, or 4).
-        direction : int
-            The rotary encoder direction.
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler:
-            if hasattr(handler, f"rotary_{encoder_number}"):
-                getattr(handler, f"rotary_{encoder_number}")(direction)
-
-    def switch(self, switch_number):
-        """
-        Respond to presses of a switch.
-
-        Parameters:
-        ----------
-        switch_number : int
-            The number of the switch (1, 2, 3, or 4).
-        """
-        handler = self.handlers.get(self.current_page)
-        if handler and hasattr(handler, f"switch_{switch_number}"):
-            getattr(handler, f"switch_{switch_number}")()
-
-    def rotary_1(self, direction):
-        self.rotary(1, direction)
-
-    def rotary_2(self, direction):
-        self.rotary(2, direction)
-
-    def rotary_3(self, direction):
-        self.rotary(3, direction)
-
-    def rotary_4(self, direction):
-        self.rotary(4, direction)
-
-    def switch_1(self):
-        self.switch(1)
-
-    def switch_2(self):
-        self.switch(2)
-
-    def switch_3(self):
-        self.switch(3)
-
-    def switch_4(self):
-        self.switch(4)

@@ -9,48 +9,33 @@ Input module for standard KY-040 rotary encoders.
 
 import time
 from machine import Pin
+import uasyncio as asyncio
 from rotary_irq_rp2 import RotaryIRQ
 from ...hardware.init import init
 from ..input.input import Input
-from ...lib.menu import Screen
+
 
 class KY040(Input):
-    def __init__(self):
+    def __init__(self, pins, pull_up=False):
+        """
+        Initialize the KY-040 rotary encoder driver.
+
+        Args:
+            pins (list): A list of lists, where each inner list contains the CLK, DT, and SW pin numbers.
+            pull_up (bool): Whether to enable pull-up resistors for the encoder pins.
+        """
         super().__init__()
 
-        self.init = init
-        self.last_switch_click_time = [0] * self.init.NUMBER_OF_COILS
+        self.pins = pins
+        self.pull_up = pull_up
+        self.last_switch_click_time = [0] * len(pins)
 
-        # Dynamically populate rotary_pins based on NUMBER_OF_COILS.
-        rotary_pins = []
-        for i in range(1, self.init.NUMBER_OF_COILS + 1):
-            clk_pin_attr = f"PIN_ROTARY_{i}_CLK"
-            dt_pin_attr = f"PIN_ROTARY_{i}_DT"
-            sw_pin_attr = f"PIN_ROTARY_{i}_SW"
-
-            if not hasattr(self.init, clk_pin_attr) or \
-               not hasattr(self.init, dt_pin_attr) or \
-               not hasattr(self.init, sw_pin_attr):
-                raise ValueError(
-                    f"Rotary encoder configuration for KY-040 input {i} is missing. "
-                    f"Please ensure {clk_pin_attr}, {dt_pin_attr}, and {sw_pin_attr} are defined in main."
-                )
-
-            rotary_pins.append((
-                getattr(self.init, clk_pin_attr),
-                getattr(self.init, dt_pin_attr),
-                getattr(self.init, sw_pin_attr),
-            ))
-
-        # Initialize rotary encoders and switches dynamically.
-        self.rotary_encoders = []
+        # Initialize rotary encoders and switches.
+        self.instances = []
         self.last_rotations = []
+        self.active_interrupt = None
 
-        for i in range(self.init.NUMBER_OF_COILS):
-            clk_pin = rotary_pins[i][0]
-            dt_pin = rotary_pins[i][1]
-            sw_pin = rotary_pins[i][2]
-
+        for i, (clk_pin, dt_pin, sw_pin) in enumerate(pins):
             # Initialize rotary encoder.
             encoder = RotaryIRQ(
                 pin_num_clk=clk_pin,
@@ -59,45 +44,86 @@ class KY040(Input):
                 max_val=100,
                 reverse=False,
                 range_mode=RotaryIRQ.RANGE_WRAP,
-                pull_up=init.ROTARY_PULL_UP,
+                pull_up=self.pull_up,
                 half_step=False,
             )
-            self.rotary_encoders.append(encoder)
+            self.instances.append(encoder)
             self.last_rotations.append(encoder.value())
 
             # Add listener for rotary encoder.
             encoder.add_listener(self.create_listener(i))
 
-            # Initialize switch.
-            switch_pin = Pin(sw_pin, Pin.IN, Pin.PULL_UP)
-            switch_pin.irq(lambda pin, idx=i: self.switch_click(idx + 1), Pin.IRQ_FALLING)
-            setattr(self.init, f"switch_{i + 1}", switch_pin)
+            # Initialize switch if SW pin is provided.
+            if sw_pin is not None:
+                switch_pin = Pin(sw_pin, Pin.IN, Pin.PULL_UP if self.pull_up else Pin.IN)
+                switch_pin.irq(self.create_switch_callback(i), Pin.IRQ_FALLING)
+
+        instance_key = len(self.init.input_instances["encoder"]["ky_040"])
+
+        # Print initialization details.
+        print(f"KY-040 driver {instance_key} initialized with {len(self.pins)} encoders (pull_up={self.pull_up}):")
+        for i, (clk_pin, dt_pin, sw_pin) in enumerate(self.pins):
+            print(f"- Encoder {i + 1}: CLK={clk_pin}, DT={dt_pin}, SW={sw_pin}")
+
+        # Start the asyncio task to process interrupts.
+        asyncio.create_task(self.process_interrupt())
 
     def create_listener(self, idx):
+        """
+        Create a listener callback for the rotary encoder.
+
+        Args:
+            idx (int): The index of the encoder.
+
+        Returns:
+            function: The listener callback.
+        """
         def listener():
-            direction = None
-            new_value = self.rotary_encoders[idx].value()
-
-            if new_value is None:
-                return
-            
-            if self.last_rotations[idx] != new_value:
-                # Handle wrap-around cases.
-                if self.last_rotations[idx] == 0 and new_value == 100:
-                    direction = -1
-                elif self.last_rotations[idx] == 100 and new_value == 0:
-                    direction = 1
-                else:
-                    direction = 1 if new_value > self.last_rotations[idx] else -1
-            else:
-                return
-
-            self.last_rotations[idx] = new_value
-            self.rotary_encoder_change(idx, direction)
+            # Set the active_interrupt to the index of the encoder that triggered the interrupt.
+            self.active_interrupt = idx
         return listener
 
-    def switch_click(self, switch):
-        current_time = time.ticks_ms()
-        if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > 500:
-            self.last_switch_click_time[switch - 1] = current_time
-            super().switch_click(switch)
+    def create_switch_callback(self, idx):
+        """
+        Create a switch callback for the rotary encoder switch.
+
+        Args:
+            idx (int): The index of the encoder.
+
+        Returns:
+            function: The switch callback.
+        """
+        def callback(pin):
+            current_time = time.ticks_ms()
+            if time.ticks_diff(current_time, self.last_switch_click_time[idx]) > 500:
+                self.last_switch_click_time[idx] = current_time
+                self.switch_click(idx + 1)
+        return callback
+
+    async def process_interrupt(self):
+        """
+        Asyncio task to process rotary encoder changes.
+        """
+        while True:
+            if self.active_interrupt is not None:
+                idx = self.active_interrupt
+                self.active_interrupt = None
+
+                encoder = self.instances[idx]
+                new_value = encoder.value()
+
+                if new_value is None:
+                    continue
+
+                if self.last_rotations[idx] != new_value:
+                    if self.last_rotations[idx] == 0 and new_value == 100:
+                        direction = -1
+                    elif self.last_rotations[idx] == 100 and new_value == 0:
+                        direction = 1
+                    else:
+                        direction = 1 if new_value > self.last_rotations[idx] else -1
+
+                    self.last_rotations[idx] = new_value
+                    super().encoder_change(idx, direction)
+
+            await asyncio.sleep(0.01)

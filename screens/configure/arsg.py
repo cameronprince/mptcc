@@ -59,7 +59,7 @@ class ARSGConfig(Screen):
         self.max_freq = self.config.get("arsg_max_freq", config.ARSG_MAX_FREQ_DEF)
         self.max_duty = self.config.get("arsg_max_duty", config.ARSG_MAX_DUTY_DEF)
         self.page = 0
-        self.font_width = self.init.display.DISPLAY_FONT_WIDTH
+        self.font_width = 8
 
     def draw(self):
         """

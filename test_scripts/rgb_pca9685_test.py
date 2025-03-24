@@ -4,8 +4,8 @@ from picoRGB import RGBLed
 import utime
 
 # Setup I2C and PCA9685
-# i2c = I2C(0, scl=Pin(17), sda=Pin(16))
-i2c = I2C(1, scl=Pin(19), sda=Pin(18), freq=400000)
+i2c = I2C(0, scl=Pin(17), sda=Pin(16))
+# i2c = I2C(1, scl=Pin(19), sda=Pin(18), freq=400000)
 # The PCA default is at 0x40
 pca = PCA9685(i2c, address=0x40)
 pca.freq(1000)
