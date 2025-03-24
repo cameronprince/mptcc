@@ -7,29 +7,77 @@ hardware/rgb_led/pca9685.py
 RGB LED device utilizing the PCA9685 external PWM board.
 """
 
-import _thread
-from machine import Pin
-from pca9685 import PCA9685 as driver
+from machine import Pin, I2C
+import ustruct
+import time
 from ..rgb_led.rgb_led import RGBLED, RGB
 from ...hardware.init import init
 
-class PCA9685(RGBLED):
+
+class PCA9685:
+    """
+    A class providing low-level functions for communicating with the PCA9685.
+    """
+    def __init__(self, i2c, address=0x40):
+        self.i2c = i2c
+        self.address = address
+        self._write(0x00, 0x00)
+
+    def _write(self, address, value):
+        self.i2c.writeto_mem(self.address, address, bytearray([value]))
+
+    def _read(self, address):
+        return self.i2c.readfrom_mem(self.address, address, 1)[0]
+
+    def freq(self, freq=None):
+        if freq is None:
+            return int(25000000.0 / 4096 / (self._read(0xfe) - 0.5))
+        prescale = int(25000000.0 / 4096.0 / freq + 0.5)
+        old_mode = self._read(0x00)
+        self._write(0x00, (old_mode & 0x7F) | 0x10)
+        self._write(0xfe, prescale)
+        self._write(0x00, old_mode)
+        time.sleep_us(5)
+        self._write(0x00, old_mode | 0xa1)
+
+    def duty(self, index, value=None, invert=False):
+        if value is None:
+            data = self.i2c.readfrom_mem(self.address, 0x06 + 4 * index, 4)
+            on, off = ustruct.unpack('<HH', data)
+            if (on, off) == (0, 4096):
+                return 0
+            elif (on, off) == (4096, 0):
+                return 4095
+            return 4095 - off if invert else off
+        if not 0 <= value <= 4095:
+            raise ValueError("Out of range")
+        if invert:
+            value = 4095 - value
+        self.i2c.writeto_mem(self.address, 0x06 + 4 * index, ustruct.pack('<HH', 0, value))
+
+
+class PCA9685_RGBLED(RGBLED):
     """
     A class to control RGB LED devices using the PCA9685 external PWM board.
-
-    Attributes:
-    -----------
-    init : object
-        The initialization object containing configuration and hardware settings.
-    driver : PCA9685
-        The PCA9685 PWM driver instance.
     """
-    def __init__(self):
+
+    def __init__(self, i2c_instance, i2c_addr=0x40, freq=1000, pins=[]):
+        """
+        Constructs all the necessary attributes for the PCA9685_RGBLED object.
+
+        Parameters:
+        ----------
+        i2c_instance : int
+            The I2C instance to use.
+        i2c_addr : int, optional
+            The I2C address of the PCA9685. Default is 0x40.
+        pins : list, optional
+            A list of pin numbers to use for the LEDs.
+        """
         super().__init__()
         self.init = init
 
-        # Prepare the I2C bus.
-        if self.init.RGB_PCA9685_I2C_INSTANCE == 2:
+        if i2c_instance == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
             self.mutex = self.init.i2c_2_mutex
@@ -39,29 +87,32 @@ class PCA9685(RGBLED):
             self.mutex = self.init.i2c_1_mutex
 
         # Initialize the PCA9685 driver.
-        self.driver = driver(self.i2c, address=self.init.RGB_PCA9685_ADDR)
-        self.driver.freq(self.init.RGB_PCA9685_FREQ)
+        self.init.mutex_acquire(self.mutex, "pca9685_rgb_led:init")
+        self.driver = PCA9685(self.i2c, address=i2c_addr)
+        self.driver.freq(freq)
+        self.init.mutex_release(self.mutex, "pca9685_rgb_led:init")
+
+        # Generate a unique key for this instance.
+        instance_key = len(self.init.rgb_led_instances["pca9685"])
+
+        # Initialize the LEDs based on the pins configuration.
+        self.instances = []
+        for led_pins in pins:
+            red_pin, green_pin, blue_pin = led_pins
+            led = RGB_PCA9685(
+                driver=self.driver,
+                red_channel=red_pin,
+                green_channel=green_pin,
+                blue_channel=blue_pin,
+                mutex=self.mutex
+            )
+            self.instances.append(led)
 
         # Print initialization details.
-        print(f"PCA9685 RGB LED driver initialized on I2C_{self.init.RGB_PCA9685_I2C_INSTANCE} at address: 0x{self.init.RGB_PCA9685_ADDR:02X}")
-        for i in range(self.init.NUMBER_OF_COILS):
-            red_channel = getattr(self.init, f"RGB_PCA9685_LED{i + 1}_RED")
-            green_channel = getattr(self.init, f"RGB_PCA9685_LED{i + 1}_GREEN")
-            blue_channel = getattr(self.init, f"RGB_PCA9685_LED{i + 1}_BLUE")
-            print(f"- LED {i + 1}: R={red_channel}, G={green_channel}, B={blue_channel}")
+        print(f"PCA9685 RGB LED driver {instance_key} initialized on I2C_{i2c_instance} at address: 0x{i2c_addr:02X}")
+        for i, led in enumerate(self.instances):
+            print(f"- LED {i + 1}: R={led.red_channel}, G={led.green_channel}, B={led.blue_channel}")
         print(f"- Asyncio polling: {self.init.RGB_LED_ASYNCIO_POLLING}")
-
-        # Dynamically initialize RGB LEDs based on NUMBER_OF_COILS.
-        self.init.rgb_led = [
-            RGB_PCA9685(
-                self.driver,
-                red_channel=getattr(self.init, f"RGB_PCA9685_LED{i + 1}_RED"),
-                green_channel=getattr(self.init, f"RGB_PCA9685_LED{i + 1}_GREEN"),
-                blue_channel=getattr(self.init, f"RGB_PCA9685_LED{i + 1}_BLUE"),
-                mutex=self.mutex,
-            )
-            for i in range(self.init.NUMBER_OF_COILS)
-        ]
 
 
 class RGB_PCA9685(RGB):
@@ -76,20 +127,29 @@ class RGB_PCA9685(RGB):
         self.blue_channel = blue_channel
         self.mutex = mutex
         self.init = init
-        self.setColor(0, 0, 0)
+        self.set_color(0, 0, 0)
 
-    def setColor(self, r, g, b):
+    def set_color(self, r, g, b):
         """
         Sets the color of the RGB LED using the PCA9685 driver.
         If any channel (red, green, or blue) is None, it will be skipped.
+
+        Parameters:
+        ----------
+        r : int
+            Red value (0-255).
+        g : int
+            Green value (0-255).
+        b : int
+            Blue value (0-255).
         """
-        self.init.mutex_acquire(self.mutex, "pca9685:set_color")
+        self.init.mutex_acquire(self.mutex, "rgb_pca9685:set_color")
         try:
-            if self.red_channel is not None:  # Skip if red channel is None
+            if self.red_channel is not None:
                 self.driver.duty(self.red_channel, r * 16)
-            if self.green_channel is not None:  # Skip if green channel is None
+            if self.green_channel is not None:
                 self.driver.duty(self.green_channel, g * 16)
-            if self.blue_channel is not None:  # Skip if blue channel is None
+            if self.blue_channel is not None:
                 self.driver.duty(self.blue_channel, b * 16)
         finally:
-            self.init.mutex_release(self.mutex, "pca9685:set_color")
+            self.init.mutex_release(self.mutex, "rgb_pca9685:set_color")

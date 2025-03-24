@@ -11,16 +11,18 @@ import _thread
 import time
 import uasyncio as asyncio
 from ...hardware.init import init
+from ...hardware.output.tasks import start_output_tasks, stop_output_tasks
 from ...lib.utils import midi_to_frequency, velocity_to_ontime, constrain
 from ...lib.config import Config as config
 import umidiparser
+
 
 class MIDIFilePlay:
     def __init__(self, midi_file):
         super().__init__()
         self.midi_file = midi_file
         self.events = []
-        self.playback_active = False
+        self.active = False
         self.init = init
         self.display = self.init.display
         self.save_levels = False
@@ -61,7 +63,7 @@ class MIDIFilePlay:
         self.display.loading_screen()
 
         # Set the active flag.
-        self.playback_active = True
+        self.active = True
 
         # Load the .map file so we can determine which tracks are to be played.
         self.midi_file.load_map_file(self.file_path)
@@ -72,7 +74,7 @@ class MIDIFilePlay:
         if not hasattr(self.midi_file, 'outputs') or all(output is None for output in self.midi_file.outputs):
             # Stop and return to file listing when the selected file has no
             # corresponding map file.
-            self.playback_active = False
+            self.active = False
             self.display.alert_screen("No tracks mapped")
             self.midi_file.handlers["files"].draw()
             return
@@ -94,14 +96,8 @@ class MIDIFilePlay:
         asyncio.create_task(self._update_display_task())
         asyncio.create_task(self._monitor_playback_end_task())
 
-        # Start potentiometer polling if the ADS1115 driver is initialized
-        if hasattr(self.init, "pot") and hasattr(self.init.pot, "start_polling"):
-            self.init.pot.start_polling()
-            print("Potentiometer polling started")
-
-        # Start the global RGB LED tasks if RGB LED asynchronous polling is enabled.
-        if self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_tasks.start(lambda: self.playback_active)
+        # Start any applicable output-related tasks, e.g. rgb_led, pot_polling.
+        start_output_tasks(lambda: self.active)
 
     def player(self, file_path):
         """
@@ -111,7 +107,7 @@ class MIDIFilePlay:
             midi_file = umidiparser.MidiFile(file_path)
             
             for event in midi_file.play():
-                if not self.playback_active:
+                if not self.active:
                     break
 
                 if event.status in (umidiparser.NOTE_ON, umidiparser.NOTE_OFF):
@@ -134,16 +130,16 @@ class MIDIFilePlay:
                     else:
                         pass
 
-            self.playback_active = False
+            self.active = False
         except Exception as e:
             print(f"Error during playback: {e}")
-            self.playback_active = False
+            self.active = False
 
     def update_display(self):
         """
         Updates the display with the elapsed time and levels.
         """
-        if not self.playback_active:
+        if not self.active:
             return
 
         # Update the elapsed time.
@@ -153,14 +149,14 @@ class MIDIFilePlay:
         self.seconds = self.elapsed_time % 60
 
         # Calculate the maximum number of columns that fit on the screen.
-        level_text_width = len("1:100%") * self.display.DISPLAY_FONT_WIDTH  # Width of one level entry
-        max_columns = min(self.display.DISPLAY_WIDTH // level_text_width, 4)  # Max 4 columns per row
+        level_text_width = len("1:100%") * self.display.font_width  # Width of one level entry
+        max_columns = min(self.display.width // level_text_width, 4)  # Max 4 columns per row
 
         # Calculate the number of rows needed to display all levels.
         num_rows = (self.init.NUMBER_OF_COILS + max_columns - 1) // max_columns
 
         # Calculate the height of the levels display area.
-        levels_area_height = num_rows * self.display.DISPLAY_LINE_HEIGHT
+        levels_area_height = num_rows * self.display.line_height
 
         # Clear the time and levels area dynamically.
         self.display.fill_rect(0, 16, self.display.width, levels_area_height + 16, 0)
@@ -171,7 +167,7 @@ class MIDIFilePlay:
 
         # Update the levels in multiple columns, wrapping based on screen width.
         y_start = 32  # Starting Y position for the first row of levels
-        y_increment = self.display.DISPLAY_LINE_HEIGHT  # Vertical spacing between rows
+        y_increment = self.display.line_height  # Vertical spacing between rows
 
         for i in range(0, self.init.NUMBER_OF_COILS, max_columns):
             row_levels = self.levels[i:i + max_columns]
@@ -185,7 +181,7 @@ class MIDIFilePlay:
         """
         Asyncio task to update the display with elapsed time and levels during playback.
         """
-        while self.playback_active:
+        while self.active:
             if self.levels_updated or time.ticks_diff(time.ticks_ms(), self.last_display_update) >= 1000:
                 self.levels_updated = False
                 self.update_display()
@@ -197,7 +193,7 @@ class MIDIFilePlay:
         Asyncio task to monitor playback_ended and call stop_playback() when it becomes True.
         """
         while True:
-            if not self.playback_active:
+            if not self.active:
                 await self.stop_playback()
                 break
             await asyncio.sleep(0.1)
@@ -206,15 +202,11 @@ class MIDIFilePlay:
         """
         Stop MIDI playback and clean up resources.
         """
-        if self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_tasks.stop()
-        # Turn off all outputs.
-        self.output.set_all_outputs()
+        # Stop any output-related tasks.
+        stop_output_tasks()
 
-        # Stop potentiometer polling if the ADS1115 driver is initialized
-        if hasattr(self.init, "pot") and hasattr(self.init.pot, "stop_polling"):
-            self.init.pot.stop_polling()
-            print("Potentiometer polling stopped")
+        # Turn off all outputs.
+        self.init.output.set_all_outputs()
 
         # Save levels if necessary.
         if self.save_levels or self.config.get("midi_file_save_levels_on_end"):
@@ -228,6 +220,7 @@ class MIDIFilePlay:
         self.init.sd_card_reader.deinit_sd()
 
         # Return to the file listing.
+        self.display.clear()
         self.midi_file.handlers["files"].draw()
 
     def rotary(self, index, direction):
@@ -246,13 +239,13 @@ class MIDIFilePlay:
     # All switches act as stop buttons.
     def switch_1(self):
         self.save_levels = True
-        self.playback_active = False
+        self.active = False
 
     def switch_2(self):
-        self.playback_active = False
+        self.active = False
 
     def switch_3(self):
-        self.playback_active = False
+        self.active = False
 
     def switch_4(self):
-        self.playback_active = False
+        self.active = False

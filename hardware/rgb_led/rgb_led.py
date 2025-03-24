@@ -10,6 +10,7 @@ Parent class for RGB LEDs.
 from ...lib.utils import status_color
 from ..hardware import Hardware
 
+
 class RGBLED(Hardware):
     """
     Parent class for RGB LED hardware.
@@ -30,17 +31,18 @@ class RGB:
         if output is not None and self.init.RGB_LED_ASYNCIO_POLLING:
             self.init.rgb_led_color[output] = color
         else:
-            self.setColor(*color)
+            self.set_color(*color)
 
-    def set_status(self, output, frequency, on_time, max_duty=None, max_on_time=None):
+    def set_status(self, output, freq, on_time, max_duty=None, max_on_time=None):
         """
         Calculates the RGB color based on frequency, on_time, and optional constraints.
+        Optionally scales the color to the full brightness if the child class supports it.
 
         Parameters:
         ----------
         output: int
             The index of the output for which the LED should be updated.
-        frequency : int
+        freq : int
             The frequency of the signal.
         on_time : int
             The on time of the signal in microseconds.
@@ -49,8 +51,19 @@ class RGB:
         max_on_time : int, optional
             The maximum on time.
         """
-        color = status_color(frequency, on_time, max_duty, max_on_time)
+        # Calculate the color based on frequency, on_time, etc.
+        color = status_color(freq, on_time, max_duty, max_on_time)
+
+        # Scale the color to the full brightness if the child class has a custom full_brightness.
+        if hasattr(self, 'full_brightness') and self.full_brightness != 255:
+            r, g, b = color
+            scaled_r = r * self.full_brightness // 255
+            scaled_g = g * self.full_brightness // 255
+            scaled_b = b * self.full_brightness // 255
+            color = (scaled_r, scaled_g, scaled_b)
+
+        # Set the LED color.
         if self.init.RGB_LED_ASYNCIO_POLLING:
             self.init.rgb_led_color[output] = color
         else:
-            self.setColor(*color)
+            self.set_color(*color)

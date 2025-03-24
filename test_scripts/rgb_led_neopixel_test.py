@@ -3,8 +3,8 @@ from neopixel import NeoPixel
 from time import sleep
 
 # Define the number of NeoPixel segments and the GPIO pin
-NUM_SEGMENTS = 8
-PIN = 28
+NUM_SEGMENTS = 4
+PIN = 11
 
 # Initialize the NeoPixel object
 np = NeoPixel(Pin(PIN), NUM_SEGMENTS)

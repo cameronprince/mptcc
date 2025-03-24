@@ -8,10 +8,8 @@ Class which integrates asyncio with the MPTCC project.
 """
 
 import uasyncio as asyncio
-from machine import Pin, Timer
 import _thread
-from ..hardware.init import init
-from ..hardware.rgb_led.tasks import RGBLEDTasks
+
 
 class AsyncIOLoop:
     def __init__(self):
@@ -49,8 +47,4 @@ class AsyncIOLoop:
             task.cancel()
         self.tasks.clear()
 
-# Create an instance of AsyncIOLoop and put it in the init object.
-init.asyncio_loop = AsyncIOLoop()
-
-# Instantiate RGBLEDTasks and add it to the init object.
-init.rgb_led_tasks = RGBLEDTasks()
+AsyncIOLoop()

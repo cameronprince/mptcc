@@ -32,7 +32,7 @@ from ArduinoFunctions import millis
 import machine
 import SerialWombat_mp_i2c
 swI2Caddress = 0x6B
-i2c = machine.I2C(1, scl=machine.Pin(19), sda=machine.Pin(18), freq=400000, timeout=50000)
+i2c = machine.I2C(0, scl=machine.Pin(17), sda=machine.Pin(16), freq=400000, timeout=50000)
 sw = SerialWombat_mp_i2c.SerialWombatChip_mp_i2c(i2c, swI2Caddress)
 sw.address = 0x6B
 

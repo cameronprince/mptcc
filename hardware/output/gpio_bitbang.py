@@ -8,48 +8,45 @@ Class for driving outputs with software PWM (bit banging).
 """
 
 from machine import Pin
-from ...hardware.init import init
 from ..output.output import Output
 import uasyncio as asyncio
 import time
 
-class GPIO_BitBang(Output):
-    def __init__(self):
-        super().__init__()
-        self.init = init
 
-        # Initialize outputs dynamically.
-        self.output = []
-        self.running = []
-        self.tasks = []
+class Output_GPIO_BitBang:
+    """
+    A class to wrap a single bit-banged PWM output and provide output control.
+    """
+    def __init__(self, pin):
+        """
+        Initialize the Output_GPIO_BitBang instance.
 
-        for i in range(1, self.init.NUMBER_OF_COILS + 1):
-            # Dynamically get the output pin for the current coil.
-            pin_attr = f"PIN_OUTPUT_{i}"
-            if not hasattr(self.init, pin_attr):
-                raise ValueError(
-                    f"Pin configuration for output {i} is missing. "
-                    f"Please ensure PIN_OUTPUT_{i} is defined in main."
-                )
-            pin = getattr(self.init, pin_attr)
+        Parameters:
+        ----------
+        pin : int
+            The GPIO pin number for the bit-banged PWM output.
+        """
+        self.pin = pin
+        self.output = Pin(pin, Pin.OUT) if pin is not None else None
+        self.running = False  # Flag to control task execution.
+        self.task = None      # Stores the asyncio task.
 
-            # Initialize the output pin.
-            self.output.append(Pin(pin, Pin.OUT))
-            self.running.append(False)
-            self.tasks.append(None)
-
-    async def _bitbang_pwm(self, output, frequency, on_time):
+    async def _bitbang_pwm(self, frequency, on_time):
         """
         Generates a PWM signal using bit banging.
         """
         period = 1_000_000 // frequency  # Period in microseconds.
-        off_time = period - on_time      # Off time in microseconds.
+        off_time = period - on_time       # Off time in microseconds.
 
-        while self.running[output]:
-            self.output[output].value(1)  # Set pin high.
+        while self.running:  # Loop until self.running is False.
+            self.output.value(1)  # Set pin high.
             await self._sleep_us(on_time)
-            self.output[output].value(0)  # Set pin low.
+            self.output.value(0)  # Set pin low.
             await self._sleep_us(off_time)
+
+        # Clean up after the loop ends.
+        self.output.value(0)  # Ensure the pin is low.
+        self.task = None     # Clear the task reference.
 
     async def _sleep_us(self, us):
         """
@@ -59,45 +56,83 @@ class GPIO_BitBang(Output):
         while time.ticks_diff(time.ticks_us(), start) < us:
             await asyncio.sleep_ms(0)
 
-    def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None):
         """
         Sets the output based on the provided parameters.
+
+        Parameters:
+        ----------
+        active : bool, optional
+            Whether the output should be active.
+        freq : int, optional
+            The frequency of the output signal.
+        on_time : int, optional
+            The on time of the output signal in microseconds.
+
+        Raises:
+        -------
+        ValueError
+            If freq or on_time is not provided when activating the output.
         """
+        if self.output is None:
+            return  # Skip if the pin is not configured.
+
         if active:
-            if frequency is None or on_time is None:
+            if freq is None or on_time is None:
                 raise ValueError("Frequency and on_time must be provided when activating the output.")
 
-            frequency = int(frequency)
+            freq = int(freq)
             on_time = int(on_time)
 
             # Stop any existing task for this output.
-            if self.tasks[output] is not None:
-                self._cancel_task(output)
+            if self.task is not None:
+                self._cancel_task()
 
             # Start a new task for the PWM generation.
-            self.running[output] = True
-            self._start_task(output, frequency, on_time)
-
-            # Handle LED updates.
-            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
+            self.running = True
+            self._start_task(freq, on_time)
         else:
             # Stop the PWM generation for this output.
-            self.running[output] = False
-            if self.tasks[output] is not None:
-                self._cancel_task(output)
-            self.output[output].value(0)  # Set the pin low.
-            self.init.rgb_led[output].off(output)  # Extinguish the LED.
+            self.running = False
+            if self.task is not None:
+                self._cancel_task()
+            self.output.value(0)  # Set the pin low.
 
-    def _start_task(self, output, frequency, on_time):
+    def _start_task(self, frequency, on_time):
         """
-        Starts the PWM task for the specified output.
+        Starts the PWM task for this output.
         """
-        self.tasks[output] = asyncio.create_task(self._bitbang_pwm(output, frequency, on_time))
+        self.task = asyncio.create_task(self._bitbang_pwm(frequency, on_time))
 
-    def _cancel_task(self, output):
+    def _cancel_task(self):
         """
-        Cancels the PWM task for the specified output.
+        Cancels the PWM task for this output.
         """
-        if self.tasks[output] is not None:
-            self.tasks[output].cancel()
-            self.tasks[output] = None
+        if self.task is not None:
+            # Signal the task to stop by setting self.running to False.
+            self.running = False
+            # Wait for the task to clean up and exit.
+            while self.task is not None:
+                asyncio.sleep_ms(10)  # Yield control to allow the task to exit.
+
+
+class GPIO_BitBang(Output):
+    def __init__(self, pins):
+        """
+        Initialize the GPIO_BitBang driver.
+
+        Parameters:
+        ----------
+        pins : list of int
+            A list of GPIO pin numbers for bit-banged PWM outputs.
+        """
+        super().__init__()
+
+        # Initialize Output_GPIO_BitBang instances for the provided pins.
+        self.instances = [Output_GPIO_BitBang(pin) for pin in pins]
+
+        # Print initialization details.
+        print(f"GPIO_BitBang driver initialized")
+        for i, pin in enumerate(pins):
+            if pin is not None:
+                print(f"- Output {i}: GPIO {pin}")

@@ -7,6 +7,24 @@ lib/utils.py
 Shared utility functions.
 """
 
+def calculate_duty_cycle(on_time, freq):
+    """
+    Calculate the duty cycle for a given on_time and frequency.
+
+    Parameters:
+    ----------
+    on_time : int
+        The on time of the output signal in microseconds.
+    freq : int
+        The frequency of the output signal in Hz.
+
+    Returns:
+    -------
+    int
+        The duty cycle value.
+    """
+    return int((on_time / (1_000_000 / freq)) * 65535)
+
 def calculate_percent(freq, on_time, max_duty=None, max_on_time=None):
     """
     Calculates the percentage value based on frequency, on_time,

@@ -8,112 +8,112 @@ Class for driving outputs with timers.
 """
 
 from machine import Pin, Timer
-from ...hardware.init import init
 from ..output.output import Output
 
-class GPIO_Timer(Output):
-    def __init__(self):
-        super().__init__()
-        self.init = init
 
-        # Initialize outputs dynamically.
-        self.output = []
+class Output_GPIO_Timer:
+    """
+    A class to wrap a single timer-based PWM output and provide output control.
+    """
+    def __init__(self, pin):
+        """
+        Initialize the Output_GPIO_Timer instance.
 
-        for i in range(1, self.init.NUMBER_OF_COILS + 1):
-            # Dynamically get the output pin for the current coil.
-            pin_attr = f"PIN_OUTPUT_{i}"
-            if not hasattr(self.init, pin_attr):
-                raise ValueError(
-                    f"Pin configuration for output {i} is missing. "
-                    f"Please ensure {pin_attr} is defined in main."
-                )
-            pin = getattr(self.init, pin_attr)
+        Parameters:
+        ----------
+        pin : int
+            The GPIO pin number for the timer-based PWM output.
+        """
+        self.pin = pin
+        self.output = Pin(pin, Pin.OUT) if pin is not None else None
+        self.timer = Timer() if pin is not None else None
+        self.running = False  # Flag to control timer execution.
 
-            # Initialize the GPIO pin and timer.
-            self.output.append({
-                'pin': Pin(pin, Pin.OUT),
-                'timer': Timer(),
-                'running': False
-            })
-
-    def _set_output_timer(self, output, frequency, on_time):
+    def _set_output_timer(self, frequency, on_time):
         """
         Configures a hardware timer to generate a PWM signal on the specified output.
 
         Parameters:
         ----------
-        output : dict
-            The output dictionary containing the pin and timer.
         frequency : int
             The frequency of the PWM signal in Hz.
         on_time : int
             The on time of the PWM signal in microseconds.
         """
-        period = 1_000_000 // frequency  # Period in microseconds.
-        off_time = period - on_time      # Off time in microseconds.
+        if self.output is None or self.timer is None:
+            return  # Skip if the pin or timer is not configured.
+
+        # Ensure the pin starts in the LOW state.
+        self.output.value(0)
 
         def toggle_pin(timer):
-            output['pin'].toggle()
-
-        # Calculate the timer period and duty cycle.
-        timer_period = period    # Timer period in microseconds.
-        timer_duty = on_time     # Timer duty cycle in microseconds.
+            # Toggle the pin state.
+            self.output.toggle()
 
         # Initialize the timer.
-        output['timer'].init(
-            freq=frequency,      # Set the timer frequency.
+        self.timer.deinit()  # Stop the timer if it's already running.
+        self.timer.init(
+            freq=frequency * 2,  # Set the timer frequency to twice the desired frequency.
             mode=Timer.PERIODIC, # Run the timer in periodic mode.
             callback=toggle_pin  # Callback to toggle the pin.
         )
 
-    def set_output(self, output, active, frequency=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None):
         """
         Sets the output based on the provided parameters.
 
         Parameters:
         ----------
-        output : int
-            The index of the output to be set.
-        active : bool
+        active : bool, optional
             Whether the output should be active.
-        frequency : int, optional
+        freq : int, optional
             The frequency of the output signal in Hz.
         on_time : int, optional
             The on time of the output signal in microseconds.
-        max_duty : int, optional
-            The maximum duty cycle allowed.
-        max_on_time : int, optional
-            The maximum on time allowed in microseconds.
 
         Raises:
         -------
         ValueError
-            If frequency or on_time is not provided when activating the output.
+            If freq or on_time is not provided when activating the output.
         """
-        out = self.output[output]
+        if self.output is None or self.timer is None:
+            return  # Skip if the pin or timer is not configured.
 
         if active:
-            if frequency is None or on_time is None:
+            if freq is None or on_time is None:
                 raise ValueError("Frequency and on_time must be provided when activating the output.")
 
-            frequency = int(frequency)
+            freq = int(freq)
             on_time = int(on_time)
 
-            # Stop the timer if it's already running.
-            if out['running']:
-                out['timer'].deinit()
-
             # Configure the timer for PWM generation.
-            self._set_output_timer(out, frequency, on_time)
-            out['running'] = True
-
-            # Handle LED updates.
-            self.init.rgb_led[output].set_status(output, frequency, on_time, max_duty, max_on_time)
+            self._set_output_timer(freq, on_time)
+            self.running = True
         else:
             # Stop the timer and deactivate the output.
-            out['running'] = False
-            out['timer'].deinit()
+            self.running = False
+            self.timer.deinit()
             # Set the pin low.
-            out['pin'].value(0)
-            # Extinguish the LED.
-            self.init.rgb_led[output].off(output)
+            self.output.value(0)
+
+
+class GPIO_Timer(Output):
+    def __init__(self, pins):
+        """
+        Initialize the GPIO_Timer driver.
+
+        Parameters:
+        ----------
+        pins : list of int
+            A list of GPIO pin numbers for timer-based PWM outputs.
+        """
+        super().__init__()
+
+        # Initialize Output_GPIO_Timer instances for the provided pins.
+        self.instances = [Output_GPIO_Timer(pin) for pin in pins]
+
+        # Print initialization details.
+        print(f"GPIO_Timer driver initialized")
+        for i, pin in enumerate(pins):
+            if pin is not None:
+                print(f"- Output {i}: GPIO {pin}")

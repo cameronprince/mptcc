@@ -86,12 +86,12 @@ class MIDIFile(Screen):
         self.outputs = [None] * self.init.NUMBER_OF_COILS  # Dynamically sized based on NUMBER_OF_COILS
         self.last_rotary_1_value = 0
         self.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * self.init.NUMBER_OF_COILS  # Dynamically sized
-        self.per_page = self.display.DISPLAY_ITEMS_PER_PAGE
+        self.per_page = 4
         self.output_y = None
-        self.line_height = self.display.DISPLAY_LINE_HEIGHT
-        self.font_width = self.display.DISPLAY_FONT_WIDTH
-        self.font_height = self.display.DISPLAY_FONT_HEIGHT
-        self.header_height = self.display.DISPLAY_HEADER_HEIGHT
+        self.line_height = 12
+        self.font_width = 8
+        self.font_height = 8
+        self.header_height = 10
 
         self.config = config.read_config()
         self.default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_LEVEL)

@@ -7,11 +7,11 @@ hardware/sd_card_reader.py
 Class for interacting with the SD card reader.
 """
 
-from ..hardware.init import init
 from .hardware import Hardware
 from machine import Pin, SPI
 import sdcard
 import uos
+
 
 class SDCardReader(Hardware):
     """
@@ -23,7 +23,7 @@ class SDCardReader(Hardware):
         The initialization object containing configuration and hardware settings.
     """
 
-    def __init__(self):
+    def __init__(self, init):
         """
         Constructs all the necessary attributes for the SDCardReader object.
         """
@@ -58,5 +58,5 @@ class SDCardReader(Hardware):
         try:
             uos.umount(self.init.SD_MOUNT_POINT)
         except Exception:
-            # Ignore any errors that occur
+            # Ignore any errors that occur.
             pass

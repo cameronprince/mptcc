@@ -7,7 +7,7 @@ config.py
 Provides default configuration values.
 """
 
-from mptcc.hardware.init import init
+from ..hardware.init import init
 import ujson
 
 class Config:

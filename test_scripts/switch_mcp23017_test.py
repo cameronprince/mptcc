@@ -14,7 +14,7 @@ INTCAPA = 0x10  # Interrupt Capture Register for PORTA
 i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 
 # Initialize interrupt pin
-int_pin = Pin(21, Pin.IN, Pin.PULL_UP)  # MCP23017 INTA connected to GPIO 21
+int_pin = Pin(19, Pin.IN, Pin.PULL_UP)  # MCP23017 INTA connected to GPIO 21
 
 # Function to write to MCP23017 register
 def write_register(reg, value):

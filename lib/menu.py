@@ -8,6 +8,9 @@ Provides menu functionality.
 Based on https://github.com/plugowski/umenu
 """
 
+from ..hardware.display.display import Display
+
+
 class MenuItem:
     """
     Represents a generic item in the menu.
@@ -81,7 +84,7 @@ class Screen(MenuItem):
 
     def __init__(self, name):
         super().__init__(name)
-        self.display = None  # it is set after initialization via Menu._update_display()
+        self.display = None
 
     def click(self):
         """Defines the action to take when the screen menu item is clicked."""
@@ -202,7 +205,6 @@ class MenuScreen:
 
     def draw(self, menu):
         """Draws the menu screen on the display."""
-        menu.display.clear()
         menu._menu_header(self.title)
 
         elements = self.count()
@@ -223,28 +225,17 @@ class Menu:
 
     Attributes:
     -----------
-    display : object
-        The display object for rendering the menu.
-    per_page : int
-        The number of items per page.
-    line_height : int
-        The height of each line in the menu.
-    font_width : int
-        The width of the font used in the menu.
-    font_height : int
-        The height of the font used in the menu.
-    main_screen : MenuScreen
-        The main screen of the menu.
-    current_screen : Screen or MenuScreen
-        The current screen being displayed.
+    init : Init
+        The global init object containing hardware instances.
     """
 
-    def __init__(self, display, per_page: int = 4, line_height: int = 14, font_width: int = 8, font_height: int = 8):
+    def __init__(self, display):
         self.display = display
-        self.per_page = per_page
-        self.line_height = line_height
-        self.font_height = font_height
-        self.font_width = font_width
+        self.display_width = self.display.width
+        self.per_page = self.display.items_per_page
+        self.line_height = self.display.line_height
+        self.font_height = self.display.font_height
+        self.font_width = self.display.font_width
         self.main_screen = None
         self.current_screen = None
 
@@ -293,19 +284,19 @@ class Menu:
         v_padding = int((self.line_height - self.font_height) / 2)
         background = int(item.is_active)
 
-        self.display.fill_rect(0, y, self.display.width, self.line_height, background)
+        self.display.fill_rect(0, y, self.display_width, self.line_height, background)
 
         self.display.text(item.name, 0, y + v_padding, int(not background))
         decorator_text = item.get_decorator()
         if decorator_text:
-            x_pos = min(self.display.width - (len(decorator_text) * self.font_width) - 1, 255)
+            x_pos = min(self.display_width - (len(decorator_text) * self.font_width) - 1, 255)
             self.display.text(decorator_text, x_pos, y + v_padding, int(not background))
 
     def _menu_header(self, text):
         """Draws the menu header on the display."""
-        x = int((self.display.width / 2) - (len(text) * self.font_width / 2))
+        x = int((self.display_width / 2) - (len(text) * self.font_width / 2))
         self.display.text(str.upper(self.current_screen.title), x, 0, 1)
-        self.display.hline(0, self.font_height + 2, self.display.width, 1)
+        self.display.hline(0, self.font_height + 2, self.display_width, 1)
 
     def _update_display(self, menu_items):
         """

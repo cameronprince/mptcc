@@ -8,7 +8,9 @@ Provides the MIDI track listing screen.
 """
 
 from ...hardware.init import init
+from ...hardware.display.tasks import start_scroll, stop_scroll
 import umidiparser
+
 
 class MIDIFileTracks:
     def __init__(self, midi_file):
@@ -73,9 +75,9 @@ class MIDIFileTracks:
             text_width = len(active_track_name) * self.midi_file.font_width
             if text_width > self.display.width:
                 # Pass the track index as the unique identifier.
-                self.display.start_scroll_task(active_track_name, active_y_position, self.midi_file.current_track_index + self.midi_file.track_cursor_position)
+                start_scroll(self.display, active_track_name, active_y_position, self.midi_file.current_track_index + self.midi_file.track_cursor_position)
             else:
-                self.display.stop_scroll_task()
+                stop_scroll(self.display)
                 # If the text doesn't require scrolling, ensure the display is updated.
                 self.display.fill_rect(0, active_y_position, self.display.width, self.midi_file.line_height, 1)  # Clear the line.
                 v_padding = int((self.midi_file.line_height - self.midi_file.font_height) / 2)
@@ -162,8 +164,7 @@ class MIDIFileTracks:
         """
         Responds to presses of encoder 1 to select tracks.
         """
-        print("switch_1")
-        self.display.stop_scroll_task()
+        stop_scroll(self.display)
         selected_track_info = self.midi_file.track_list[self.midi_file.current_track_index + self.midi_file.track_cursor_position]
         self.midi_file.selected_track = selected_track_info["original_index"]
         self.midi_file.handlers["assignment"].draw()
@@ -172,6 +173,6 @@ class MIDIFileTracks:
         """
         Responds to presses of encoder 2 to go back.
         """
-        self.display.stop_scroll_task()
+        stop_scroll(self.display)
         self.midi_file.track_list = []
         self.midi_file.handlers["files"].draw()

@@ -8,6 +8,8 @@ Provides the track assignment screen.
 """
 
 from ...hardware.init import init
+from ...hardware.display.tasks import start_scroll, stop_scroll
+
 
 class MIDIFileAssignment:
     def __init__(self, midi_file):
@@ -66,7 +68,7 @@ class MIDIFileAssignment:
         text_width = len(full_track_name) * self.midi_file.font_width
         if text_width > self.display.width:
             # Pass the track index as the unique identifier.
-            self.display.start_scroll_task(full_track_name, track_y, self.midi_file.selected_track, background_color=0)
+            start_scroll(self.display, full_track_name, track_y, self.midi_file.selected_track, background_color=0)
         else:
             # If the text doesn't require scrolling, display it normally (inactive color).
             self.display.fill_rect(0, track_y, self.display.width, self.midi_file.line_height, 0)  # Clear the line.
@@ -133,11 +135,14 @@ class MIDIFileAssignment:
 
         # Save the updated output assignments to the map file.
         self.midi_file.save_map_file(file_path)
+
         # Return to the track listing.
+        stop_scroll(self.display)
         self.midi_file.handlers["tracks"].draw()
 
     def switch_2(self):
         """
         Responds to presses of encoder 2 to go back.
         """
+        stop_scroll(self.display)
         self.midi_file.handlers["tracks"].draw()

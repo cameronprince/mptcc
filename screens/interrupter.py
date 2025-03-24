@@ -9,9 +9,11 @@ Provides functionality for the standard interrupter.
 import _thread
 import time
 from ..hardware.init import init
+from ..hardware.output.tasks import start_output_tasks, stop_output_tasks
 from ..lib.menu import Screen
 from ..lib.config import Config as config
 from ..lib.utils import calculate_on_time
+
 
 class Interrupter(Screen):
     """
@@ -23,7 +25,7 @@ class Interrupter(Screen):
         self.name = name
         self.init = init
         self.display = self.init.display
-        self.font_width = self.display.DISPLAY_FONT_WIDTH
+        self.font_width = 8
         self.init_settings()
 
     def init_settings(self):
@@ -57,14 +59,8 @@ class Interrupter(Screen):
         self.display.text("Active", 0, 56, 0)
         self.update_display(update_on_time=True, update_frequency=True, initial=True)
 
-        # Start the RGB LED update task if RGB LED asynchronous polling is enabled.
-        if self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_tasks.start(lambda: self.active)
-
-        # Start potentiometer polling if the ADS1115 driver is initialized
-        if hasattr(self.init, "pot") and hasattr(self.init.pot, "start_polling"):
-            self.init.pot.start_polling()
-            print("Potentiometer polling started")
+        # Start any applicable output-related tasks, e.g. rgb_led, pot_polling.
+        start_output_tasks(lambda: self.active)
 
     def update_display(self, update_on_time=True, update_frequency=True, update_ten_x=False, update_active=False, initial=False):
         """
@@ -100,22 +96,23 @@ class Interrupter(Screen):
         
         self.display.show()
 
-    def set_all_outputs(self):
-        """
-        Enables the outputs based on the current settings.
-        """
-        self.output.set_all_outputs(self.active, self.freq, self.on_time, self.max_duty, self.max_on_time)
-
     def output_control_thread(self):
         """
         The thread that controls the output, ensuring settings are applied.
         """
         while self.active:
             if self.settings_changed:
-                self.set_all_outputs()
+                self.init.output.set_all_outputs(
+                    self.active,
+                    self.freq,
+                    self.on_time,
+                    self.max_duty,
+                    self.max_on_time,
+                )
                 self.settings_changed = False
             time.sleep(0.1)
-        self.output.set_all_outputs()
+
+        self.init.output.set_all_outputs()
         self.settings_changed = True
 
     def update_on_time(self):
@@ -158,20 +155,16 @@ class Interrupter(Screen):
 
     def switch_2(self):
         """
-        Handles the second switch input to deactivate the interrupter, stop potentiometer polling, and return to the parent screen.
+        Handles the second switch input to deactivate the interrupter, stop potentiometer
+        polling, and return to the parent screen.
         """
         self.active = False
-        if self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_tasks.stop()
-
-        # Stop potentiometer polling if the ADS1115 driver is initialized
-        if hasattr(self.init, "pot") and hasattr(self.init.pot, "stop_polling"):
-            self.init.pot.stop_polling()
-            print("Potentiometer polling stopped")
+        stop_output_tasks()
 
         # Return to the parent screen
         parent_screen = self.parent
         if parent_screen:
+            self.display.clear()
             self.init.menu.set_screen(parent_screen)
             self.init.menu.draw()
 

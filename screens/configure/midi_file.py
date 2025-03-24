@@ -48,7 +48,7 @@ class MIDIFileConfig(Screen):
         self.config = config.read_config()
         self.output_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_LEVEL)
         self.save_levels = self.config.get("midi_file_auto_save_levels", config.DEF_MIDI_FILE_AUTO_SAVE_LEVELS)
-        self.font_width = self.init.display.DISPLAY_FONT_WIDTH
+        self.font_width = 8
 
     def draw(self):
         """

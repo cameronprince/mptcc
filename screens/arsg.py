@@ -24,7 +24,7 @@ class ARSG(Screen):
         self.name = name
         self.init = init
         self.display = self.init.display
-        self.font_width = self.display.DISPLAY_FONT_WIDTH
+        self.font_width = 8
         self.init_settings()
 
     def init_settings(self):
