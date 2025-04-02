@@ -9,6 +9,7 @@ MCP23017 universal class for driving hardware.
 
 from mcp23017 import MCP23017 as MCP23017_Driver
 import time
+import collections
 import asyncio
 from machine import Pin, I2C
 from ..input.input import Input
@@ -35,7 +36,7 @@ class MCP23017:
         self.switch = switch
         self.init = init
         self.class_name = self.__class__.__name__
-        self.interrupt = {}
+        self.interrupt = collections.deque([], 300)
         self.init_complete = [False]
         self.encoder_states = {}
         self.switch_states = {}
@@ -213,7 +214,8 @@ class MCP23017:
             self.init.mutex_acquire(self.mutex, f"{self.class_name}:interrupt_captured:a")
             captured_a = self.mcp.porta.interrupt_captured
             self.init.mutex_release(self.mutex, f"{self.class_name}:interrupt_captured:a")
-            self.interrupt = [flagged_a, captured_a, "A"]
+            try: self.interrupt.appendleft([flagged_a, captured_a, "A"])
+            except: pass
         else:
             # Only check Port B if Port A had no activity.
             flagged_b = self.mcp.portb.interrupt_flag
@@ -221,18 +223,21 @@ class MCP23017:
                 self.init.mutex_acquire(self.mutex, f"{self.class_name}:interrupt_captured:b")
                 captured_b = self.mcp.portb.interrupt_captured
                 self.init.mutex_release(self.mutex, f"{self.class_name}:interrupt_captured:b")
-                self.interrupt = [flagged_b, captured_b, "B"]
+                try: self.interrupt.appendleft([flagged_b, captured_b, "B"])
+                except: pass
 
     async def _poll(self):
         """
         Asyncio task to process MCP23017 interrupts.
         """
         while True:
-            if isinstance(self.interrupt, (tuple, list)) and len(self.interrupt) == 3:
-                print(self.interrupt)
-                flagged, captured, port = self.interrupt
-                self.interrupt = None
-                self._process_interrupt(flagged, captured, port)
+            while True:
+                try: intx = self.interrupt.pop()
+                except: break
+                if isinstance(intx, (tuple, list)) and len(intx) == 3:
+                    print(intx)
+                    flagged, captured, port = intx
+                    self._process_interrupt(flagged, captured, port)
             await asyncio.sleep(0.01)
 
     def _process_interrupt(self, flagged, captured, port):
