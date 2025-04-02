@@ -18,7 +18,7 @@ from mptcc.hardware.init import init
 # acquired or released. This is very useful in following the flow of I2C
 # communications.
 init.DEBUG_MUTEX = True
-#
+
 # When memory debugging is enabled, drivers print memory usage after they are
 # initialized.
 init.DEBUG_MEMORY = True
@@ -28,7 +28,7 @@ init.DEBUG_MEMORY = True
 # The MPTCC configuration is stored in files in the hardware/profiles directory.
 # You can edit the default profile, or copy it to a new file in the profiles
 # directory and reference it here instead of default.
-PROFILE_NAME = "mptcc_4"
+PROFILE_NAME = "mptcc_1"
 profile = __import__(f"mptcc.hardware.profiles.{PROFILE_NAME}", None, None, (None,))
 profile.Profile(PROFILE_NAME, init)
 
@@ -37,17 +37,17 @@ from mptcc.lib.menu import Menu, MenuScreen, SubMenuItem, Screen
 import mptcc.screens as screens
 
 init.menu = Menu(init.display)
-init.menu.set_screen(MenuScreen('MicroPython TCC')
-    .add(screens.Interrupter('Interrupter'))
-    .add(screens.MIDIFile('MIDI File'))
-    .add(screens.MIDIInput('MIDI Input'))
-    .add(screens.ARSG('ARSG Emulator'))
-    .add(screens.BatteryStatus('Battery Status'))
-    .add(SubMenuItem('Configure')
-        .add(screens.InterrupterConfig('Interrupter Config'))
-        .add(screens.MIDIFileConfig('MIDI File Config'))
-        .add(screens.ARSGConfig('ARSG Config'))
-        .add(screens.RestoreDefaults('Restore Defaults'))
+init.menu.set_screen(MenuScreen("MicroPython TCC")
+    .add(screens.Interrupter("Interrupter"))
+    .add(screens.MIDIFile("MIDI File"))
+    .add(screens.MIDIInput("MIDI Input"))
+    .add(screens.ARSG("ARSG Emulator"))
+    .add(screens.BatteryStatus("Battery Status"))
+    .add(SubMenuItem("Configure")
+        .add(screens.InterrupterConfig("Interrupter Config"))
+        .add(screens.MIDIFileConfig("MIDI File Config"))
+        .add(screens.ARSGConfig("ARSG Config"))
+        .add(screens.RestoreDefaults("Restore Defaults"))
     )
 )
 init.menu.draw()

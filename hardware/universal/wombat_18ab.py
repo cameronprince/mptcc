@@ -26,7 +26,6 @@ class Wombat_18AB:
     def __init__(
         self,
         i2c_instance,
-        init_delay=0.2,
         i2c_addr=0x6B,
         encoder=None,
         output=None,
@@ -36,16 +35,13 @@ class Wombat_18AB:
         """
         Constructs all the necessary attributes for the Wombat_18AB object.
         """
-        if (encoder is None or not encoder.get("enabled", False)) \
-        and (output is None or not output.get("enabled", False)) \
-        and (rgb_led is None or not rgb_led.get("enabled", False)) \
-        and (switch is None or not switch.get("enabled", False)):
+        if encoder is None and output is None and rgb_led is None and switch is None:
             return
 
         super().__init__()
         self.init = init
-        self.init_delay = init_delay
         self.instances = []
+        self.init_complete = [False]
 
         # Prepare the I2C bus.
         if i2c_instance == 2:
@@ -67,14 +63,21 @@ class Wombat_18AB:
             from SerialWombatPWM import SerialWombatPWM_18AB as swpwm
 
         # Initialize switches if switch is provided.
-        if switch is not None and switch.get("enabled"):
+        if switch is not None:
             from SerialWombatDebouncedInput import SerialWombatDebouncedInput as swdi
-            if 'wombat_18ab_switch' not in self.init.input_instances:
-                self.init.input_instances['wombat_18ab_switch'] = []
+            if "wombat_18ab_switch" not in self.init.input_instances:
+                self.init.input_instances["wombat_18ab_switch"] = []
             switch_instances = []
-            switch_instance = Switch_Wombat_18AB(self.init, self.driver, swdi, switch, self.mutex, self.init_delay)
+            switch_instance = Switch_Wombat_18AB(
+                self.init,
+                self.driver,
+                swdi,
+                switch,
+                self.mutex,
+                self.init_complete,
+            )
             switch_instances.append(switch_instance)
-            self.init.input_instances['wombat_18ab_switch'].append(switch_instances)
+            self.init.input_instances["wombat_18ab_switch"].append(switch_instances)
             print(f"- Switches initialized (pull_up={switch.get("pull_up", False)})")
             for i, pin in enumerate(switch.get("pins")):
                 print(f"  - Switch {i}: Pin {pin}")
@@ -82,14 +85,21 @@ class Wombat_18AB:
             print(f"  - Host interrupt pin: {switch.get("host_interrupt_pin")} (pull_up={switch.get("host_interrupt_pin_pull_up", False)})")
 
         # Initialize encoders if encoder is provided.
-        if encoder is not None and encoder.get("enabled"):
+        if encoder is not None:
             from SerialWombatQuadEnc import SerialWombatQuadEnc as swqe
-            if 'wombat_18ab_encoder' not in self.init.input_instances:
-                self.init.input_instances['wombat_18ab_encoder'] = []
+            if "wombat_18ab_encoder" not in self.init.input_instances:
+                self.init.input_instances["wombat_18ab_encoder"] = []
             encoder_instances = []
-            encoder_instance = Encoder_Wombat_18AB(self.init, self.driver, swqe, encoder, self.mutex, self.init_delay)
+            encoder_instance = Encoder_Wombat_18AB(
+                self.init,
+                self.driver,
+                swqe,
+                encoder,
+                self.mutex,
+                self.init_complete,
+            )
             encoder_instances.append(encoder_instance)
-            self.init.input_instances['wombat_18ab_encoder'].append(encoder_instances)
+            self.init.input_instances["wombat_18ab_encoder"].append(encoder_instances)
             print(f"- Encoders initialized (pull_up={encoder.get("pull_up", False)})")
             for i, pin in enumerate(encoder.get("pins")):
                 pin, secondPin = pin
@@ -98,25 +108,24 @@ class Wombat_18AB:
             print(f"  - Host interrupt pin: {encoder.get("host_interrupt_pin")} (pull_up={encoder.get("host_interrupt_pin_pull_up", False)})")
 
         # Initialize outputs if output is provided.
-        if output is not None and output.get("enabled"):
-            pins = output.get("pins")
-            if 'wombat_18ab' not in self.init.output_instances:
-                self.init.output_instances['wombat_18ab'] = []
+        if output is not None:
+            if "wombat_18ab" not in self.init.output_instances:
+                self.init.output_instances["wombat_18ab"] = []
             output_instances = []
-            for pin in pins:
+            for pin in output_pins:
                 output = Output_Wombat_18AB(self.init, self.driver, swpwm, pin, self.mutex)
                 output_instances.append(output)
-            self.init.output_instances['wombat_18ab'].append(output_instances)
+            self.init.output_instances["wombat_18ab"].append(output_instances)
             print(f"- Outputs initialized:")
-            for i, pin in enumerate(pins):
+            for i, pin in enumerate(output_pins):
                 print(f"  - Output {i}: Pin {pin}")
 
         # Initialize RGB LEDs if rgb_led is provided.
-        if rgb_led is not None and rgb_led.get("enabled"):
-            if 'wombat_18ab' not in self.init.rgb_led_instances:
-                self.init.rgb_led_instances['wombat_18ab'] = []
+        if rgb_led is not None:
+            if "wombat_18ab" not in self.init.rgb_led_instances:
+                self.init.rgb_led_instances["wombat_18ab"] = []
             rgb_led_instances = []
-            for led_pins in rgb_led.get("pins"):
+            for led_pins in rgb_led_pins:
                 red_pin, green_pin, blue_pin = led_pins
                 led = RGB_Wombat_18AB(
                     init=self.init,
@@ -128,11 +137,13 @@ class Wombat_18AB:
                     mutex=self.mutex
                 )
                 rgb_led_instances.append(led)
-            self.init.rgb_led_instances['wombat_18ab'].append(rgb_led_instances)
+            self.init.rgb_led_instances["wombat_18ab"].append(rgb_led_instances)
             print(f"- RGB LEDs initialized:")
-            for i, led_pins in enumerate(rgb_led.get("pins")):
+            for i, led_pins in enumerate(rgb_led_pins):
                 red_pin, green_pin, blue_pin = led_pins
                 print(f"  - LED {i}: R={red_pin}, G={green_pin}, B={blue_pin}")
+
+        self.init_complete[0] = True
 
 
 class Output_Wombat_18AB(Output):
@@ -290,7 +301,7 @@ class RGB_Wombat_18AB(RGB):
 
 class Switch_Wombat_18AB(Input):
 
-    def __init__(self, init, driver, swdi, switch, mutex, init_delay):
+    def __init__(self, init, driver, swdi, switch, mutex, init_complete):
         super().__init__()
         self.init = init
         self.driver = driver
@@ -299,9 +310,9 @@ class Switch_Wombat_18AB(Input):
         self.switch = switch
         self.pull_up = self.switch.get("pull_up", False)
         self.mutex = mutex
-        self.init_delay = init_delay
         self.di_instances = []
         self.active_interrupt = False
+        self.init_complete = init_complete
 
         # Disable integrated switches in encoders.
         self.init.integrated_switches = False
@@ -313,6 +324,7 @@ class Switch_Wombat_18AB(Input):
             self.di = self.swdi(driver)
             self.init.mutex_acquire(self.mutex, "Switch_Wombat_18AB:begin")
             try:
+                print(f"begin - pin: {pin}, debounce_mS: {self.debounce_delay}, usePullUp: {self.pull_up}")
                 self.di.begin(
                     pin=pin,
                     debounce_mS=self.debounce_delay,
@@ -324,7 +336,6 @@ class Switch_Wombat_18AB(Input):
             finally:
                 self.init.mutex_release(self.mutex, "Switch_Wombat_18AB:begin")
             self.di_instances.append(self.di)
-            time.sleep(self.init_delay)
 
         # Set up the host interrupt pin.
         host_interrupt_pin = self.switch.get("host_interrupt_pin")
@@ -335,7 +346,6 @@ class Switch_Wombat_18AB(Input):
         host_int.irq(trigger=Pin.IRQ_FALLING, handler=self._interrupt)
 
         prefix = "Switch_Wombat_18AB:switch_interrupt_"
-        print(switch.get("pulse_on_change_pin"))
         # Set up the pulse on change pin.
         from SerialWombatPulseOnChange import SerialWombatPulseOnChange as swpoc
         poc = swpoc(self.driver)
@@ -351,10 +361,9 @@ class Switch_Wombat_18AB(Input):
         self.init.mutex_release(self.mutex, f"{prefix}begin")
 
         for i, pin in enumerate(self.switch.get("pins")):
-            self.init.mutex_acquire(self.mutex, f"{prefix}setEntryOnChange_{i}/{pin}")
-            poc.setEntryOnChange(i, pin)
-            self.init.mutex_release(self.mutex, f"{prefix}setEntryOnChange_{i}/{pin}")
-            time.sleep(self.init_delay)
+            self.init.mutex_acquire(self.mutex, f"{prefix}set_{pin}")
+            poc.setEntryOnIncrease(i, pin)
+            self.init.mutex_release(self.mutex, f"{prefix}set_{pin}")
 
         # Set up the host interrupt pin.
         host_interrupt_pin = self.switch.get("host_interrupt_pin")
@@ -367,7 +376,6 @@ class Switch_Wombat_18AB(Input):
         asyncio.create_task(self._poll())
 
     async def _poll(self):
-        print("Switch_Wombat_18AB - _poll")
         """
         Asyncio task to poll Wombat switch pins.
         """
@@ -383,45 +391,43 @@ class Switch_Wombat_18AB(Input):
                     state = di.readTransitionsState()
                     self.init.mutex_release(self.mutex, text)
                     if di.transitions > 0 and state:
-                        print(f"switch {i} click")
+                        self.switch_click(i+1)
                         break
                     await asyncio.sleep(0.01)
             await asyncio.sleep(0.01)
 
     def _interrupt(self, pin):
-        print("_switch_interrupt")
-        self.active_interrupt = True
+        if self.init_complete[0]:
+            self.active_interrupt = True
 
     def switch_click(self, switch):
         """
         Handle a switch click event.
         """
-        current_time = time.ticks_ms()
-        if time.ticks_diff(current_time, self.last_switch_click_time[switch - 1]) > self.debounce_delay:
-            self.last_switch_click_time[switch - 1] = current_time
+        print(f"switch click: {switch}")
+        if switch <= 4:
+            # Switches 1-4: Call the parent class's switch_click method.
+            super().switch_click(switch)
+        else:
+            # Switches 5-6: Simulate encoder 1 rotation
+            direction = 1 if switch == 6 else -1  # Switch 5 = Previous, Switch 6 = Next.
+            super().encoder_change(0, direction)  # Encoder 1 is index 0.
 
-            if switch <= 4:
-                # Switches 1-4: Call the parent class's switch_click method.
-                super().switch_click(switch)
-            else:
-                # Switches 5-6: Simulate encoder 1 rotation
-                direction = 1 if switch == 6 else -1  # Switch 5 = Previous, Switch 6 = Next.
-                super().encoder_change(0, direction)  # Encoder 1 is index 0.
 
 class Encoder_Wombat_18AB(Input):
 
-    def __init__(self, init, driver, swqe, encoder, mutex, init_delay):
+    def __init__(self, init, driver, swqe, encoder, mutex, init_complete):
         super().__init__()
         self.init = init
         self.driver = driver
         self.swqe = swqe
-        self.debounce_delay = 10
+        self.debounce_delay = 0
         self.encoder = encoder
         self.pull_up = self.encoder.get("pull_up", False)
         self.mutex = mutex
-        self.init_delay = init_delay
         self.qe_instances = []
         self.active_interrupt = False
+        self.init_complete = init_complete
 
         text = f"{self.__class__.__name__}:begin"
         for i, pin in enumerate(self.encoder.get("pins")):
@@ -440,17 +446,15 @@ class Encoder_Wombat_18AB(Input):
                     secondPin,
                     debounce_mS = self.debounce_delay,
                     pullUpsEnabled = self.pull_up,
-                    readState = 6,
+                    readState = 5,
                 )
-                time.sleep(self.init_delay)
-                val = self.qe.read(32768)
+                val = self.qe.write(32768)
                 print(f"encoder init val: {val}")
             except Exception as e:
                 print(f"Error initializing SerialWombatQuadEnc on pin {pin}: {e}")
             finally:
                 self.init.mutex_release(self.mutex, text)
             self.qe_instances.append(self.qe)
-            time.sleep(self.init_delay)
 
         prefix = f"{self.__class__.__name__}:encoder_interrupt_"
         # Set up the pulse on change pin.
@@ -467,12 +471,14 @@ class Encoder_Wombat_18AB(Input):
         );
         self.init.mutex_release(self.mutex, f"{prefix}begin")
 
+        index = 0
         for pin_set in self.encoder.get("pins"):
-            for i, pin in enumerate(pin_set):
+            for pin in pin_set:
                 self.init.mutex_acquire(self.mutex, f"{prefix}set_{pin}")
-                poc.setEntryOnChange(i, pin)
+                print(f"setEntryOnIncrease - index: {index} pin: {pin}")
+                poc.setEntryOnChange(index, pin)
                 self.init.mutex_release(self.mutex, f"{prefix}set_{pin}")
-                time.sleep(self.init_delay)
+            index += 1
 
         # Set up the host interrupt pin.
         host_interrupt_pin = self.encoder.get("host_interrupt_pin")
@@ -485,11 +491,12 @@ class Encoder_Wombat_18AB(Input):
         asyncio.create_task(self._poll())
 
     def _interrupt(self, pin):
-        print("_encoder_interrupt")
-        self.active_interrupt = True
+        if self.init_complete[0]:
+            print("_encoder_interrupt")
+            self.active_interrupt = True
 
     async def _poll(self):
-        # print("wombat_18ab - _poll")
+        print("Encoder_Wombat_18AB - _poll")
         """
         Asyncio task to poll Wombat encoders.
         """
@@ -503,12 +510,14 @@ class Encoder_Wombat_18AB(Input):
                     self.init.mutex_acquire(self.mutex, text)
                     value = qe.read(32768)
                     self.init.mutex_release(self.mutex, text)
-                    print(f"value: {value}")
+                    print(f"pooling encoder: {i} (pin: {pin}) value: {value}")
                     if value != 32768:
                         if value > 32768:
                             print(f"rotary encoder {i} upward change")
+                            super().encoder_change(i, 1)
                         else:
                             print(f"rotary encoder {i} downward change")
+                            super().encoder_change(i, -1)
                         break
                     await asyncio.sleep(0.01)
             await asyncio.sleep(0.01)

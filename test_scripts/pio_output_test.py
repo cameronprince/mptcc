@@ -15,7 +15,7 @@ def pwm_prog():
     jmp(y_dec, "pwmloop")   # Decrement Y and loop
 
 # Configuration
-output_pin = 13  # GPIO pin 13
+output_pin = 21  # GPIO pin 13
 fixed_sm_freq = 10_000_000  # Updated state machine frequency (10 MHz)
 desired_freq = 100  # Desired PWM frequency in Hz
 desired_high_time_us = 20  # Desired high time in microseconds (20 µs)

@@ -12,7 +12,6 @@ import time
 from machine import Pin
 from ..lib.asyncio import AsyncIOLoop
 from .manager import DisplayManager, RGBLEDManager, OutputManager
-from .sd_card_reader import SDCardReader as sd_card_reader
 import gc
 
 
@@ -51,7 +50,7 @@ class Init:
             setattr(self, key, value)
 
         # Define the order in which drivers should be loaded.
-        order = ["display", "input", "output", "rgb_led", "universal"]
+        order = ["display", "input", "output", "rgb_led", "universal", "other"]
 
         # Create the driver objects in init.
         for driver in order:
@@ -64,18 +63,10 @@ class Init:
                 driver_dict = drivers[driver_type]
                 self._load_driver_type(driver_type, driver_dict)
 
-        # Load the SD card reader driver.
-        self.sd_card_reader = sd_card_reader(self)
-
         # Initialize the hardware managers.
         self.display = DisplayManager(self)
         self.rgb_led = RGBLEDManager(self)
         self.output = OutputManager(self)
-
-        # Empty the trash to free up memory.
-        print("Running garbage collection to free memory after loading drivers")
-        gc.collect()
-        self.memory_usage()
 
         # Initialize the asyncio loop.
         self.asyncio = AsyncIOLoop()
@@ -189,7 +180,7 @@ class Init:
             else:
                 instance_storage[driver_name].append(instance)
 
-            if hasattr(self, 'DEBUG_MEMORY') and self.DEBUG_MEMORY:
+            if hasattr(self, "DEBUG_MEMORY") and self.DEBUG_MEMORY:
                 self.memory_usage()
 
     def validate_settings(self):
@@ -216,7 +207,7 @@ class Init:
             raise ValueError("The maximum number of supported coils is currently 8. The program will now exit.")
 
         # Ensure self.output exists.
-        if not hasattr(self, 'output'):
+        if not hasattr(self, "output"):
             raise ValueError("No output drivers initialized. The program will now exit.")
 
         # Validate that each driver's output list matches NUMBER_OF_COILS.
@@ -230,7 +221,7 @@ class Init:
                             f"but NUMBER_OF_COILS is {self.NUMBER_OF_COILS}. The program will now exit."
                         )
                 # Alternatively, if the driver_instance is an object with an 'output' attribute.
-                elif hasattr(driver_instance, 'output') and isinstance(driver_instance.output, list):
+                elif hasattr(driver_instance, "output") and isinstance(driver_instance.output, list):
                     if len(driver_instance.output) != self.NUMBER_OF_COILS:
                         raise ValueError(
                             f"Driver {driver_key}[{instance_key}] has {len(driver_instance.output)} outputs, "
@@ -250,7 +241,7 @@ class Init:
                 if isinstance(driver_instance, list):
                     total_outputs += len(driver_instance)
                 # Alternatively, if the driver_instance is an object with an 'output' attribute.
-                elif hasattr(driver_instance, 'output') and isinstance(driver_instance.output, list):
+                elif hasattr(driver_instance, "output") and isinstance(driver_instance.output, list):
                     total_outputs += len(driver_instance.output)
 
         # Ensure there are at least 4 outputs.
@@ -271,7 +262,7 @@ class Init:
                 timeout=self.I2C_1_TIMEOUT,
             )
         # Add a mutex for I2C communication to the init object.
-        if not hasattr(self, 'i2c_1_mutex'):
+        if not hasattr(self, "i2c_1_mutex"):
             self.i2c_1_mutex = _thread.allocate_lock()
 
     def init_i2c_2(self):
@@ -288,7 +279,7 @@ class Init:
                 timeout=self.I2C_2_TIMEOUT,
             )
         # Add a mutex for I2C communication to the init object.
-        if not hasattr(self, 'i2c_2_mutex'):
+        if not hasattr(self, "i2c_2_mutex"):
             self.i2c_2_mutex = _thread.allocate_lock()
 
     def init_spi_1(self):
@@ -346,7 +337,7 @@ class Init:
         """
         Acquires a mutex and provides a common function for debugging.
         """
-        if hasattr(self, 'DEBUG_MUTEX') and self.DEBUG_MUTEX:
+        if hasattr(self, "DEBUG_MUTEX") and self.DEBUG_MUTEX:
             print("mutex_acquire:", src)
         mutex.acquire()
 
@@ -354,7 +345,7 @@ class Init:
         """
         Releases a mutex and provides a common function for debugging.
         """
-        if hasattr(self, 'DEBUG_MUTEX') and self.DEBUG_MUTEX:
+        if hasattr(self, "DEBUG_MUTEX") and self.DEBUG_MUTEX:
             print("mutex_release:", src)
         mutex.release()
 
