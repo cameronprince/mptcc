@@ -99,7 +99,7 @@ DRIVERS = {
                 {
                     "i2c_instance": 2,
                     "addresses": [0x6A, 0x68, 0x6B, 0x69, 0x67, 0x66, 0x64, 0x63],
-                    "default_color": "#326400", # Hex code or "vu_meter".
+                    "default_color": "#00FFFF", # Hex code or "vu_meter".
                     "threshold_brightness": 16,
                     "full_brightness": 32,
                     "rotation": 180,
@@ -109,18 +109,24 @@ DRIVERS = {
             ],
         },
         "neopixel": {
-            "class": "NeoPixel",
+            "class": "GPIO_NeoPixel",
             "common_cfg": {
                 "segments": 8,
                 "reverse": True,
-                "default_color": "#326400",
+                "default_color": "#00FFFF",
                 "threshold_brightness": 16,
                 "full_brightness": 255,
             },
             "instances": [
                 {
-                    "enabled": True,
+                    "enabled": False,
                     "pin": 0,
+                    "segments": 64,
+                    "rotation": 0,
+                    "reverse": False,    # The first LED becomes the last LED when True.
+                    "invert": True,
+                    "mode": "vu_meter",
+                    "matrix": "8x8",
                 },
                 {
                     "enabled": True,

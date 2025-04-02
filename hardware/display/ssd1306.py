@@ -47,23 +47,39 @@ class SSD1306(Display):
         font_height=8,
         header_height=10,
         items_per_page=4,
+        channel=None,
     ):
-
         super().__init__()
         self.init = init
+        self.channel = channel
 
-        # Initialize the framebuffer.
+        # Initialize framebuffer.
         self.width = width
         self.height = height
         self.external_vcc = external_vcc
-        self.pages = self.height // 8
-        self.buffer = bytearray(self.pages * self.width)
-        self.framebuf = framebuf.FrameBuffer(self.buffer, self.width, self.height, framebuf.MONO_VLSB)
+        self.pages = height // 8
+        self.buffer = bytearray(self.pages * width)
+        self.framebuf = framebuf.FrameBuffer(self.buffer, width, height, framebuf.MONO_VLSB)
 
         instance_key = len(self.init.display_instances['ssd1306'])
 
-        # Initialize the display interface.
-        if i2c_instance is not None:
+        # Handle TCA9548A multiplexer.
+        if isinstance(i2c_instance, str) and i2c_instance.startswith("tca9548a_"):
+            from ..universal.tca9548a import TCA9548AChannel
+            mux_num = int(i2c_instance.split("_")[1])
+            mux = self.init.universal_instances["tca9548a"][mux_num]
+            self.i2c = TCA9548AChannel(mux, channel, mux.mutex)
+            self.driver = SSD1306_I2C(
+                self.width,
+                self.height,
+                i2c=self.i2c,
+                addr=i2c_addr,
+                external_vcc=self.external_vcc
+            )
+            print(f"- SSD1306 display initialized on channel {channel}")
+        
+        # Handle regular I2C.
+        elif i2c_instance is not None:
             if i2c_instance == 2:
                 self.init.init_i2c_2()
                 self.i2c = self.init.i2c_2
@@ -72,18 +88,21 @@ class SSD1306(Display):
                 self.init.init_i2c_1()
                 self.i2c = self.init.i2c_1
                 self.mutex = self.init.i2c_1_mutex
-
+            
             self.driver = SSD1306_I2C(
                 self.width,
                 self.height,
                 i2c=self.i2c,
                 addr=i2c_addr,
-                external_vcc=self.external_vcc,
+                external_vcc=self.external_vcc
             )
+
             print(
                 f"SSD1306 display driver {instance_key} initialized on I2C instance {i2c_instance} "
                 f"at address: 0x{i2c_addr:02X}"
             )
+
+        # Handle SPI.
         elif spi_instance is not None:
             spi = SPI(spi_instance)
             dc_pin = Pin(self.init.PIN_SPI_DC)
@@ -96,12 +115,13 @@ class SSD1306(Display):
                 dc=dc_pin,
                 res=res_pin,
                 cs=cs_pin,
-                external_vcc=self.external_vcc,
+                external_vcc=self.external_vcc
             )
             print(f"SSD1306 display driver {instance_key} initialized on SPI instance {spi_instance}")
         else:
             raise ValueError("Either i2c_instance or spi_instance must be provided.")
 
+        print("init_display")
         self.init_display()
 
     def init_display(self):

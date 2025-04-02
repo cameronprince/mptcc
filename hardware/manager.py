@@ -62,13 +62,13 @@ class DisplayManager(HardwareManager):
             for index, driver_instance in enumerate(driver_instances):  # Track instance index
                 method = getattr(driver_instance, method_name)
                 if method:
-                    if hasattr(driver_instance, 'mutex'):
+                    if hasattr(driver_instance, "mutex"):
                         self.init.mutex_acquire(
                             driver_instance.mutex,
                             f"{driver_type}:{index}:{method_name}"  # Include instance index
                         )
                     method(*args, **kwargs)
-                    if hasattr(driver_instance, 'mutex'):
+                    if hasattr(driver_instance, "mutex"):
                         self.init.mutex_release(
                             driver_instance.mutex,
                             f"{driver_type}:{index}:{method_name}"  # Include instance index
@@ -314,7 +314,7 @@ class RGBLEDManager(HardwareManager):
                 if index < len(led_group):
                     led_instance = led_group[index]
                     # print(f"Debug: Processing LED instance {led_instance} at index {index}")  # Debug: Print LED instance
-                    if hasattr(led_instance, 'set_status'):
+                    if hasattr(led_instance, "set_status"):
                         # print(f"Debug: Calling set_status on {led_instance}")  # Debug: Print method call
                         led_instance.set_status(index, freq, on_time, max_duty, max_on_time)
                     else:
@@ -333,7 +333,7 @@ class RGBLEDManager(HardwareManager):
                 if index < len(led_group):
                     led_instance = led_group[index]
                     # print(f"Debug: Processing LED instance {led_instance} at index {index}")  # Debug: Print LED instance
-                    if hasattr(led_instance, 'off'):
+                    if hasattr(led_instance, "off"):
                         # print(f"Debug: Calling off on {led_instance}")  # Debug: Print method call
                         led_instance.off(index)
                     else:
@@ -343,7 +343,7 @@ class RGBLEDManager(HardwareManager):
                     # print(f"Warning: LED index {index} is out of range for {driver_key}.")
                     pass
 
-    def set_color(self, index, r, g, b):
+    def set_color(self, index, r, g, b, asyncio=False):
         """
         Sets the color of the specified LED on all RGB LED drivers.
         """
@@ -353,7 +353,7 @@ class RGBLEDManager(HardwareManager):
                 if index < len(led_group):
                     led_instance = led_group[index]
                     # print(f"Debug: Processing LED instance {led_instance} at index {index}")  # Debug: Print LED instance
-                    if hasattr(led_instance, 'set_color'):
+                    if hasattr(led_instance, "set_color") and not asyncio or (asyncio and hasattr(led_instance, "mutex")):
                         # print(f"Debug: Calling set_color on {led_instance}")  # Debug: Print method call
                         led_instance.set_color(r, g, b)
                     else:

@@ -26,7 +26,7 @@ class Input(Hardware):
         Parameters:
         ----------
         switch : int
-            The switch number corresponding to the encoder (1 to 4).
+            The switch number corresponding to the encoder.
         """
         # Allows screens to skip the next switch click.
         # Used by restore defaults to return to main menu.
@@ -34,9 +34,13 @@ class Input(Hardware):
             self.init.switch_disabled = False
             return
 
+        # Check to see if beep tone confirmation is to be fired.
+        if hasattr(self.init, 'beep'):
+            self.init.beep.on()
+
         current_screen = self.init.menu.get_current_screen()
         if isinstance(current_screen, Screen):
-            method_name = f'switch_{switch}'
+            method_name = f"switch_{switch}"
             if hasattr(current_screen, method_name):
                 getattr(current_screen, method_name)()
         else:
@@ -56,7 +60,11 @@ class Input(Hardware):
         current_screen = self.init.menu.get_current_screen()
 
         if current_screen:
-            method_name = f'rotary_{idx + 1}'
+            method_name = f"rotary_{idx + 1}"
+
+            # Check to see if beep tone confirmation is to be fired.
+            if hasattr(self.init, 'beep'):
+                self.init.beep.on()
 
             if hasattr(current_screen, method_name):
                 getattr(current_screen, method_name)(direction)
@@ -64,4 +72,4 @@ class Input(Hardware):
                 if idx == 0:
                     self.init.menu.move(direction)
 
-        time.sleep_ms(50)
+        # time.sleep_ms(50)

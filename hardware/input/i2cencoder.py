@@ -106,7 +106,7 @@ class I2CEncoder(Input):
         instance_key = len(self.init.input_instances["encoder"]["i2cencoder"])
 
         if self.type == "rgb":
-            # self.init.RGB_LED_ASYNCIO_POLLING = True
+            self.init.RGB_LED_ASYNCIO_POLLING = True
             if 'i2cencoder' not in self.init.rgb_led_instances:
                 self.init.rgb_led_instances['i2cencoder'] = []
             rgb_encoder_instances = []
@@ -115,11 +115,11 @@ class I2CEncoder(Input):
                 rgb_encoder_instances.append(led_instance)
             self.init.rgb_led_instances['i2cencoder'].append(rgb_encoder_instances)
 
-        print(f"I2CEncoder driver {instance_key} (type: {self.type}) initialized on I2C_{i2c_instance}")
+        print(f"I2CEncoder {instance_key} (type: {self.type}) initialized on I2C_{i2c_instance}")
         for i, addr in enumerate(self.i2c_addrs):
             print(f"- Encoder {i + 1}: I2C address 0x{addr:02X}")
         if self.type == "rgb":
-            print(f"- RGB LEDs initialized with default color: {self.default_color}")
+            print(f"- RGB LEDs initialized (default color: {self.default_color})")
             print(f"- Asyncio polling: {self.init.RGB_LED_ASYNCIO_POLLING}")
 
     def init_encoder(self, encoder):

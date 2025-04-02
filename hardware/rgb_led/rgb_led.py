@@ -18,7 +18,6 @@ class RGBLED(Hardware):
     def __init__(self):
         super().__init__()
 
-
 class RGB:
     """
     A base class for RGB LED functionality.
@@ -67,3 +66,42 @@ class RGB:
             self.init.rgb_led_color[output] = color
         else:
             self.set_color(*color)
+
+    def get_color_gradient(self, color1, color2, steps):
+        """
+        Generate a color gradient between two colors.
+        """
+        gradient = []
+        for i in range(steps):
+            ratio = i / float(steps)
+            red = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+            green = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+            blue = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+            gradient.append((red, green, blue))
+        return gradient
+
+    def generate_vu_colors(self, num_leds):
+        """
+        Generate the VU meter colors for an LED array.
+        """
+        # Define the base VU meter colors.
+        vu_colors = [
+            (0, 255, 0),    # Green.
+            (85, 255, 0),   # Yellow-green.
+            (170, 255, 0),  # Yellow.
+            (255, 170, 0),  # Yellow-orange.
+            (255, 85, 0),   # Orange.
+            (255, 0, 0)     # Red.
+        ]
+
+        vu_meter_colors = []
+        for i in range(len(vu_colors) - 1):
+            steps = num_leds // (len(vu_colors) - 1)
+            gradient = self.get_color_gradient(vu_colors[i], vu_colors[i + 1], steps)
+            vu_meter_colors.extend(gradient)
+
+        # Ensure the list has exactly num_leds colors.
+        if len(vu_meter_colors) < num_leds:
+            vu_meter_colors.extend([vu_colors[-1]] * (num_leds - len(vu_meter_colors)))
+
+        return vu_meter_colors

@@ -62,15 +62,63 @@ DRIVERS = {
         },
     },
     "universal": {
-        "wombat_18ab": {
-        "class": "Wombat_18AB",
+        "tca9548a": {
+            "class": "TCA9548A",
             "instances": [
                 {
-                    "enabled": True,
+                    "enabled": False,
                     "i2c_instance": 1,
-                    "init_delay": 0.2,
+                    "i2c_addr": 0x70,
+                    "display": {
+                        "ssd1306": {
+                            "class": "SSD1306",
+                            "common_cfg": {
+                                "width": 128,
+                                "height": 64,
+                                "line_height": 12,
+                                "font_width": 8,
+                                "font_height": 8,
+                                "header_height": 10,
+                                "items_per_page": 4,
+                            },
+                            "instances": [
+                                {
+                                    "enabled": True,
+                                    "i2c_addr": 0x3C,
+                                    "channel": 0
+                                },
+                                {
+                                    "enabled": True,
+                                    "i2c_addr": 0x3C,
+                                    "channel": 1
+                                },
+                                {
+                                    "enabled": True,
+                                    "i2c_addr": 0x3C,
+                                    "channel": 2
+                                },
+                                {
+                                    "enabled": True,
+                                    "i2c_addr": 0x3C,
+                                    "channel": 3
+                                },
+                            ],
+
+                        },
+                    },
+
+                },
+            ],
+        },
+        "wombat_18ab": {
+            "class": "Wombat_18AB",
+            "instances": [
+                {
+                    "enabled": False,
+                    "i2c_instance": 1,
                     "i2c_addr": 0x6B,
                     "switch": {
+                        "enabled": True,
                         "pins": [1, 0, 14, 10],
                         "pull_up": False,
                         "pulse_on_change_pin": 5,
@@ -78,6 +126,7 @@ DRIVERS = {
                         "host_interrupt_pin_pull_up": True,
                     },
                     "encoder": {
+                        "enabled": True,
                         "pins": [
                             [13, 12],
                             [15, 11],
@@ -91,6 +140,54 @@ DRIVERS = {
                     },
                 },
             ],
+        },
+        "mcp23017": {
+            "class": "MCP23017",
+            "instances": [
+                {
+                    "enabled": True,
+                    "i2c_instance": 1,
+                    "i2c_addr": 0x20,
+                    "host_interrupt_pin": 18,
+                    "host_interrupt_pin_pull_up": True,
+                    "switch": {
+                        "enabled": True,
+                        "port": "B",
+                        "pins": [0, 1, 2, 3],
+                        "pull_up": False,
+                    },
+                    "encoder": {
+                        "enabled": True,
+                        "port": "A",
+                        "pins": [
+                            [0, 1],
+                            [2, 3],
+                            [4, 5],
+                            [6, 7],
+                        ],
+                        "pull_up": False,
+                    },
+                },
+            ],
+        },
+    },
+    "input": {
+        "encoder": {
+            "i2cencoder": {
+                "class": "I2CEncoder",
+                "instances": [
+                    {
+                        "enabled": True,
+                        "i2c_instance": 1,
+                        "i2c_addrs": [0x50, 0x30, 0x60, 0x44],
+                        "interrupt_pin": 20,
+                        "type": "rgb",
+                        "default_color": "#00FFFF",
+                        "threshold_brightness": 32,
+                        "full_brightness": 255,
+                    },
+                ],
+            },
         },
     },
     "output": {
@@ -106,7 +203,7 @@ DRIVERS = {
     },
     "rgb_led": {
         "neopixel": {
-            "class": "NeoPixel",
+            "class": "GPIO_NeoPixel",
             "common_cfg": {
                 "segments": 4,
                 "reverse": True,

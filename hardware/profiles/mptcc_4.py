@@ -42,6 +42,7 @@ DRIVERS = {
     "display": {
         "ssd1306": {
             "class": "SSD1306",
+            "enabled": True,
             "instances": [
                 {
                     "enabled": True,
@@ -79,6 +80,7 @@ DRIVERS = {
         "encoder": {
             "i2cencoder": {
                 "class": "I2CEncoder",
+                "enabled": True,
                 "instances": [
                     {
                         "enabled": True,
@@ -96,6 +98,7 @@ DRIVERS = {
         "switch": {
             "switch_gpio": {
                 "class": "Switch_GPIO",
+                "enabled": False,
                 "instances": [
                     {
                         "enabled": False,
@@ -104,55 +107,15 @@ DRIVERS = {
                     },
                 ],
             },
-            "switch_mcp23017": {
-                "class": "Switch_MCP23017",
-                "instances": [
-                    {
-                        "enabled": False,
-                        "i2c_instance": 1,
-                        "i2c_addr": 0x27,
-                        "port": "A",
-                        "pins": [0, 1, 2, 3, 4, 5],
-                        "pull_up": True,
-                        "host_interrupt_pin": 19,
-                        "host_interrupt_pin_pull_up": True,
-                    },
-                ],
-            },
-        },
-    },
-    "universal": {
-        "wombat_18ab": {
-        "class": "Wombat_18AB",
-            "instances": [
-                {
-                    "enabled": True,
-                    "i2c_instance": 1,
-                    "init_delay": 0.2,
-                    "i2c_addr": 0x6B,
-                    "output": {
-                        "enabled": False,
-                        "pins": [16, 17, 18, 19],
-                    },
-                    "switch": {
-                        "enabled": True,
-                        "pins": [5, 14, 15, 16, 17, 19],
-                        "pull_up": False,
-                        "pulse_on_change_pin": 0,
-                        "host_interrupt_pin": 19,
-                        "host_interrupt_pin_pull_up": True,
-                    },
-
-                },
-            ],
         },
     },
     "output": {
         "gpio_pwm": {
             "class": "GPIO_PWM",
+            "enabled": True,
             "instances": [
                 {
-                    "enabled": False,
+                    "enabled": True,
                     "pins": [13, 12, 11, 10],
                 },
             ],
@@ -160,7 +123,8 @@ DRIVERS = {
     },
     "rgb_led": {
         "neopixel": {
-            "class": "NeoPixel",
+            "class": "GPIO_NeoPixel",
+            "enabled": True,
             "common_cfg": {
                 "segments": 4,
                 "reverse": True,
@@ -177,10 +141,21 @@ DRIVERS = {
                     "enabled": True,
                     "pin": 22,
                 },
+                {
+                    "enabled": True,
+                    "pin": 15,
+                    "segments": 64,
+                    "rotation": 0,
+                    "reverse": False,    # The first LED becomes the last LED when True.
+                    "invert": True,
+                    "mode": "vu_meter",
+                    "matrix": "8x8",
+                },
             ],
         },
         "pca9685": {
             "class": "PCA9685_RGBLED",
+            "enabled": False,
             "instances": [
                 {
                     "enabled": False,
@@ -192,19 +167,6 @@ DRIVERS = {
                         [12, 13, None],
                         [10, 11, None],
                         [8, 9, None],
-                    ],
-                },
-            ],
-        },
-        "gpio": {
-            "class": "GPIO_RGBLED",
-            "instances": [
-                {
-                    "pins": [
-                        [15, 14, None],
-                        [9, 8, None],
-                        [7, 6, None],
-                        [1, 0, None],
                     ],
                 },
             ],

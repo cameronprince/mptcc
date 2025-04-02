@@ -58,7 +58,6 @@ DRIVERS = {
                     "items_per_page": 4,
                 },
             ],
-
         },
     },
     "input": {
@@ -82,7 +81,7 @@ DRIVERS = {
                 "class": "I2CEncoder",
                 "instances": [
                     {
-                        "enabled": True,
+                        "enabled": False,
                         "i2c_instance": 1,
                         "i2c_addrs": [0x50, 0x30, 0x60, 0x44],
                         "interrupt_pin": 18,
@@ -147,7 +146,7 @@ DRIVERS = {
     },
     "rgb_led": {
         "neopixel": {
-            "class": "NeoPixel",
+            "class": "GPIO_NeoPixel",
             "common_cfg": {
                 "segments": 4,
                 "reverse": True,
@@ -157,12 +156,75 @@ DRIVERS = {
             },
             "instances": [
                 {
-                    "enabled": False,
-                    "pin": 18,
+                    "enabled": True,
+                    "pin": 28,
                 },
+            ],
+        },
+    },
+    "universal": {
+        "wombat_18ab": {
+            "class": "Wombat_18AB",
+            "instances": [
                 {
                     "enabled": True,
-                    "pin": 19,
+                    "i2c_instance": 1,
+                    "i2c_addr": 0x6b,
+                    "switch": {
+                        "enabled": True,
+                        "pins": [8, 13, 16, 19],
+                        "pull_up": False,
+                        "pulse_on_change_pin": 1,
+                        "host_interrupt_pin": 18,
+                        "host_interrupt_pin_pull_up": False,
+                    },
+                    "encoder": {
+                        "enabled": True,
+                        "pins": [
+                            [11, 12],
+                            [14, 15],
+                            [17, 18],
+                            [5, 6],
+                        ],
+                        "pull_up": False,
+                        "pulse_on_change_pin": 0,
+                        "host_interrupt_pin": 19,
+                        "host_interrupt_pin_pull_up": False,
+                    },
+                    "beep": {
+                        "enabled": False,
+                        "class": "Beep_Wombat_18AB",
+                        "instances": [
+                            {
+                                "enabled": True,
+                                "pin": 13,
+                                "length_ms": 50,
+                            },
+                        ],
+
+                    },
+                },
+            ],
+        },
+    },
+    "other": {
+        "sd_card_reader": {
+            "class": "SDCardReader",
+            "instances": [
+                {
+                    "enabled": True,
+                    "spi_instance": 1,
+                    "mount_point": "/sd",
+                },
+            ],
+        },
+        "beep": {
+            "class": "GPIO_Beep",
+            "instances": [
+                {
+                    "enabled": True,
+                    "pin": 13,
+                    "length_ms": 50,
                 },
             ],
         },

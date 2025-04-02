@@ -40,7 +40,7 @@ async def update_rgb_leds():
                 r, g, b = color
                 if rgb_led_states.get(output, (0, 0, 0)) != (r, g, b):
                     rgb_led_states[output] = (r, g, b)
-                    rgb_led_manager.set_color(output, r, g, b)
+                    rgb_led_manager.set_color(output, r, g, b, True)
                 init.rgb_led_color[output] = None
         await asyncio.sleep(0.1)
 

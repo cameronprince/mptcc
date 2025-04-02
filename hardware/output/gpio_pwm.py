@@ -76,7 +76,7 @@ class GPIO_PWM():
         instance_key = len(self.init.output_instances['gpio_pwm'])
 
         # Print initialization details.
-        print(f"GPIO_PWM driver {instance_key} initialized")
+        print(f"GPIO PWM output {instance_key} initialized")
         for i, pin in enumerate(pins):
             if pin is not None:
                 print(f"- Output {i}: GPIO {pin}")
