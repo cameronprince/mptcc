@@ -33,6 +33,7 @@ SET_PRECHARGE = const(0xD9)
 SET_VCOM_DESEL = const(0xDB)
 SET_CHARGE_PUMP = const(0x8D)
 
+
 class SSD1306(Display):
     def __init__(
         self,
@@ -77,7 +78,7 @@ class SSD1306(Display):
                 external_vcc=self.external_vcc
             )
             print(f"- SSD1306 display initialized on channel {channel}")
-        
+
         # Handle regular I2C.
         elif i2c_instance is not None:
             if i2c_instance == 2:
@@ -121,7 +122,6 @@ class SSD1306(Display):
         else:
             raise ValueError("Either i2c_instance or spi_instance must be provided.")
 
-        print("init_display")
         self.init_display()
 
     def init_display(self):

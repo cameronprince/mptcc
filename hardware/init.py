@@ -86,7 +86,8 @@ class Init:
 
         # Load drivers for this type.
         for driver_name, driver_details in driver_dict.items():
-            self._load_driver(driver_type, driver_name, driver_details, instance_storage)
+            if driver_details.get('enabled', True):
+                self._load_driver(driver_type, driver_name, driver_details, instance_storage)
 
     def _load_driver(self, driver_type, driver_name, driver_details, instance_storage):
         """

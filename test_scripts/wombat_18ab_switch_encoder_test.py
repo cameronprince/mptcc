@@ -14,33 +14,33 @@ from SerialWombatDebouncedInput import SerialWombatDebouncedInput
 from SerialWombatQuadEnc import SerialWombatQuadEnc
 from SerialWombatPulseOnChange import SerialWombatPulseOnChange
 
-# Initialize I2C (hardcoded values)
 i2c = machine.I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 sw = SerialWombatChip_mp_i2c(i2c, 0x6B)
 sw.begin()
-time.sleep(0.2)
 
-# Initialize switch on pin 1
+switch_pin = 8
+encoder_pin_1 = 11
+encoder_pin_2 = 12
+switch_interrupt_pin = 18
+encoder_interrupt_pin = 19
+switch_poc_pin = 1
+encoder_poc_pin = 0
+
 switch = SerialWombatDebouncedInput(sw)
-switch.begin(pin=1, debounce_mS=30, invert=True, usePullUp=False)
+switch.begin(pin=switch_pin, debounce_mS=30, invert=True, usePullUp=False)
 
-# Initialize encoder on pins 13,12
 encoder = SerialWombatQuadEnc(sw)
-encoder.begin(13, 12, debounce_mS=1, pullUpsEnabled=False, readState=6)
-encoder.write(32768)  # Center value
+encoder.begin(encoder_pin_1, encoder_pin_2, debounce_mS=0, pullUpsEnabled=False, readState=5)
+encoder.write(32768)
 
-# Set up pulse on change for switch (pin 6)
 poc_switch = SerialWombatPulseOnChange(sw)
-poc_switch.begin(pin=6, activeMode=1, inactiveMode=0, pulseOnTime=50, pulseOffTime=50, orNotAnd=1)
-poc_switch.setEntryOnIncrease(0, 13)
+poc_switch.begin(pin=switch_poc_pin, activeMode=1, inactiveMode=0, pulseOnTime=1, pulseOffTime=1, orNotAnd=1)
+poc_switch.setEntryOnIncrease(0, switch_pin)
 
-# Set up pulse on change for encoder (pin 5)
 poc_encoder = SerialWombatPulseOnChange(sw)
-poc_encoder.begin(pin=5, activeMode=1, inactiveMode=0, pulseOnTime=50, pulseOffTime=50, orNotAnd=1)
-poc_encoder.setEntryOnIncrease(0, 12)
+poc_encoder.begin(pin=encoder_poc_pin, activeMode=1, inactiveMode=0, pulseOnTime=1, pulseOffTime=1, orNotAnd=1)
+poc_encoder.setEntryOnChange(0, encoder_pin_1)
 
-
-# Set up interrupts
 switch_interrupt = False
 encoder_interrupt = False
 
@@ -52,11 +52,8 @@ def encoder_callback(pin):
     global encoder_interrupt
     encoder_interrupt = True
 
-# Switch interrupt on pin 18 (pull-up)
-Pin(18, Pin.IN, Pin.PULL_UP).irq(trigger=Pin.IRQ_FALLING, handler=switch_callback)
-
-# Encoder interrupt on pin 19 (pull-up)
-Pin(19, Pin.IN, Pin.PULL_UP).irq(trigger=Pin.IRQ_FALLING, handler=encoder_callback)
+Pin(switch_interrupt_pin, Pin.IN, Pin.PULL_UP).irq(trigger=Pin.IRQ_FALLING, handler=switch_callback)
+Pin(encoder_interrupt_pin, Pin.IN, Pin.PULL_UP).irq(trigger=Pin.IRQ_FALLING, handler=encoder_callback)
 
 async def poll_switch():
     global switch_interrupt
@@ -81,8 +78,8 @@ async def poll_encoder():
         await asyncio.sleep(0.01)
 
 print("Testing started:")
-print("- Press the switch (pin 1)")
-print("- Rotate the encoder (pins 13,12)")
+print("- Press the switch")
+print("- Rotate the encoder")
 
 asyncio.create_task(poll_switch())
 asyncio.create_task(poll_encoder())
