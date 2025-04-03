@@ -16,8 +16,6 @@ CONFIG = {
     "I2C_1_FREQ": 400000,
     "I2C_1_TIMEOUT": 50000,
     "CONFIG_PATH": "/mptcc/config.json",
-    "SD_CARD_READER_SPI_INSTANCE": 1,
-    "SD_CARD_READER_MOUNT_POINT": "/sd",
     "PIN_BATT_STATUS_ADC": 28,
     "VOLTAGE_DROP_FACTOR": 848.5,
     "PIN_MIDI_INPUT": 13,
@@ -165,6 +163,7 @@ DRIVERS = {
     "universal": {
         "wombat_18ab": {
             "class": "Wombat_18AB",
+            "enabled": True,
             "instances": [
                 {
                     "enabled": True,
@@ -192,16 +191,11 @@ DRIVERS = {
                         "host_interrupt_pin_pull_up": False,
                     },
                     "beep": {
-                        "enabled": False,
-                        "class": "Beep_Wombat_18AB",
-                        "instances": [
-                            {
-                                "enabled": True,
-                                "pin": 13,
-                                "length_ms": 50,
-                            },
-                        ],
-
+                        "enabled": True,
+                        "pin": 7,
+                        "length_ms": 5,
+                        "volume": 10,
+                        "pwm_freq": 3000,
                     },
                 },
             ],
@@ -222,9 +216,11 @@ DRIVERS = {
             "class": "GPIO_Beep",
             "instances": [
                 {
-                    "enabled": True,
+                    "enabled": False,
                     "pin": 13,
-                    "length_ms": 50,
+                    "length_ms": 5,
+                    "volume": 5,
+                    "pwm_freq": 3000,
                 },
             ],
         },

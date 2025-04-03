@@ -17,7 +17,7 @@ from mptcc.hardware.init import init
 # Mutex debugging causes print statements to be issued each time a mutex is
 # acquired or released. This is very useful in following the flow of I2C
 # communications.
-init.DEBUG_MUTEX = True
+init.DEBUG_MUTEX = False
 
 # When memory debugging is enabled, drivers print memory usage after they are
 # initialized.
