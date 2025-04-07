@@ -93,11 +93,25 @@ DRIVERS = {
         },
     },
     "output": {
+        "analog_meter": {
+            "class": "Analog_Meter",
+            "enabled": True,
+            "common_cfg": {
+                "sensitivity": 0.5,
+                "pwm_freq": 1000,
+            },
+            "instances": [
+                {
+                    "enabled": True,
+                    "pins": [1, 8, 7, 6],
+                },
+            ],
+        },
         "gpio_pwm": {
             "class": "GPIO_PWM",
             "instances": [
                 {
-                    "enabled": True,
+                    "enabled": False,
                     "pins": [1, 8, 7, 6],
                 },
             ],
@@ -149,8 +163,8 @@ DRIVERS = {
                 "segments": 4,
                 "reverse": True,
                 "default_color": "#FFFFFF",
-                "threshold_brightness": 16,
-                "full_brightness": 255,
+                "threshold_brightness": 4,
+                "full_brightness": 80,
             },
             "instances": [
                 {
@@ -191,11 +205,15 @@ DRIVERS = {
                         "host_interrupt_pin_pull_up": False,
                     },
                     "beep": {
-                        "enabled": True,
+                        "enabled": False,
                         "pin": 7,
                         "length_ms": 5,
                         "volume": 10,
                         "pwm_freq": 3000,
+                    },
+                    "output": {
+                        "enabled": True,
+                        "pins": [9, 2, 10, 7],
                     },
                 },
             ],
@@ -216,7 +234,7 @@ DRIVERS = {
             "class": "GPIO_Beep",
             "instances": [
                 {
-                    "enabled": False,
+                    "enabled": True,
                     "pin": 13,
                     "length_ms": 5,
                     "volume": 5,

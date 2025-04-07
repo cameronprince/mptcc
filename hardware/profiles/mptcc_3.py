@@ -15,9 +15,12 @@ CONFIG = {
     "I2C_1_INTERFACE": 0,
     "I2C_1_FREQ": 400000,
     "I2C_1_TIMEOUT": 50000,
+    "PIN_I2C_2_SCL": 19,
+    "PIN_I2C_2_SDA": 18,
+    "I2C_2_INTERFACE": 1,
+    "I2C_2_FREQ": 400000,
+    "I2C_2_TIMEOUT": 50000,
     "CONFIG_PATH": "/mptcc/config.json",
-    "SD_CARD_READER_SPI_INSTANCE": 1,
-    "SD_CARD_READER_MOUNT_POINT": "/sd",
     "PIN_BATT_STATUS_ADC": 28,
     "VOLTAGE_DROP_FACTOR": 848.5,
     "PIN_MIDI_INPUT": 1,
@@ -110,45 +113,14 @@ DRIVERS = {
                 },
             ],
         },
-        "wombat_18ab": {
-            "class": "Wombat_18AB",
-            "instances": [
-                {
-                    "enabled": False,
-                    "i2c_instance": 1,
-                    "i2c_addr": 0x6B,
-                    "switch": {
-                        "enabled": True,
-                        "pins": [1, 0, 14, 10],
-                        "pull_up": False,
-                        "pulse_on_change_pin": 5,
-                        "host_interrupt_pin": 14,
-                        "host_interrupt_pin_pull_up": True,
-                    },
-                    "encoder": {
-                        "enabled": True,
-                        "pins": [
-                            [13, 12],
-                            [15, 11],
-                            [17, 16],
-                            [19, 18],
-                        ],
-                        "pull_up": False,
-                        "pulse_on_change_pin": 6,
-                        "host_interrupt_pin": 15,
-                        "host_interrupt_pin_pull_up": True,
-                    },
-                },
-            ],
-        },
         "mcp23017": {
             "class": "MCP23017",
             "instances": [
                 {
                     "enabled": True,
-                    "i2c_instance": 1,
+                    "i2c_instance": 2,
                     "i2c_addr": 0x20,
-                    "host_interrupt_pin": 18,
+                    "host_interrupt_pin": 1,
                     "host_interrupt_pin_pull_up": True,
                     "switch": {
                         "enabled": True,
@@ -171,25 +143,6 @@ DRIVERS = {
             ],
         },
     },
-    "input": {
-        "encoder": {
-            "i2cencoder": {
-                "class": "I2CEncoder",
-                "instances": [
-                    {
-                        "enabled": True,
-                        "i2c_instance": 1,
-                        "i2c_addrs": [0x50, 0x30, 0x60, 0x44],
-                        "interrupt_pin": 20,
-                        "type": "rgb",
-                        "default_color": "#00FFFF",
-                        "threshold_brightness": 32,
-                        "full_brightness": 255,
-                    },
-                ],
-            },
-        },
-    },
     "output": {
         "gpio_pwm": {
             "class": "GPIO_PWM",
@@ -207,26 +160,66 @@ DRIVERS = {
             "common_cfg": {
                 "segments": 4,
                 "reverse": True,
-                "default_color": "#00FFFF",
-                "threshold_brightness": 16,
-                "full_brightness": 255,
+                "default_color": "#000000",
+                "threshold_brightness": 4,
+                "full_brightness": 20,
             },
+            "instances": [
+                {"enabled": True, "pin": 13},
+                {"enabled": True, "pin": 12},
+                {"enabled": True, "pin": 11},
+                {"enabled": True, "pin": 10},
+            ],
+        },
+        "neopixel_matrix": {
+            "class": "GPIO_NeoPixel_Matrix",
+            "enabled": True,
+            "instances": [
+                {
+                    "pin": 14,
+                    "rotation": 0,
+                    "reverse": False,    # The first LED becomes the last LED when True.
+                    "invert": True,
+                    "mode": "vu_meter",
+                    "matrix": "8x8",
+                    "default_color": "vu_meter",
+                    "threshold_brightness": 4,
+                    "full_brightness": 20,
+                    "vu_meter_sensitivity": 1,
+                    "vu_meter_colors": [
+                        [0, 255, 0],    # LED 1: Pure green
+                        [64, 255, 0],   # LED 2: Very greenish
+                        [128, 255, 0],  # LED 3: Green-yellow
+                        [191, 255, 0],  # LED 4: Nearly yellow
+                        [255, 255, 0],  # LED 5: Yellow
+                        [255, 170, 0],  # LED 6: Orange
+                        [255, 85, 0],   # LED 7: Reddish-orange
+                        [255, 0, 0]     # LED 8: Red
+                    ],
+                },
+            ],
+        },
+    },
+    "other": {
+        "sd_card_reader": {
+            "class": "SDCardReader",
             "instances": [
                 {
                     "enabled": True,
-                    "pin": 13,
+                    "spi_instance": 1,
+                    "mount_point": "/sd",
                 },
+            ],
+        },
+        "beep": {
+            "class": "GPIO_Beep",
+            "instances": [
                 {
                     "enabled": True,
-                    "pin": 12,
-                },
-                {
-                    "enabled": True,
-                    "pin": 11,
-                },
-                {
-                    "enabled": True,
-                    "pin": 10,
+                    "pin": 15,
+                    "length_ms": 5,
+                    "volume": 100,
+                    "pwm_freq": 3000,
                 },
             ],
         },

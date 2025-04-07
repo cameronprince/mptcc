@@ -110,12 +110,12 @@ class Wombat_18AB:
             if "wombat_18ab" not in self.init.output_instances:
                 self.init.output_instances["wombat_18ab"] = []
             output_instances = []
-            for pin in output_pins:
-                output = Output_Wombat_18AB(self.init, self.driver, swpwm, pin, self.mutex)
-                output_instances.append(output)
+            for pin in output.get("pins"):
+                o = Output_Wombat_18AB(self.driver, swpwm, pin, self.mutex)
+                output_instances.append(o)
             self.init.output_instances["wombat_18ab"].append(output_instances)
             print(f"- Outputs initialized:")
-            for i, pin in enumerate(output_pins):
+            for i, pin in enumerate(output.get("pins")):
                 print(f"  - Output {i}: Pin {pin}")
 
         # Initialize RGB LEDs if rgb_led is provided.
@@ -186,7 +186,7 @@ class Output_Wombat_18AB(Output):
         finally:
             self.init.mutex_release(self.mutex, f"{self.class_name}:init")
 
-    def set_output(self, active=False, freq=None, on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
 
@@ -384,7 +384,6 @@ class Switch_Wombat_18AB(Input):
         """
         Asyncio task to poll Wombat switch pins.
         """
-        text = "Switch_Wombat_18AB:poll"
         while True:
             if self.active_interrupt:
                 self.active_interrupt = False
@@ -392,9 +391,9 @@ class Switch_Wombat_18AB(Input):
                     if pin is None:
                         continue
                     di = self.di_instances[i]
-                    self.init.mutex_acquire(self.mutex, text)
+                    self.init.mutex_acquire(self.mutex, f"{self.class_name}:poll")
                     state = di.readTransitionsState()
-                    self.init.mutex_release(self.mutex, text)
+                    self.init.mutex_release(self.mutex, f"{self.class_name}:poll")
                     if di.transitions > 0 and state:
                         self.switch_click(i+1)
                         break
@@ -430,8 +429,8 @@ class Encoder_Wombat_18AB(Input):
         self.mutex = mutex
         self.qe_instances = []
         self.init_complete = init_complete
-        self.class_name = self.__class__.__name__
         self.active_interrupt = False
+        self.class_name = self.__class__.__name__
 
         for i, pin in enumerate(self.encoder.get("pins")):
             if pin is None:
@@ -490,26 +489,36 @@ class Encoder_Wombat_18AB(Input):
         )
         self.host_int.irq(trigger=Pin.IRQ_FALLING, handler=self._interrupt)
 
+        asyncio.create_task(self._poll())
+
     def _interrupt(self, pin):
+        print("_interrupt")
         if not self.init_complete[0]:
             return
+        self.active_interrupt = True
 
-        trigger = None
+    async def _poll(self):
+        """
+        Asyncio task to poll Wombat encoders.
+        """
+        while True:
+            if self.active_interrupt:
+                print(f"_poll active interrupt")
+                self.active_interrupt = False
+                self._process_interrupt()
+            await asyncio.sleep(0.01)
 
+    def _process_interrupt(self):
         self.init.mutex_acquire(self.mutex, f"{self.class_name}:encoder:read")
         for i, pin in enumerate(self.encoder.get("pins")):
             value = self.qe_instances[i].read(32768)
             if value != 32768:
-                trigger = (i, value)
                 break
         self.init.mutex_release(self.mutex, f"{self.class_name}:encoder:read")
-
-        if trigger:
-            i, value = trigger
-            if value > 32768:
-                super().encoder_change(i, 1)
-            else:
-                super().encoder_change(i, -1)
+        if value > 32768:
+            super().encoder_change(i, 1)
+        elif value < 32768:
+            super().encoder_change(i, -1)
 
 
 class Beep_Wombat_18AB():

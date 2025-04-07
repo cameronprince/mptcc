@@ -268,7 +268,7 @@ class OutputManager(HardwareManager):
                 # Check if the index is within the range of this group.
                 if index < len(output_group):
                     # Call set_output on the specific Output_GPIO_PWM object.
-                    output_group[index].set_output(active, freq, on_time)
+                    output_group[index].set_output(active, freq, on_time, max_duty, max_on_time)
                 else:
                     print(f"Warning: Output index {index} is out of range for {driver_key}.")
 
