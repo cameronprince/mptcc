@@ -95,7 +95,7 @@ class MIDIFileFiles:
         try:
             self.midi_file.file_list = [
                 f[0] if isinstance(f, tuple) else f 
-                for f in uos.listdir(self.init.SD_CARD_READER_MOUNT_POINT)
+                for f in uos.listdir(self.init.sd_card_reader.mount_point)
                 if (isinstance(f, str) or isinstance(f, tuple)) and 
                     ((isinstance(f, str) and (f.endswith(".mid") or f.endswith(".midi")) and not f.startswith("._")) or
                     (isinstance(f, tuple) and f[0].endswith((".mid", ".midi")) and not f[0].startswith("._")))
@@ -158,9 +158,6 @@ class MIDIFileFiles:
         self.midi_file.outputs = [None] * self.init.NUMBER_OF_COILS
         self.midi_file.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * self.init.NUMBER_OF_COILS
         self.midi_file.handlers["tracks"].draw()
-        # Prevent clicks from propagating to the tracks sub-screen on files with
-        # a lot of tracks.
-        self.init.switch_disabled = True
 
     def switch_2(self):
         """
@@ -185,5 +182,5 @@ class MIDIFileFiles:
         """
         stop_scroll(self.display)
         self.midi_file.selected_file = self.midi_file.current_file_index + self.midi_file.file_cursor_position
-        file_path = self.init.SD_CARD_READER_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
+        file_path = self.init.sd_card_reader.mount_point + "/" + self.midi_file.file_list[self.midi_file.selected_file]
         self.midi_file.handlers["play"].draw(file_path)

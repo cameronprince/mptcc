@@ -4,7 +4,7 @@ from time import sleep
 
 # Define the number of NeoPixel segments and the GPIO pin
 NUM_SEGMENTS = 4
-PIN = 11
+PIN = 14
 
 # Initialize the NeoPixel object
 np = NeoPixel(Pin(PIN), NUM_SEGMENTS)
@@ -30,11 +30,6 @@ def cycle_colors():
             np[i] = (0, 0, 0)  # Turn off the current segment
             np.write()     # Update the NeoPixel strip
 
-try:
-    while True:
-        cycle_colors()
-except KeyboardInterrupt:
-    # Turn off all LEDs when the script is interrupted
-    for i in range(NUM_SEGMENTS):
-        np[i] = (0, 0, 0)
-    np.write()
+
+np[0] = (255, 165, 0)
+np.write()

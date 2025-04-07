@@ -12,6 +12,7 @@ from mptcc.hardware.init import init
 from mptcc.lib.menu import Screen
 import mptcc.lib.config as config
 
+
 class RestoreDefaults(Screen):
     """
     A class to represent and handle the screen for restoring default settings
@@ -38,6 +39,8 @@ class RestoreDefaults(Screen):
         self.name = name
         self.init = init
         self.selection = "No"
+        self.font_width = 8
+        self.font_height = 8
 
     def draw(self):
         """
@@ -48,18 +51,16 @@ class RestoreDefaults(Screen):
 
         # Calculate positions for centering text.
         screen_width = self.init.display.width
-        font_width = self.init.display.DISPLAY_FONT_WIDTH
-        font_height = self.init.display.DISPLAY_FONT_HEIGHT
         padding = 2
         vertical_spacing = 10
 
         restore_defaults_text = "Restore now?"
-        restore_defaults_x = (screen_width - len(restore_defaults_text) * font_width) // 2
+        restore_defaults_x = (screen_width - len(restore_defaults_text) * self.font_width) // 2
 
         yes_text = "Yes"
         no_text = "No"
         yes_no_text = f"{yes_text}       {no_text}"
-        yes_no_x = (screen_width - len(yes_no_text) * font_width) // 2
+        yes_no_x = (screen_width - len(yes_no_text) * self.font_width) // 2
 
         # Display the centered options.
         self.init.display.text(restore_defaults_text, restore_defaults_x, 20, 1)
@@ -69,16 +70,16 @@ class RestoreDefaults(Screen):
         no_background = int(self.selection == "No")
 
         yes_x = yes_no_x
-        no_x = yes_no_x + len(yes_text) * font_width + 7 * font_width
-        box_height = font_height + 2 * padding
+        no_x = yes_no_x + len(yes_text) * self.font_width + 7 * self.font_width
+        box_height = self.font_height + 2 * padding
         yes_y = 30 + vertical_spacing
         no_y = yes_y
 
         # Draw the background rectangles with padding.
-        self.init.display.fill_rect(yes_x - padding, yes_y - padding, len(yes_text) * font_width + 2 * padding, box_height, yes_background)
+        self.init.display.fill_rect(yes_x - padding, yes_y - padding, len(yes_text) * self.font_width + 2 * padding, box_height, yes_background)
         self.init.display.text(yes_text, yes_x, yes_y, int(not yes_background))
 
-        self.init.display.fill_rect(no_x - padding, no_y - padding, len(no_text) * font_width + 2 * padding, box_height, no_background)
+        self.init.display.fill_rect(no_x - padding, no_y - padding, len(no_text) * self.font_width + 2 * padding, box_height, no_background)
         self.init.display.text(no_text, no_x, no_y, int(not no_background))
 
         self.init.display.show()
@@ -119,7 +120,6 @@ class RestoreDefaults(Screen):
         or return to the configuration menu if "No" is selected.
         """
         if self.selection == "Yes":
-            self.init.switch_disabled = True
             self.restore_defaults()
         else:
             self.switch_2()

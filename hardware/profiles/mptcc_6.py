@@ -16,8 +16,6 @@ CONFIG = {
     "I2C_1_FREQ": 400000,
     "I2C_1_TIMEOUT": 50000,
     "CONFIG_PATH": "/mptcc/config.json",
-    "SD_CARD_READER_SPI_INSTANCE": 1,
-    "SD_CARD_READER_MOUNT_POINT": "/sd",
     "PIN_BATT_STATUS_ADC": 28,
     "VOLTAGE_DROP_FACTOR": 848.5,
     "PIN_MIDI_INPUT": 13,
