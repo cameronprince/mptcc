@@ -103,7 +103,7 @@ DRIVERS = {
             "instances": [
                 {
                     "enabled": True,
-                    "pins": [1, 8, 7, 6],
+                    "pins": [1, 8, 6, 7],
                 },
             ],
         },
@@ -177,7 +177,7 @@ DRIVERS = {
     "universal": {
         "wombat_18ab": {
             "class": "Wombat_18AB",
-            "enabled": True,
+            "enabled": False,
             "instances": [
                 {
                     "enabled": True,
@@ -197,7 +197,7 @@ DRIVERS = {
                             [11, 12],
                             [14, 15],
                             [17, 18],
-                            [5, 6],
+                            [6, 5],
                         ],
                         "pull_up": False,
                         "pulse_on_change_pin": 0,

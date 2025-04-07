@@ -9,6 +9,7 @@ Provides the MIDI playback functionality.
 
 import _thread
 import time
+import gc
 import uasyncio as asyncio
 from ...hardware.init import init
 from ...hardware.output.tasks import start_output_tasks, stop_output_tasks
@@ -218,6 +219,8 @@ class MIDIFilePlay:
 
         # Deinitialize the SD card reader.
         self.init.sd_card_reader.deinit_sd()
+
+        gc.collect()
 
         # Return to the file listing.
         self.display.clear()

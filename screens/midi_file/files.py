@@ -158,9 +158,6 @@ class MIDIFileFiles:
         self.midi_file.outputs = [None] * self.init.NUMBER_OF_COILS
         self.midi_file.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * self.init.NUMBER_OF_COILS
         self.midi_file.handlers["tracks"].draw()
-        # Prevent clicks from propagating to the tracks sub-screen on files with
-        # a lot of tracks.
-        self.init.switch_disabled = True
 
     def switch_2(self):
         """

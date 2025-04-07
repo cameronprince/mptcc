@@ -492,7 +492,6 @@ class Encoder_Wombat_18AB(Input):
         asyncio.create_task(self._poll())
 
     def _interrupt(self, pin):
-        print("_interrupt")
         if not self.init_complete[0]:
             return
         self.active_interrupt = True
@@ -503,7 +502,6 @@ class Encoder_Wombat_18AB(Input):
         """
         while True:
             if self.active_interrupt:
-                print(f"_poll active interrupt")
                 self.active_interrupt = False
                 self._process_interrupt()
             await asyncio.sleep(0.01)

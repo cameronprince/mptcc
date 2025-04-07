@@ -7,6 +7,7 @@ screens/midi_file/tracks.py
 Provides the MIDI track listing screen.
 """
 
+import gc
 from ...hardware.init import init
 from ...hardware.display.tasks import start_scroll, stop_scroll
 import umidiparser
@@ -103,27 +104,32 @@ class MIDIFileTracks:
         # Track counter for default names.
         track_counter = 1
 
-        for index, track in enumerate(umidiparser.MidiFile(file_path, buffer_size=0).tracks):
-            has_note_on = False
-            track_name = None
+        gc.collect()
+        try:
+            for index, track in enumerate(umidiparser.MidiFile(file_path, buffer_size=0).tracks):
+                has_note_on = False
+                track_name = None
 
-            # First pass: Check for NOTE_ON events and track name.
-            for event in track:
-                if event.is_meta() and event.status == umidiparser.TRACK_NAME:
-                    track_name = event.name
-                elif not event.is_meta() and event.status == umidiparser.NOTE_ON:
-                    has_note_on = True
-                    break  # Exit the loop early once a NOTE_ON event is found.
+                # First pass: Check for NOTE_ON events and track name.
+                for event in track:
+                    if event.is_meta() and event.status == umidiparser.TRACK_NAME:
+                        track_name = event.name
+                    elif not event.is_meta() and event.status == umidiparser.NOTE_ON:
+                        has_note_on = True
+                        break  # Exit the loop early once a NOTE_ON event is found.
 
-            # Only add tracks with NOTE_ON events.
-            if has_note_on:
-                # Assign a default name if the track has no name.
-                if not track_name:
-                    track_name = f"Track {track_counter}"
-                    track_counter += 1  # Increment the track counter.
-                self.midi_file.track_list.append({"name": track_name, "original_index": index})
+                # Only add tracks with NOTE_ON events.
+                if has_note_on:
+                    # Assign a default name if the track has no name.
+                    if not track_name:
+                        track_name = f"Track {track_counter}"
+                        track_counter += 1  # Increment the track counter.
+                    self.midi_file.track_list.append({"name": track_name, "original_index": index})
+        except Exception as e:
+            print(f"Error obtaining track list: {e}")
 
         self.init.sd_card_reader.deinit_sd()
+        gc.collect()
 
     def rotary_1(self, direction):
         """

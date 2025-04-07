@@ -33,7 +33,8 @@ class KY040(Input):
         # Initialize rotary encoders and switches.
         self.instances = []
         self.last_rotations = []
-        self.active_interrupt = None
+        self.encoder_interrupt = None
+        self.switch_interrupt = None
 
         for i, (clk_pin, dt_pin, sw_pin) in enumerate(pins):
             # Initialize rotary encoder.
@@ -66,7 +67,8 @@ class KY040(Input):
             print(f"- Encoder {i + 1}: CLK={clk_pin}, DT={dt_pin}, SW={sw_pin}")
 
         # Start the asyncio task to process interrupts.
-        asyncio.create_task(self.process_interrupt())
+        asyncio.create_task(self.encoder_interrupt_handler())
+        asyncio.create_task(self.switch_interrupt_handler())
 
     def create_listener(self, idx):
         """
@@ -79,8 +81,8 @@ class KY040(Input):
             function: The listener callback.
         """
         def listener():
-            # Set the active_interrupt to the index of the encoder that triggered the interrupt.
-            self.active_interrupt = idx
+            # Set the encoder_interrupt to the index of the encoder that triggered the interrupt.
+            self.encoder_interrupt = idx
         return listener
 
     def create_switch_callback(self, idx):
@@ -95,19 +97,19 @@ class KY040(Input):
         """
         def callback(pin):
             current_time = time.ticks_ms()
-            if time.ticks_diff(current_time, self.last_switch_click_time[idx]) > 500:
+            if time.ticks_diff(current_time, self.last_switch_click_time[idx]) > 300:
                 self.last_switch_click_time[idx] = current_time
-                self.switch_click(idx + 1)
+                self.switch_interrupt = idx
         return callback
 
-    async def process_interrupt(self):
+    async def encoder_interrupt_handler(self):
         """
         Asyncio task to process rotary encoder changes.
         """
         while True:
-            if self.active_interrupt is not None:
-                idx = self.active_interrupt
-                self.active_interrupt = None
+            if self.encoder_interrupt is not None:
+                idx = self.encoder_interrupt
+                self.encoder_interrupt = None
 
                 encoder = self.instances[idx]
                 new_value = encoder.value()
@@ -126,4 +128,15 @@ class KY040(Input):
                     self.last_rotations[idx] = new_value
                     super().encoder_change(idx, direction)
 
+            await asyncio.sleep(0.01)
+
+    async def switch_interrupt_handler(self):
+        """
+        Asyncio task to process switch clicks.
+        """
+        while True:
+            if self.switch_interrupt is not None:
+                idx = self.switch_interrupt
+                self.switch_interrupt = None
+                super().switch_click(idx + 1)
             await asyncio.sleep(0.01)
