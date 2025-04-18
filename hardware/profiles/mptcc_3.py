@@ -9,7 +9,6 @@ Hardware profile for MPTCC 3.
 
 CONFIG = {
     "NUMBER_OF_COILS": 4,
-    "RGB_LED_ASYNCIO_POLLING": False,
     "PIN_I2C_1_SCL": 17,
     "PIN_I2C_1_SDA": 16,
     "I2C_1_INTERFACE": 0,
@@ -69,7 +68,7 @@ DRIVERS = {
             "class": "TCA9548A",
             "instances": [
                 {
-                    "enabled": False,
+                    "enabled": True,
                     "i2c_instance": 1,
                     "i2c_addr": 0x70,
                     "display": {
@@ -143,6 +142,22 @@ DRIVERS = {
             ],
         },
     },
+    "input": {
+        "encoder": {
+            "navkey": {
+                "class": "NavKey",
+                "instances": [
+                    {
+                        "enabled": True,
+                        "i2c_instance": 2,
+                        "i2c_addrs": [0x10],
+                        "interrupt_pin": 20,
+                        "rotation": 0,
+                    },
+                ],
+            },
+        },
+    },
     "output": {
         "gpio_pwm": {
             "class": "GPIO_PWM",
@@ -166,9 +181,9 @@ DRIVERS = {
             },
             "instances": [
                 {"enabled": True, "pin": 13},
-                {"enabled": True, "pin": 12},
-                {"enabled": True, "pin": 11},
-                {"enabled": True, "pin": 10},
+                {"enabled": False, "pin": 12},
+                {"enabled": False, "pin": 11},
+                {"enabled": False, "pin": 10},
             ],
         },
         "neopixel_matrix": {

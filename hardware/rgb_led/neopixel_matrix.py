@@ -9,104 +9,66 @@ RGB LED device utilizing the WS2812/NeoPixel on a GPIO pin.
 
 from machine import Pin
 from neopixel import NeoPixel as NeoPixelDriver
-from ...lib.utils import status_color, hex_to_rgb, calculate_percent
+from ...lib.utils import status_color, hex_to_rgb, calculate_percent, scale_rgb
 from ..rgb_led.rgb_led import RGBLED, RGB
 from ...hardware.init import init
 
 
 class GPIO_NeoPixel_Matrix(RGBLED):
-    def __init__(
-        self,
-        pin,
-        reverse=False,
-        default_color=None,
-        threshold_brightness=16,
-        full_brightness=255,
-        rotation=0,
-        invert=False,
-        mode="status",
-        matrix=None,
-        vu_meter_sensitivity=0.5,
-        vu_meter_colors=[]
-    ):
+    def __init__(self, config):
         super().__init__()
         self.init = init
         self.instances = []
 
-        self.rows, self.cols = map(int, matrix.split('x'))
-        segments = self.rows * self.cols
+        self.matrix = config.get("matrix", "8x8")
+        self.pin = config.get("pin", None)
+        self.default_color = config.get("default_color", "#000000")
 
-        self.np = NeoPixelDriver(Pin(pin), segments)
-        if isinstance(default_color, str):
-            self.default_color = hex_to_rgb(default_color) if default_color.upper() != "VU_METER" else "VU_METER"
+        if self.pin is None:
+            return
+
+        self.rows, self.cols = map(int, self.matrix.split('x'))
+        self.segments = self.rows * self.cols
+
+        self.np = NeoPixelDriver(Pin(self.pin), self.segments)
+        if isinstance(self.default_color, str):
+            self.default_color = hex_to_rgb(self.default_color) if self.default_color.upper() != "VU_METER" else "VU_METER"
 
         for i in range(self.cols):
-            kwargs = {
-                "driver": self.np,
-                "instance_index": i,
-                "mode": mode.upper(),
-                "reverse": reverse,
-                "num_segments": segments,
-                "default_color": self.default_color,
-                "threshold_brightness": threshold_brightness,
-                "full_brightness": full_brightness,
-                "rotation": rotation,
-                "invert": invert,
-                "vu_meter_sensitivity": vu_meter_sensitivity,
-                "vu_meter_colors": vu_meter_colors,
-                "rows": self.rows,
-                "cols": self.cols
-            }
-            self.instances.append(RGB_NeoPixel_Matrix(**kwargs))
+            self.instances.append(RGB_NeoPixel_Matrix(self.np, i, self.segments, self.default_color, self.rows, self.cols, config))
 
         instance_key = len(self.init.rgb_led_instances["neopixel_matrix"])
-        print(f"GPIO NeoPixel Matrix {instance_key} ({matrix}) initialized on pin {pin}")
-        print(f"- Reverse: {reverse}")
-        print(f"- Rotation: {rotation} degrees")
-        print(f"- Invert: {invert}")
-        print(f"- Mode: {mode}")
-        print(f"- Default color: {default_color}")
-        print(f"- Threshold brightness: {threshold_brightness}")
-        print(f"- Full brightness: {full_brightness}")
-        print(f"- VU meter sensitivity: {vu_meter_sensitivity}")
-        print(f"- VU meter colors: {vu_meter_colors}")
-        print(f"- Asyncio polling: {self.init.RGB_LED_ASYNCIO_POLLING}")
+        print(f"GPIO NeoPixel Matrix {instance_key} ({self.matrix}) initialized on pin {self.pin}")
+        print(f"- Reverse: {config.get('reverse', False)}")
+        print(f"- Rotation: {config.get('rotation', 0)} degrees")
+        print(f"- Invert: {config.get('invert', 0)}")
+        print(f"- Mode: {config.get('mode', 0)}")
+        print(f"- Default color: {self.default_color}")
+        print(f"- Threshold brightness: {config.get('threshold_brightness', 0)}")
+        print(f"- Full brightness: {config.get('full_brightness', 0)}")
+        print(f"- VU meter sensitivity: {config.get('vu_meter_sensitivity', 1)}")
+        print(f"- VU meter colors: {config.get('vu_meter_colors', [])}")
 
 
 class RGB_NeoPixel_Matrix(RGB):
-    def __init__(
-        self,
-        driver,
-        instance_index,
-        mode,
-        reverse,
-        num_segments,
-        default_color,
-        vu_meter_sensitivity,
-        vu_meter_colors,
-        threshold_brightness=16,
-        full_brightness=255,
-        rotation=0,
-        invert=False,
-        rows=None,
-        cols=None,
-    ):
+    def __init__(self, driver, instance_index, num_segments, default_color, rows=None, cols=None, config=[]):
         super().__init__()
         self.driver = driver
         self.instance_index = instance_index
-        self.mode = mode
-        self.reverse = reverse
         self.num_segments = num_segments
         self.default_color = default_color
-        self.threshold_brightness = threshold_brightness
-        self.full_brightness = full_brightness
-        self.rotation = rotation
-        self.invert = invert
-        self.vu_meter_sensitivity = vu_meter_sensitivity
-        self.vu_meter_colors = vu_meter_colors
         self.rows = rows
         self.cols = cols
         self.init = init
+
+        self.mode = config.get("mode", "status").upper()
+        self.reverse = config.get("reverse", False)
+        self.threshold_brightness = config.get("threshold_brightness", 0)
+        self.full_brightness = config.get("full_brightness", 0)
+        self.rotation = config.get("rotation", False)
+        self.invert = config.get("invert", False)
+        self.vu_meter_sensitivity = config.get("vu_meter_sensitivity", 1)
+        self.vu_meter_colors = config.get("vu_meter_colors", [])
 
         self.rotated_index = self._get_index(self.instance_index)
         self.off()
@@ -117,7 +79,7 @@ class RGB_NeoPixel_Matrix(RGB):
         if self.default_color == "VU_METER":
             self._set_column(col, self.vu_meter_colors, self.threshold_brightness)
         else:
-            r, g, b = self._scale_rgb(*self.default_color, self.threshold_brightness)
+            r, g, b = scale_rgb(*self.default_color, self.threshold_brightness)
             self._set_column(col, [(r, g, b)] * self.rows)
         self.driver.write()
 
@@ -138,16 +100,11 @@ class RGB_NeoPixel_Matrix(RGB):
         actual_index = row * self.cols + col
         return (self.num_segments - 1 - actual_index if self.reverse else actual_index)
 
-    def _scale_rgb(self, r, g, b, brightness):
-        """Scale RGB values by brightness (0-255)."""
-        return ((r, g, b) if brightness is None else
-                (r * brightness // 255, g * brightness // 255, b * brightness // 255))
-
     def _set_column(self, col, colors, brightness=None):
         """Set all LEDs in a column to given colors with optional brightness."""
         for row, (r, g, b) in enumerate(colors):
             index = row * self.cols + col
-            self.driver[self._get_index(index)] = self._scale_rgb(r, g, b, brightness)
+            self.driver[self._get_index(index)] = scale_rgb(r, g, b, brightness)
 
     def set_color(self, r, g, b):
         """
@@ -157,7 +114,7 @@ class RGB_NeoPixel_Matrix(RGB):
         col = self.instance_index % self.cols
         if r == 0 and g == 0 and b == 0:
             if isinstance(self.default_color, tuple):
-                r, g, b = self._scale_rgb(*self.default_color, self.threshold_brightness)
+                r, g, b = scale_rgb(*self.default_color, self.threshold_brightness)
                 self._set_column(col, [(r, g, b)] * self.rows)
             elif self.mode == "VU_METER":
                 self._set_column(col, self.vu_meter_colors, self.threshold_brightness)
@@ -170,7 +127,7 @@ class RGB_NeoPixel_Matrix(RGB):
         if self.mode == "STATUS":
             color = status_color(freq, on_time, max_duty, max_on_time)
             if self.full_brightness != 255:
-                color = self._scale_rgb(*color, self.full_brightness)
+                color = scale_rgb(*color, self.full_brightness)
             self.set_color(*color)
         else:
             level = calculate_percent(freq, on_time, max_duty, max_on_time) / 100.0
@@ -179,13 +136,13 @@ class RGB_NeoPixel_Matrix(RGB):
             if self.default_color == "VU_METER":
                 for row in range(self.rows):
                     brightness = self.full_brightness if row < leds_to_light else self.threshold_brightness
-                    color = self._scale_rgb(*self.vu_meter_colors[row], brightness)
+                    color = scale_rgb(*self.vu_meter_colors[row], brightness)
                     self.driver[self._get_index(row * self.cols + col)] = color
             else:
-                r, g, b = self._scale_rgb(*self.default_color, self.threshold_brightness)
+                r, g, b = scale_rgb(*self.default_color, self.threshold_brightness)
                 for row in range(self.rows):
                     if row < leds_to_light:
-                        color = self._scale_rgb(*self.vu_meter_colors[row], self.full_brightness)
+                        color = scale_rgb(*self.vu_meter_colors[row], self.full_brightness)
                     else:
                         color = (r, g, b)
                     self.driver[self._get_index(row * self.cols + col)] = color

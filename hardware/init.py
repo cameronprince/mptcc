@@ -82,6 +82,7 @@ class Init:
         driver_dict : dict
             A dictionary of driver configurations for the specified type.
         """
+        # print(f"Loading {driver_type} drivers")
         instance_storage = getattr(self, f"{driver_type}_instances")
 
         # Load drivers for this type.
@@ -118,9 +119,11 @@ class Init:
                 return
 
             # Initialize a single driver instance.
+            print(f"Loading {driver_name} {driver_type} driver")
             self._initialize_driver_instance(driver_type, driver_name, driver_details, instance_storage)
 
     def _initialize_driver_instance(self, driver_type, driver_name, driver_details, instance_storage):
+        # print(f"_initialize_driver_instance - driver_details: {driver_details}, instance_storage: {instance_storage}")
         """
         Initialize a single driver instance and store it in the init object.
 
@@ -129,7 +132,7 @@ class Init:
         driver_type : str
             The type of driver (e.g., "display", "input").
         driver_name : str
-            The name of the driver (e.g., "ssd1306", "i2cencoder").
+            The name of the driver (e.g., "ssd1306", "rgb_led_ring").
         driver_details : dict
             The configuration details for the driver.
         instance_storage : dict
@@ -158,28 +161,19 @@ class Init:
         # Initialize instances.
         instance_storage[driver_name] = []
         for instance_config in driver_details["instances"]:
-
             if not instance_config.get("enabled", True):
                 continue
 
             # If common_cfg exists, merge it with instance_config.
             if common_cfg is not None:
-                merged_config = common_cfg.copy()  # Create a copy of common_cfg.
-                merged_config.update(instance_config)  # Update with instance-specific config.
+                merged_config = common_cfg.copy()
+                merged_config.update(instance_config)
             else:
-                merged_config = instance_config  # Use instance_config as-is.
+                merged_config = instance_config.copy()
 
-            # Remove the "enabled" attribute since it's not needed by the drivers.
-            merged_config.pop("enabled", None)
-
-            # Create an instance of the driver class.
-            instance = driver_class(**merged_config)
-
-            # If the driver has an `instances` attribute, store it as a nested list.
-            if hasattr(instance, "instances"):
-                instance_storage[driver_name].append(instance.instances)
-            else:
-                instance_storage[driver_name].append(instance)
+            # Create an instance of the driver class with config.
+            instance = driver_class(config=merged_config)
+            instance_storage[driver_name].append(instance)
 
             if hasattr(self, "DEBUG_MEMORY") and self.DEBUG_MEMORY:
                 self.memory_usage()

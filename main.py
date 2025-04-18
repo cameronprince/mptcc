@@ -28,7 +28,7 @@ init.DEBUG_MEMORY = True
 # The MPTCC configuration is stored in files in the hardware/profiles directory.
 # You can edit the default profile, or copy it to a new file in the profiles
 # directory and reference it here instead of default.
-PROFILE_NAME = "mptcc_1"
+PROFILE_NAME = "mptcc_5"
 profile = __import__(f"mptcc.hardware.profiles.{PROFILE_NAME}", None, None, (None,))
 profile.Profile(PROFILE_NAME, init)
 

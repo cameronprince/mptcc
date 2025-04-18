@@ -19,20 +19,18 @@ class MCP23017:
     """
     A class to provide hardware instances using the MCP23017 GPIO expander.
     """
-    def __init__(
-        self,
-        i2c_instance,
-        i2c_addr=0x20,
-        host_interrupt_pin=None,
-        host_interrupt_pin_pull_up=True,
-        encoder=None,
-        switch=None,
-    ):
-        if encoder is None and switch is None:
+    def __init__(self, config):
+
+        self.i2c_instance = config.get("i2c_instance", 1)
+        self.i2c_addr = config.get("i2c_addr", 0x20)
+        self.host_interrupt_pin = config.get("host_interrupt_pin", None)
+        self.host_interrupt_pin_pull_up = config.get("host_interrupt_pin_pull_up", False)
+        self.encoder = config.get("encoder", None)
+        self.switch = config.get("switch", None)
+
+        if self.encoder is None and self.switch is None:
             return
 
-        self.encoder = encoder
-        self.switch = switch
         self.init = init
         self.class_name = self.__class__.__name__
         self.interrupt = None
@@ -40,7 +38,7 @@ class MCP23017:
         self.instance_number = len(self.init.universal_instances.get("mcp23017", []))
 
         # Prepare the I2C bus.
-        if i2c_instance == 2:
+        if self.i2c_instance == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
             self.mutex = self.init.i2c_2_mutex
@@ -51,7 +49,7 @@ class MCP23017:
 
         # Initialize the MCP23017 driver.
         self.init.mutex_acquire(self.mutex, f"{self.class_name}:__init__")
-        self.mcp = MCP23017_Driver(self.i2c, i2c_addr)
+        self.mcp = MCP23017_Driver(self.i2c, self.i2c_addr)
         self.init.mutex_release(self.mutex, f"{self.class_name}:__init__")
 
         self._configure()
@@ -61,23 +59,23 @@ class MCP23017:
             self.init.universal_instances["mcp23017"] = []
         self.init.universal_instances["mcp23017"].append(self)
 
-        print(f"MCP23017 {self.instance_number} initialized on I2C_{i2c_instance} ({hex(i2c_addr)})")
-        print(f"- Host interrupt pin: {host_interrupt_pin} (pull_up={host_interrupt_pin_pull_up})")
+        print(f"MCP23017 {self.instance_number} initialized on I2C_{self.i2c_instance} ({hex(self.i2c_addr)})")
+        print(f"- Host interrupt pin: {self.host_interrupt_pin} (pull_up={self.host_interrupt_pin_pull_up})")
 
         # Configure interrupt pin.
         self.host_int = Pin(
-            host_interrupt_pin, 
+            self.host_interrupt_pin, 
             Pin.IN, 
-            Pin.PULL_UP if host_interrupt_pin_pull_up else None
+            Pin.PULL_UP if self.host_interrupt_pin_pull_up else None
         )
         self.host_int.irq(trigger=Pin.IRQ_FALLING, handler=self._interrupt)
 
         # Initialize switches if configured.
-        if switch is not None and switch.get("enabled", True):
+        if self.switch is not None and self.switch.get("enabled", True):
             self._init_switches()
 
         # Initialize encoders if configured.
-        if encoder is not None and encoder.get("enabled", True):
+        if self.encoder is not None and self.encoder.get("enabled", True):
             self._init_encoders()
 
         # Start the polling task.

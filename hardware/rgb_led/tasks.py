@@ -3,13 +3,6 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-When init.RGB_LED_ASYNCIO_POLLING = True, the start task is called from
-screens which activate outputs. The output drivers also check for this
-constant which causes them to update self.init.rgb_led_color rather than
-attempting to communicate with the hardware drivers directly. The task
-below detects the changes to rgb_led_color and makes the driver calls.
-This ensures that only the main thread is communicating with the hardware.
-
 hardware/rgb_led/tasks.py
 Asyncio tasks for RGB LED control.
 """
@@ -24,9 +17,6 @@ rgb_led_states = {}
 # Track the tasks we create.
 rgb_led_tasks = []
 
-# Create an instance of RGBLEDManager
-rgb_led_manager = RGBLEDManager(init)
-
 # Create storage for the colors.
 init.rgb_led_color = {}
 
@@ -37,10 +27,12 @@ async def update_rgb_leds():
     while True:
         for output, color in init.rgb_led_color.items():
             if color:
+                print(f"update_rgb_leds - {init.rgb_led_color}")
                 r, g, b = color
                 if rgb_led_states.get(output, (0, 0, 0)) != (r, g, b):
                     rgb_led_states[output] = (r, g, b)
-                    rgb_led_manager.set_color(output, r, g, b, True)
+                    print(f"update_rgb_leds calling set_color")
+                    init.rgb_led.set_color(output, r, g, b, True)
                 init.rgb_led_color[output] = None
         await asyncio.sleep(0.1)
 
@@ -73,8 +65,7 @@ async def turn_off_all_rgb_leds():
     """
     Turn off all RGB LEDs.
     """
-    # print("turn_off_all_rgb_leds")
-    rgb_led_manager.disable_all_leds()
+    init.rgb_led.disable_all_leds(True)
     for index in rgb_led_states:
         rgb_led_states[index] = (0, 0, 0)
 

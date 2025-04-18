@@ -90,6 +90,9 @@ class MIDIFilePlay:
         self.display.clear()
         self.update_display()
 
+        # Default masters to 100%.
+        self.init.output.set_master(self.init.MASTER_DEFAULT_POSITION)
+
         # Start playback in a separate thread.
         _thread.start_new_thread(self.player, (self.file_path,))
 
@@ -209,6 +212,9 @@ class MIDIFilePlay:
         # Turn off all outputs.
         self.init.output.set_all_outputs()
 
+        # Default masters to zero.
+        self.init.output.set_master(0)
+
         # Save levels if necessary.
         if self.save_levels or self.config.get("midi_file_save_levels_on_end"):
             self.save_levels = False
@@ -239,6 +245,9 @@ class MIDIFilePlay:
         # Signal that the levels need to be updated.
         self.levels_updated = True
 
+    def rotary_master(self, direction):
+        self.init.output.change_master(direction)
+
     # All switches act as stop buttons.
     def switch_1(self):
         self.save_levels = True
@@ -251,4 +260,7 @@ class MIDIFilePlay:
         self.active = False
 
     def switch_4(self):
+        self.active = False
+
+    def switch_master(self):
         self.active = False

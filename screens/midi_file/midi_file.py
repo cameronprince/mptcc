@@ -58,7 +58,6 @@ class MIDIFile(Screen):
     handlers : dict
         Dictionary of screen handlers.
     """
-
     def __init__(self, name):
         """
         Constructs all the necessary attributes for the MIDIFile object.
@@ -116,12 +115,28 @@ class MIDIFile(Screen):
             setattr(self, f"rotary_{i + 1}", self._create_rotary_method(i + 1))
             setattr(self, f"switch_{i + 1}", self._create_switch_method(i + 1))
 
-    def _create_rotary_method(self, encoder_number):
+        # Create rotary_master method if a master encoder exists.
+        if self._has_master_encoder():
+            setattr(self, "rotary_master", self._create_rotary_method("master"))
+            setattr(self, "switch_master", self._create_switch_method("master"))
+
+    def _has_master_encoder(self):
         """
-        Factory function to create a rotary method for a specific encoder number.
+        Check if any input instance has a master encoder.
+        """
+        for driver_key, driver_instances in self.init.input_instances.items():
+            for instance_list in driver_instances.values():
+                for instance in instance_list:
+                    if hasattr(instance, "master") and instance.master:
+                        return True
+        return False
+
+    def _create_rotary_method(self, encoder_id):
+        """
+        Factory function to create a rotary method for a specific encoder id.
         """
         def rotary_method(direction):
-            self.rotary(encoder_number, direction)
+            self.rotary(encoder_id, direction)
         return rotary_method
 
     def _create_switch_method(self, switch_number):
@@ -132,21 +147,22 @@ class MIDIFile(Screen):
             self.switch(switch_number)
         return switch_method
 
-    def rotary(self, encoder_number, direction):
+    def rotary(self, encoder_id, direction):
         """
         Respond to rotation of a rotary encoder.
 
         Parameters:
         ----------
-        encoder_number : int
-            The number of the rotary encoder (1, 2, 3, or 4).
+        encoder_id : int or str
+            The number of the rotary encoder (1, 2, 3, or 4) or 'master' for the master encoder.
         direction : int
             The rotary encoder direction.
         """
         handler = self.handlers.get(self.current_page)
         if handler:
-            if hasattr(handler, f"rotary_{encoder_number}"):
-                getattr(handler, f"rotary_{encoder_number}")(direction)
+            method_name = f"rotary_{encoder_id}"
+            if hasattr(handler, method_name):
+                getattr(handler, method_name)(direction)
 
     def switch(self, switch_number):
         """

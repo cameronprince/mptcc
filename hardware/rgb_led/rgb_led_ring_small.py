@@ -43,32 +43,21 @@ class RGBLEDRingSmall(RGBLED):
     A class to control the RGB LED Ring Small device with batch updates.
     """
 
-    def __init__(
-        self,
-        i2c_instance,
-        addresses,
-        default_color,
-        threshold_brightness,
-        full_brightness,
-        rotation,
-        delay_between_steps,
-        mode,
-        vu_meter_sensitivity,
-        vu_meter_colors,
-    ):
+    def __init__(self, config):
         super().__init__()
         self.init = init
-        self.i2c_instance = i2c_instance
-        self.addresses = addresses
-        self.default_color = default_color
-        self.threshold_brightness = threshold_brightness
-        self.full_brightness = full_brightness
-        self.rotation = rotation
-        self.delay_between_steps = delay_between_steps
-        self.mode = mode
+        self.i2c_instance = config.get("i2c_instance", 1)
+        self.i2c_addrs = config.get("i2c_addrs", [])
+        self.default_color = config.get("default_color", "#000000")
+        self.threshold_brightness = config.get("threshold_brightness", 0)
+        self.full_brightness = config.get("full_brightness", 0)
+        self.rotation = config.get("rotation", 0)
+        self.delay_between_steps = config.get("delay_between_steps", 0)
+        self.mode = config.get("mode", "status")
+
         self.instances = []
-        self.vu_meter_sensitivity = vu_meter_sensitivity
-        self.vu_meter_colors = vu_meter_colors
+        self.vu_meter_sensitivity = config.get("vu_meter_sensitivity", 1)
+        self.vu_meter_colors = config.get("vu_meter_colors", [])
 
         # Prepare the I2C bus.
         if self.i2c_instance == 2:
@@ -83,68 +72,44 @@ class RGBLEDRingSmall(RGBLED):
         # Generate a unique key for this instance.
         instance_key = len(self.init.rgb_led_instances["rgb_led_ring_small"])
 
-        for i, address in enumerate(self.addresses):
-            led_instance = RGB_RGBLEDRingSmall(
-                i2c=self.i2c,
-                address=address,
-                mutex=self.mutex,
-                default_color=self.default_color,
-                threshold_brightness=self.threshold_brightness,
-                full_brightness=self.full_brightness,
-                rotation=self.rotation,
-                delay_between_steps=self.delay_between_steps,
-                mode=self.mode,
-                vu_meter_sensitivity=self.vu_meter_sensitivity,
-                vu_meter_colors=self.vu_meter_colors,
-            )
+        for i, addr in enumerate(self.i2c_addrs):
+            led_instance = RGB_RGBLEDRingSmall(i2c=self.i2c, i2c_addr=addr, mutex=self.mutex, config=config)
             self.instances.append(led_instance)
 
         # Print initialization details.
         print(f"RGBLEDRingSmall {instance_key} initialized on I2C_{self.i2c_instance} with {self.init.NUMBER_OF_COILS} objects:")
-        for i, addr in enumerate(self.addresses):
-            print(f"- {i + 1}: I2C address 0x{addr:02X}")
-        print(f"- Rotation: {rotation} degrees")
-        print(f"- Mode: {mode}")
-        print(f"- Default color: {default_color}")
-        print(f"- Threshold brightness: {threshold_brightness}")
-        print(f"- Full brightness: {full_brightness}")
-        print(f"- VU meter sensitivity: {vu_meter_sensitivity}")
-        print(f"- VU meter colors: {vu_meter_colors}")
-        print(f"- Asyncio polling: {self.init.RGB_LED_ASYNCIO_POLLING}")
+        for i, addr in enumerate(self.i2c_addrs):
+            print(f"- {i}: I2C address 0x{addr:02X}")
+        print(f"- Rotation: {config.get('rotation', False)} degrees")
+        print(f"- Mode: {config.get('mode', 'status')}")
+        print(f"- Default color: {config.get('default_color', '#000000')}")
+        print(f"- Threshold brightness: {config.get('threshold_brightness', 0)}")
+        print(f"- Full brightness: {config.get('full_brightness', 0)}")
+        print(f"- VU meter sensitivity: {config.get('vu_meter_sensitivity', 1)}")
+        print(f"- VU meter colors: {config.get('vu_meter_colors', [])}")
 
 
 class RGB_RGBLEDRingSmall(RGB):
     """
     A class for handling the RGB LED Ring Small device with batch updates.
     """
-    def __init__(
-        self,
-        i2c,
-        address,
-        mutex,
-        default_color,
-        threshold_brightness,
-        full_brightness,
-        rotation,
-        delay_between_steps,
-        mode,
-        vu_meter_sensitivity,
-        vu_meter_colors,
-    ):
+    def __init__(self, i2c, i2c_addr, mutex, config):
         super().__init__()
         self.i2c = i2c
-        self.address = address
+        self.i2c_addr = i2c_addr
         self.mutex = mutex
         self.init = init
+        
         self.num_leds = 24
-        self.threshold_brightness = threshold_brightness
-        self.full_brightness = full_brightness
-        self.default_color = self._get_default_color(default_color)
-        self.step_delay = delay_between_steps
-        self.rotation = rotation
-        self.mode = mode
-        self.vu_meter_sensitivity = vu_meter_sensitivity
-        self.vu_meter_colors = vu_meter_colors
+        
+        self.threshold_brightness = config.get("threshold_brightness", 0)
+        self.full_brightness = config.get("full_brightness", 0)
+        self.default_color = self._get_default_color(config.get("default_color", "#000000"))
+        self.step_delay = config.get("delay_between_steps", 0)
+        self.rotation = config.get("rotation", False)
+        self.mode = config.get("mode", "status")
+        self.vu_meter_sensitivity = config.get("vu_meter_sensitivity", 1)
+        self.vu_meter_colors = config.get("vu_meter_colors", [])
         self.led_ring = None
 
         # Define the base logical-to-physical index mapping.
@@ -182,7 +147,7 @@ class RGB_RGBLEDRingSmall(RGB):
         """
         self.init.mutex_acquire(self.mutex, "rgb_led_ring_small:_initialize_led_ring")
         try:
-            self.led_ring = DuPPa(self.i2c, self.address, CONSTANTS)
+            self.led_ring = DuPPa(self.i2c, self.i2c_addr, CONSTANTS)
             self.led_ring.reset()
             time.sleep(0.01)
             self.led_ring.configuration(0x01)

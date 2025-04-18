@@ -14,20 +14,21 @@ from ...lib.utils import calculate_percent
 
 
 class Analog_Meter():
-    def __init__(self, pins, sensitivity, pwm_freq):
+    def __init__(self, config):
         """Initialize the Analog_Meter driver."""
         super().__init__()
         self.init = init
+        self.pins = config.get("pins", [])
 
         # Initialize Output_GPIO_PWM instances for the provided pins.
-        self.instances = [Analog_Meter_PWM(pin, pwm_freq, sensitivity) for pin in pins]
+        self.instances = [Analog_Meter_PWM(pin, config) for pin in self.pins]
 
         # Assign this instance to the next available key.
         instance_key = len(self.init.output_instances['analog_meter'])
 
         # Print initialization details.
         print(f"Analog meter {instance_key} initialized")
-        for i, pin in enumerate(pins):
+        for i, pin in enumerate(self.pins):
             if pin is not None:
                 print(f"- {i}: GPIO {pin}")
 
@@ -36,12 +37,12 @@ class Analog_Meter_PWM(Output):
     """
     A class to wrap a single PWM object and provide analog meter control.
     """
-    def __init__(self, pin, pwm_freq, sensitivity):
+    def __init__(self, pin, config):
         self.pin = pin
         self.pwm = PWM(Pin(pin)) if pin is not None else None
         if self.pwm:
-            self.pwm.freq(pwm_freq)
-        self.sensitivity = sensitivity
+            self.pwm.freq(config.get("pwm_freq", 1000))
+        self.sensitivity = config.get("sensitivity", 1)
 
     def set_output(self, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
         if not self.pwm:

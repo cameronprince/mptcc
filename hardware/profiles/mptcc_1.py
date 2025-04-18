@@ -9,7 +9,6 @@ Hardware profile for MPTCC 1.
 
 CONFIG = {
     "NUMBER_OF_COILS": 4,
-    "RGB_LED_ASYNCIO_POLLING": False,
     "PIN_I2C_1_SCL": 17,
     "PIN_I2C_1_SDA": 16,
     "I2C_1_INTERFACE": 0,
@@ -177,7 +176,7 @@ DRIVERS = {
     "universal": {
         "wombat_18ab": {
             "class": "Wombat_18AB",
-            "enabled": False,
+            "enabled": True,
             "instances": [
                 {
                     "enabled": True,

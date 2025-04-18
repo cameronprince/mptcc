@@ -57,7 +57,10 @@ class Input(Hardware):
         current_screen = self.init.menu.get_current_screen()
 
         if current_screen:
-            method_name = f"rotary_{idx + 1}"
+            if isinstance(idx, int):
+                method_name = f"rotary_{idx + 1}"
+            else:
+                method_name = f"rotary_{idx}"
 
             # Check to see if beep tone confirmation is to be fired.
             if hasattr(self.init, 'beep'):

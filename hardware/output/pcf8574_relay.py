@@ -43,7 +43,7 @@ class Output_PCF8574_Relay(Output):
         # Initialize the relay to the off state.
         self._set_relay(False)
 
-    def set_output(self, active=False, freq=None, on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the relay output based on the provided parameters.
 

@@ -23,20 +23,19 @@ class Wombat_18AB:
     """
     A class to provide hardware instances using the Serial Wombat 18AB board.
     """
-    def __init__(
-        self,
-        i2c_instance,
-        i2c_addr=0x6B,
-        encoder=None,
-        output=None,
-        rgb_led=None,
-        switch=None,
-        beep=None,
-    ):
+    def __init__(self, config):
         """
         Constructs all the necessary attributes for the Wombat_18AB object.
         """
-        if encoder is None and output is None and rgb_led is None and switch is None and beep is None:
+        self.i2c_instance = config.get("i2c_instance", 1)
+        self.i2c_addr = config.get("i2c_addr", 0x6B)
+        self.encoder = config.get("encoder", None)
+        self.output = config.get("output", None)
+        self.rgb_led = config.get("rgb_led", None)
+        self.switch = config.get("switch", None)
+        self.beep = config.get("beep", None)
+
+        if self.encoder is None and self.output is None and self.rgb_led is None and self.switch is None and self.beep is None:
             return
 
         super().__init__()
@@ -45,7 +44,7 @@ class Wombat_18AB:
         self.init_complete = [False]
 
         # Prepare the I2C bus.
-        if i2c_instance == 2:
+        if self.i2c_instance == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
             self.mutex = self.init.i2c_2_mutex
@@ -55,15 +54,15 @@ class Wombat_18AB:
             self.mutex = self.init.i2c_1_mutex
 
         # Initialize the Wombat 18AB driver.
-        self.driver = driver(self.i2c, i2c_addr)
+        self.driver = driver(self.i2c, self.i2c_addr)
 
-        print(f"Wombat_18AB universal driver initialized (I2C Address: {hex(i2c_addr)})")
+        print(f"Wombat_18AB universal driver initialized (I2C Address: {hex(self.i2c_addr)})")
 
-        if rgb_led is not None or output is not None:
+        if self.rgb_led is not None or self.output is not None or self.beep is not None:
             from SerialWombatPWM import SerialWombatPWM_18AB as swpwm
 
         # Initialize switches if switch is provided.
-        if switch is not None and switch.get("enabled", True):
+        if self.switch is not None and self.switch.get("enabled", True):
             from SerialWombatDebouncedInput import SerialWombatDebouncedInput as swdi
             if "wombat_18ab_switch" not in self.init.input_instances:
                 self.init.input_instances["wombat_18ab_switch"] = []
@@ -71,20 +70,20 @@ class Wombat_18AB:
             switch_instance = Switch_Wombat_18AB(
                 self.driver,
                 swdi,
-                switch,
+                self.switch,
                 self.mutex,
                 self.init_complete,
             )
             switch_instances.append(switch_instance)
             self.init.input_instances["wombat_18ab_switch"].append(switch_instances)
-            print(f"- Switches initialized (pull_up={switch.get("pull_up", False)})")
-            for i, pin in enumerate(switch.get("pins")):
+            print(f"- Switches initialized (pull_up={self.switch.get("pull_up", False)})")
+            for i, pin in enumerate(self.switch.get("pins")):
                 print(f"  - Switch {i}: Pin {pin}")
-            print(f"  - Pulse on change pin: {switch.get("pulse_on_change_pin")}")
-            print(f"  - Host interrupt pin: {switch.get("host_interrupt_pin")} (pull_up={switch.get("host_interrupt_pin_pull_up", False)})")
+            print(f"  - Pulse on change pin: {self.switch.get("pulse_on_change_pin")}")
+            print(f"  - Host interrupt pin: {self.switch.get("host_interrupt_pin")} (pull_up={self.switch.get("host_interrupt_pin_pull_up", False)})")
 
         # Initialize encoders if encoder is provided.
-        if encoder is not None and encoder.get("enabled", True):
+        if self.encoder is not None and self.encoder.get("enabled", True):
             from SerialWombatQuadEnc import SerialWombatQuadEnc as swqe
             if "wombat_18ab_encoder" not in self.init.input_instances:
                 self.init.input_instances["wombat_18ab_encoder"] = []
@@ -92,38 +91,38 @@ class Wombat_18AB:
             encoder_instance = Encoder_Wombat_18AB(
                 self.driver,
                 swqe,
-                encoder,
+                self.encoder,
                 self.mutex,
                 self.init_complete,
             )
             encoder_instances.append(encoder_instance)
             self.init.input_instances["wombat_18ab_encoder"].append(encoder_instances)
-            print(f"- Encoders initialized (pull_up={encoder.get("pull_up", False)})")
-            for i, pin in enumerate(encoder.get("pins")):
+            print(f"- Encoders initialized (pull_up={self.encoder.get("pull_up", False)})")
+            for i, pin in enumerate(self.encoder.get("pins")):
                 pin, secondPin = pin
                 print(f"  - Encoder {i}: Pins {pin} and {secondPin}")
-            print(f"  - Pulse on change pin: {encoder.get("pulse_on_change_pin")}")
-            print(f"  - Host interrupt pin: {encoder.get("host_interrupt_pin")} (pull_up={encoder.get("host_interrupt_pin_pull_up", False)})")
+            print(f"  - Pulse on change pin: {self.encoder.get("pulse_on_change_pin")}")
+            print(f"  - Host interrupt pin: {self.encoder.get("host_interrupt_pin")} (pull_up={self.encoder.get("host_interrupt_pin_pull_up", False)})")
 
         # Initialize outputs if output is provided.
-        if output is not None and output.get("enabled", True):
+        if self.output is not None and self.output.get("enabled", True):
             if "wombat_18ab" not in self.init.output_instances:
                 self.init.output_instances["wombat_18ab"] = []
             output_instances = []
-            for pin in output.get("pins"):
+            for pin in self.output.get("pins"):
                 o = Output_Wombat_18AB(self.driver, swpwm, pin, self.mutex)
                 output_instances.append(o)
             self.init.output_instances["wombat_18ab"].append(output_instances)
             print(f"- Outputs initialized:")
-            for i, pin in enumerate(output.get("pins")):
+            for i, pin in enumerate(self.output.get("pins")):
                 print(f"  - Output {i}: Pin {pin}")
 
         # Initialize RGB LEDs if rgb_led is provided.
-        if rgb_led is not None and rgb_led.get("enabled", True):
+        if self.rgb_led is not None and self.rgb_led.get("enabled", True):
             if "wombat_18ab" not in self.init.rgb_led_instances:
                 self.init.rgb_led_instances["wombat_18ab"] = []
             rgb_led_instances = []
-            for led_pins in rgb_led_pins:
+            for led_pins in self.rgb_led.get("pins"):
                 red_pin, green_pin, blue_pin = led_pins
                 led = RGB_Wombat_18AB(
                     driver=self.driver,
@@ -136,15 +135,15 @@ class Wombat_18AB:
                 rgb_led_instances.append(led)
             self.init.rgb_led_instances["wombat_18ab"].append(rgb_led_instances)
             print(f"- RGB LEDs initialized:")
-            for i, led_pins in enumerate(rgb_led_pins):
+            for i, led_pins in enumerate(self.rgb_led.get("pins")):
                 red_pin, green_pin, blue_pin = led_pins
                 print(f"  - LED {i}: R={red_pin}, G={green_pin}, B={blue_pin}")
 
         # Initialize Beep if beep is provided.
-        if beep is not None and beep.get("enabled", True):
+        if self.beep is not None and self.beep.get("enabled", True):
             self.init.beep = Beep_Wombat_18AB(
                 driver=self.driver,
-                beep=beep,
+                beep=self.beep,
                 mutex=self.mutex,
             )
             print(f"- Beep tone confirmation enabled (Pin: {beep.get("pin")}, Length: {beep.get("length_ms")}ms, Volume: {beep.get("volume")}%, PWM frequency: {beep.get("pwm_freq")}Hz)")

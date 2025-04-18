@@ -35,53 +35,44 @@ SET_CHARGE_PUMP = const(0x8D)
 
 
 class SSD1306(Display):
-    def __init__(
-        self,
-        i2c_instance=None,
-        i2c_addr=0x3C,
-        spi_instance=None,
-        external_vcc=False,
-        width=128,
-        height=64,
-        line_height=12,
-        font_width=8,
-        font_height=8,
-        header_height=10,
-        items_per_page=4,
-        channel=None,
-    ):
+    def __init__(self, config):
         super().__init__()
         self.init = init
-        self.channel = channel
+
+        self.i2c_instance = config.get("i2c_instance", 1)
+        self.i2c_addr = config.get("i2c_addr", 0x3C)
+        self.spi_instance = config.get("spi_instance", None)
+
+        self.width = config.get("width", 128)
+        self.height = config.get("height", 64)
+        self.external_vcc = config.get("external_vcc", False)
+        self.channel = config.get("channel", 0)
 
         # Initialize framebuffer.
-        self.width = width
-        self.height = height
-        self.external_vcc = external_vcc
-        self.pages = height // 8
-        self.buffer = bytearray(self.pages * width)
-        self.framebuf = framebuf.FrameBuffer(self.buffer, width, height, framebuf.MONO_VLSB)
+        self.pages = self.height // 8
+        self.buffer = bytearray(self.pages * self.width)
+        self.framebuf = framebuf.FrameBuffer(self.buffer, self.width, self.height, framebuf.MONO_VLSB)
 
         instance_key = len(self.init.display_instances['ssd1306'])
 
         # Handle TCA9548A multiplexer.
-        if isinstance(i2c_instance, str) and i2c_instance.startswith("tca9548a_"):
+        if isinstance(self.i2c_instance, str) and self.i2c_instance.startswith("tca9548a_"):
             from ..universal.tca9548a import TCA9548AChannel
-            mux_num = int(i2c_instance.split("_")[1])
+            mux_num = int(self.i2c_instance.split("_")[1])
             mux = self.init.universal_instances["tca9548a"][mux_num]
-            self.i2c = TCA9548AChannel(mux, channel, mux.mutex)
+            self.i2c = TCA9548AChannel(mux, self.channel, mux.mutex)
             self.driver = SSD1306_I2C(
                 self.width,
                 self.height,
                 i2c=self.i2c,
-                addr=i2c_addr,
+                addr=self.i2c_addr,
                 external_vcc=self.external_vcc
             )
-            print(f"- SSD1306 display initialized on channel {channel}")
+            print(f"- SSD1306 display initialized on channel {self.channel}")
 
         # Handle regular I2C.
-        elif i2c_instance is not None:
-            if i2c_instance == 2:
+        elif self.i2c_instance is not None:
+            if self.i2c_instance == 2:
                 self.init.init_i2c_2()
                 self.i2c = self.init.i2c_2
                 self.mutex = self.init.i2c_2_mutex
@@ -94,17 +85,17 @@ class SSD1306(Display):
                 self.width,
                 self.height,
                 i2c=self.i2c,
-                addr=i2c_addr,
+                addr=self.i2c_addr,
                 external_vcc=self.external_vcc
             )
 
             print(
-                f"SSD1306 display driver {instance_key} initialized on I2C instance {i2c_instance} "
-                f"at address: 0x{i2c_addr:02X}"
+                f"SSD1306 display driver {instance_key} initialized on I2C instance {self.i2c_instance} "
+                f"at address: 0x{self.i2c_addr:02X}"
             )
 
         # Handle SPI.
-        elif spi_instance is not None:
+        elif self.spi_instance is not None:
             spi = SPI(spi_instance)
             dc_pin = Pin(self.init.PIN_SPI_DC)
             res_pin = Pin(self.init.PIN_SPI_RST)

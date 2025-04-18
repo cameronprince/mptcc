@@ -17,33 +17,25 @@ class GPIO_Beep():
     A class to interact with a piezo element connected to a GPIO pin.
     """
 
-    def __init__(self, pin, length_ms, volume, pwm_freq):
+    def __init__(self, config):
         """
         Constructs all the necessary attributes for the GPIO_Beep object.
-
-        Parameters:
-        ----------
-        pin : int
-            The GPIO pin number connected to the piezo element.
-        length_ms : int
-            The duration of the beep in milliseconds.
-        volume : int
-            The volume as a percentage (0-100), mapped to PWM duty cycle or digital out at 100.
-        pwm_freq : int
-            The PWM operating frequency.
         """
         super().__init__()
-        self.pin_number = pin
-        self.length_ms = length_ms
-        self.volume = volume
+
+        self.pin_number = config.get("pin", None)
+        self.length_ms = config.get("length_ms", 0)
+        self.volume = config.get("volume", 0)
+        self.pwm_freq = config.get("pwm_freq", 0)
+
         if self.volume == 100:
             self.pin = Pin(self.pin_number, Pin.OUT)
         else:
             self.pin = PWM(Pin(self.pin_number))
-            self.pin.freq(pwm_freq)
+            self.pin.freq(self.pwm_freq)
         init.beep = self
 
-        print(f"Beep tone confirmation enabled (Pin: {pin}, Length: {length_ms}ms, Volume: {volume}, PWM Frequency: {pwm_freq})")
+        print(f"Beep tone confirmation enabled (Pin: {self.pin_number}, Length: {self.length_ms}ms, Volume: {self.volume}, PWM Frequency: {self.pwm_freq})")
 
     def on(self):
         """

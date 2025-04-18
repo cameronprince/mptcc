@@ -9,7 +9,6 @@ Hardware profile for MPTCC 2.
 
 CONFIG = {
     "NUMBER_OF_COILS": 8,
-    "RGB_LED_ASYNCIO_POLLING": False,
     "PIN_I2C_1_SCL": 17,
     "PIN_I2C_1_SDA": 16,
     "I2C_1_INTERFACE": 0,
@@ -65,15 +64,14 @@ DRIVERS = {
     },
     "input": {
         "encoder": {
-            "i2cencoder": {
-                "class": "I2CEncoder",
+            "i2cencoder_mini": {
+                "class": "I2CEncoderMini",
                 "instances": [
                     {
                         "enabled": True,
                         "i2c_instance": 1,
                         "i2c_addrs": [0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28],
                         "interrupt_pin": 20,
-                        "type": "mini",
                     },
                 ],
             },
@@ -96,7 +94,7 @@ DRIVERS = {
             "instances": [
                 {
                     "i2c_instance": 2,
-                    "addresses": [0x6A, 0x68, 0x6B, 0x69, 0x67, 0x66, 0x64, 0x63],
+                    "i2c_addrs": [0x6A, 0x68, 0x6B, 0x69, 0x67, 0x66, 0x64, 0x63],
                     "default_color": "#FFFFFF", # Hex code or "vu_meter".
                     "threshold_brightness": 2,
                     "full_brightness": 40,

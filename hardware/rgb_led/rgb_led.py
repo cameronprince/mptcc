@@ -7,7 +7,7 @@ hardware/rgb_led/rgb_led.py
 Parent class for RGB LEDs.
 """
 
-from ...lib.utils import status_color
+from ...lib.utils import status_color, scale_rgb
 from ..hardware import Hardware
 
 
@@ -23,15 +23,11 @@ class RGB:
     """
     A base class for RGB LED functionality.
     """
-    def off(self, output=None):
+    def off(self):
         """
         Turns off the LED by setting its color to (0, 0, 0).
         """
-        color = (0, 0, 0)
-        if output is not None and self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_color[output] = color
-        else:
-            self.set_color(*color)
+        self.set_color(0, 0, 0)
 
     def set_status(self, output, freq, on_time, max_duty=None, max_on_time=None):
         """
@@ -53,12 +49,5 @@ class RGB:
         """
         color = status_color(freq, on_time, max_duty, max_on_time)
         if hasattr(self, 'full_brightness') and self.full_brightness != 255:
-            r, g, b = color
-            scaled_r = r * self.full_brightness // 255
-            scaled_g = g * self.full_brightness // 255
-            scaled_b = b * self.full_brightness // 255
-            color = (scaled_r, scaled_g, scaled_b)
-        if self.init.RGB_LED_ASYNCIO_POLLING:
-            self.init.rgb_led_color[output] = color
-        else:
-            self.set_color(*color)
+            color = scale_rgb(*color, self.full_brightness)
+        self.set_color(*color)

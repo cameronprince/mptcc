@@ -26,17 +26,18 @@ class SSD1322(Display):
     # DISPLAY_HEADER_HEIGHT = 10
     # DISPLAY_ITEMS_PER_PAGE = 4
 
-    def __init__(self, spi_instance=None):
+    def __init__(self, config):
         """
         Constructs all the necessary attributes for the SSD1322 object.
         """
         super().__init__()
+        self.spi_instance = config.get("spi_instance", None)
         self.init = init
 
-        if spi_instance is None:
+        if self.spi_instance is None:
             raise ValueError("SPI instance must be provided.")
 
-        if spi_instance == 2:
+        if self.spi_instance == 2:
             init.init_spi_2()
             self.dc = Pin(self.init.PIN_SPI_2_DC, Pin.OUT)
             self.cs = Pin(self.init.PIN_SPI_2_CS, Pin.OUT)
@@ -53,7 +54,7 @@ class SSD1322(Display):
         self.width = self.DISPLAY_WIDTH
         self.height = self.DISPLAY_HEIGHT
 
-        print(f"SSD1322 display driver initialized on SPI{spi_instance}")
+        print(f"SSD1322 display driver initialized on SPI{self.spi_instance}")
 
     def _clear(self):
         """

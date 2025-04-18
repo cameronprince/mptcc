@@ -9,7 +9,6 @@ Hardware profile for MPTCC 6.
 
 CONFIG = {
     "NUMBER_OF_COILS": 2,
-    "RGB_LED_ASYNCIO_POLLING": False,
     "PIN_I2C_1_SCL": 15,
     "PIN_I2C_1_SDA": 14,
     "I2C_1_INTERFACE": 1,

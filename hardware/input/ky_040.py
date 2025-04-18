@@ -16,19 +16,15 @@ from ..input.input import Input
 
 
 class KY040(Input):
-    def __init__(self, pins, pull_up=False):
+    def __init__(self, config):
         """
         Initialize the KY-040 rotary encoder driver.
-
-        Args:
-            pins (list): A list of lists, where each inner list contains the CLK, DT, and SW pin numbers.
-            pull_up (bool): Whether to enable pull-up resistors for the encoder pins.
         """
         super().__init__()
 
-        self.pins = pins
-        self.pull_up = pull_up
-        self.last_switch_click_time = [0] * len(pins)
+        self.pins = config.get("pins", [])
+        self.pull_up = config.get("pull_up", False)
+        self.last_switch_click_time = [0] * len(self.pins)
 
         # Initialize rotary encoders and switches.
         self.instances = []
@@ -36,7 +32,7 @@ class KY040(Input):
         self.encoder_interrupt = None
         self.switch_interrupt = None
 
-        for i, (clk_pin, dt_pin, sw_pin) in enumerate(pins):
+        for i, (clk_pin, dt_pin, sw_pin) in enumerate(self.pins):
             # Initialize rotary encoder.
             encoder = RotaryIRQ(
                 pin_num_clk=clk_pin,
@@ -59,7 +55,7 @@ class KY040(Input):
                 switch_pin = Pin(sw_pin, Pin.IN, Pin.PULL_UP if self.pull_up else Pin.IN)
                 switch_pin.irq(self.create_switch_callback(i), Pin.IRQ_FALLING)
 
-        instance_key = len(self.init.input_instances["encoder"]["ky_040"])
+        instance_key = len(self.init.input_instances.get("encoder", {}).get("ky_040", [])) - 1
 
         # Print initialization details.
         print(f"KY-040 driver {instance_key} initialized with {len(self.pins)} encoders (pull_up={self.pull_up}):")
