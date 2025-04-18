@@ -68,6 +68,9 @@ class Init:
         self.rgb_led = RGBLEDManager(self)
         self.output = OutputManager(self)
 
+        # Clear up memory after loading all drivers.
+        self.clear_memory()
+
         # Initialize the asyncio loop.
         self.asyncio = AsyncIOLoop()
 
@@ -349,5 +352,8 @@ class Init:
         free_memory = gc.mem_free()
         print(f"- Free memory: {free_memory} bytes")
 
+    def clear_memory(self):
+        # Run garbage collection to free memory.
+        gc.collect()
 
 init = Init()

@@ -90,7 +90,7 @@ class MIDIFilePlay:
         self.display.clear()
         self.update_display()
 
-        # Default masters to 100%.
+        # Default masters.
         self.init.output.set_master(self.init.MASTER_DEFAULT_POSITION)
 
         # Start playback in a separate thread.
@@ -100,7 +100,7 @@ class MIDIFilePlay:
         asyncio.create_task(self._update_display_task())
         asyncio.create_task(self._monitor_playback_end_task())
 
-        # Start any applicable output-related tasks, e.g. rgb_led, pot_polling.
+        # Start any applicable output-related tasks, e.g. pot_polling.
         start_output_tasks(lambda: self.active)
 
     def player(self, file_path):
@@ -128,7 +128,7 @@ class MIDIFilePlay:
                                 on_time = velocity_to_ontime(velocity)
                                 # Scale the on_time by the level control percentage.
                                 scaled_on_time = int(on_time * self.levels[output] / 100)
-                                self.init.output.set_output(output, True, frequency, scaled_on_time)
+                                self.init.output.set_output(output, True, frequency, scaled_on_time, None, None, True)
                         elif event.status == umidiparser.NOTE_OFF:
                             self.init.output.set_output(output, False)
                     else:

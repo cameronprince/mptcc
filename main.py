@@ -21,7 +21,7 @@ from mptcc.hardware.init import init
 
 # When memory debugging is enabled, drivers print memory usage after they are
 # initialized.
-init.DEBUG_MEMORY = True
+# init.DEBUG_MEMORY = True
 
 # HARDWARE PROFILES
 #

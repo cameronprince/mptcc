@@ -255,7 +255,7 @@ class OutputManager(HardwareManager):
         self.master_level = new_level
         self.rgb_led_manager.set_master(new_level)
 
-    def set_output(self, index, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_output(self, index, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None, master=False):
         """
         Sets the specified output across all registered output drivers, scaling on_time by master_level.
 
@@ -273,8 +273,10 @@ class OutputManager(HardwareManager):
             The maximum duty cycle allowed.
         max_on_time : int, optional
             The maximum on time allowed in microseconds.
+        master : bool, optional
+            Whether a master should be active. Defaults to False.
         """
-        if active and on_time is not None:
+        if active and master and on_time is not None:
             on_time = int(on_time * (self.master_level / 100))  # Scale by master_level
 
         for driver_key, driver_instances in self.instances.items():
@@ -313,20 +315,7 @@ class RGBLEDManager(HardwareManager):
     def __init__(self, init):
         self.init = init
         super().__init__(self.init, "rgb_led")
-        self._polling = self._polling_check()
         self._master_led_count = self._master_led_count()
-
-    def _polling_check(self):
-        for driver_key, driver_instances in self.instances.items():
-            for instance in driver_instances:
-                if hasattr(instance, "instances"):
-                    for led_instance in instance.instances:
-                        if hasattr(led_instance, "asyncio_polling"):
-                            return True
-        return False
-
-    def needs_polling(self):
-        return self._polling
 
     def master_led_count(self):
         return self._master_led_count
@@ -358,7 +347,7 @@ class RGBLEDManager(HardwareManager):
                         if hasattr(led_instance, "master") and led_instance.master:
                             led_instance.set_level(level)
 
-    def enable_led(self, index, freq, on_time, max_duty=None, max_on_time=None, poll=False):
+    def enable_led(self, index, freq, on_time, max_duty=None, max_on_time=None):
         """
         Enables the specified LED on all RGB LED drivers.
 
@@ -374,8 +363,6 @@ class RGBLEDManager(HardwareManager):
             The maximum duty cycle allowed.
         max_on_time : int, optional
             The maximum on time allowed in microseconds.
-        poll : bool, optional
-            Whether to enable polling for asyncio-based LEDs. Defaults to False.
         """
         if index >= self.init.NUMBER_OF_COILS:
             raise ValueError(f"LED index {index} exceeds NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS})")
@@ -386,12 +373,9 @@ class RGBLEDManager(HardwareManager):
                     led_instance = instance.instances[index]
                     if hasattr(led_instance, "master") and led_instance.master:
                         continue
-                    if poll and hasattr(led_instance, "asyncio_polling"):
-                        led_instance.set_status(index, freq, on_time, max_duty, max_on_time, True)
-                    else:
-                        led_instance.set_status(index, freq, on_time, max_duty, max_on_time)
+                    led_instance.set_status(index, freq, on_time, max_duty, max_on_time)
 
-    def disable_led(self, index, poll=False):
+    def disable_led(self, index):
         """
         Disables the specified LED on all RGB LED drivers.
 
@@ -399,8 +383,6 @@ class RGBLEDManager(HardwareManager):
         ----------
         index : int
             The index of the LED to disable.
-        poll : bool, optional
-            Whether to update polling state for asyncio-based LEDs. Defaults to False.
         """
         if index >= self.init.NUMBER_OF_COILS:
             raise ValueError(f"LED index {index} exceeds NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS})")
@@ -411,17 +393,11 @@ class RGBLEDManager(HardwareManager):
                     led_instance = instance.instances[index]
                     if hasattr(led_instance, "master") and led_instance.master:
                         continue
-                    if hasattr(led_instance, "asyncio_polling"):
-                        if poll:
-                            self.init.rgb_led_color[index] = (0, 0, 0)
-                        else:
-                            led_instance.off()
-                    else:
-                        led_instance.off()
+                    led_instance.off()
 
-    def disable_all_leds(self, poll=False):
+    def disable_all_leds(self):
         """
         Disables all RGB LEDs across all registered drivers.
         """
         for index in range(self.init.NUMBER_OF_COILS):
-            self.disable_led(index, poll)
+            self.disable_led(index)

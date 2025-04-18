@@ -8,6 +8,7 @@ Hardware profile for MPTCC 1.
 """
 
 CONFIG = {
+    "OPERATING_FREQ": 150000000, # RP2350 default 150MHz.
     "NUMBER_OF_COILS": 4,
     "PIN_I2C_1_SCL": 17,
     "PIN_I2C_1_SDA": 16,
@@ -246,7 +247,14 @@ DRIVERS = {
 
 class Profile:
     def __init__(self, name, init):
+        # Set the operating frequency.
+        from machine import freq
+        freq(CONFIG["OPERATING_FREQ"])
+        print(f"Operating frequency set to {(int(CONFIG["OPERATING_FREQ"] / 1000000))}MHz")
+        # Load all drivers.
         init.load_drivers(CONFIG, DRIVERS);
         print(f"Profile ({name}) loading complete")
+        init.memory_usage()
+
 
 # END
