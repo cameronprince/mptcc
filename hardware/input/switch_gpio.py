@@ -15,19 +15,13 @@ from ...lib.menu import Screen
 
 
 class Switch_GPIO(Input):
-    def __init__(self, pins, pull_up=True):
-        """
-        Initialize the GPIO switch driver.
-
-        Args:
-            pins (list): A list of GPIO pin numbers to use as switches.
-            pull_up (bool): Whether to enable pull-up resistors for the switch pins.
-        """
+    def __init__(self, config):
+        """Initialize the GPIO switch driver."""
         super().__init__()
 
-        self.pins = pins
-        self.pull_up = pull_up
-        self.last_switch_click_time = [0] * len(pins)  # Track last click time for debouncing.
+        self.pins = config.get("pins", [])
+        self.pull_up = config.get("pull_up", False)
+        self.last_switch_click_time = [0] * len(self.pins)  # Track last click time for debouncing.
         self.debounce_delay = 300  # Debounce delay in milliseconds.
         self.instances = []
 
@@ -65,7 +59,6 @@ class Switch_GPIO(Input):
         Args:
             switch (int): The index of the switch (1-based).
         """
-        print(switch)
         if switch <= 4:
             # Switches 1-4: Call the parent class's switch_click method.
             super().switch_click(switch)

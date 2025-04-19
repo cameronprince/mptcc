@@ -31,7 +31,7 @@ class Output_GPIO_BitBang:
         self.running = False  # Flag to control task execution.
         self.task = None      # Stores the asyncio task.
 
-    async def _bitbang_pwm(self, frequency, on_time):
+    async def _bitbang_pwm(self, frequency, on_time, max_duty=None, max_on_time=None):
         """
         Generates a PWM signal using bit banging.
         """

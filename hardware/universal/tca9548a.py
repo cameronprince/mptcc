@@ -13,6 +13,86 @@ from machine import Pin, I2C
 from ...hardware.init import init
 
 
+class TCA9548A:
+    def __init__(self, config):
+        self.init = init
+
+        self.i2c_instance = config.get("i2c_instance", 1)
+        self.i2c_addr = config.get("i2c_addr", 0x70)
+        self.display = config.get("display", None)
+        self.instances = []
+        self.instance_number = len(self.init.universal_instances.get("tca9548a", []))
+
+        # Initialize I2C first.
+        if self.i2c_instance == 2:
+            self.init.init_i2c_2()
+            self.i2c = self.init.i2c_2
+            self.mutex = self.init.i2c_2_mutex
+        else:
+            self.init.init_i2c_1()
+            self.i2c = self.init.i2c_1
+            self.mutex = self.init.i2c_1_mutex
+
+        # Store in init before initializing hardware.
+        if "tca9548a" not in self.init.universal_instances:
+            self.init.universal_instances["tca9548a"] = []
+        self.init.universal_instances["tca9548a"].append(self)
+
+        print(f"TCA9548A {self.instance_number} initialized on I2C_{self.i2c_instance} ({hex(self.i2c_addr)})")
+
+        # Initialize displays if configured.
+        if self.display is not None:
+            self._init_displays(self.display)
+
+    def _init_displays(self, display_config):
+        # Initialize displays after I2C is ready.
+        for driver_name, driver_config in display_config.items():
+            if "class" not in driver_config:
+                continue
+
+            if driver_name not in self.init.display_instances:
+                self.init.display_instances[driver_name] = []
+            
+            display_instances = []
+            common_cfg = driver_config.get("common_cfg", {})
+            
+            for instance_cfg in driver_config.get("instances", []):
+                if not instance_cfg.get("enabled", True):
+                    continue
+
+                # Create config using compatible dictionary operations.
+                config = common_cfg.copy()
+                config.update(instance_cfg)
+                config.update({
+                    "i2c_instance": f"tca9548a_{self.instance_number}",
+                    "channel": int(instance_cfg["channel"])
+                })
+                config.pop("enabled", None)
+
+                from ..display.ssd1306 import SSD1306
+                try:
+                    display = SSD1306(config=config)
+                    display_instances.append(display)
+                except Exception as e:
+                    print(f"Failed to initialize display on channel {config['channel']}: {e}")
+                finally:
+                    pass
+
+            # Store instances in the same format as init._initialize_driver_instance.
+            if display_instances:
+                # Append the list of instances directly (not nested).
+                self.init.display_instances[driver_name].extend(display_instances)
+                self.instances.extend(display_instances)
+
+    def select_channel(self, channel):
+        if channel < 0 or channel > 7:
+            raise ValueError("Channel must be 0-7")
+        self.i2c.writeto(self.i2c_addr, bytes([1 << channel]))
+
+    def disable_all(self):
+        self.i2c.writeto(self.i2c_addr, bytes([0]))
+
+
 class TCA9548AChannel:
     def __init__(self, mux, channel, mutex):
         self.mux = mux
@@ -46,80 +126,3 @@ class TCA9548AChannel:
             return self.mux.i2c.readfrom(addr, nbytes, **kwargs)
         finally:
             self.init.mutex_release(self.mutex, f"{self.class_name}:{self.channel}:readfrom")
-
-
-class TCA9548A:
-    def __init__(self, i2c_instance, i2c_addr=0x70, display=None):
-        self.init = init
-        self.i2c_addr = i2c_addr
-        self.instances = []
-        self.instance_number = len(self.init.universal_instances.get("tca9548a", []))
-
-        # Initialize I2C first.
-        if i2c_instance == 2:
-            self.init.init_i2c_2()
-            self.i2c = self.init.i2c_2
-            self.mutex = self.init.i2c_2_mutex
-        else:
-            self.init.init_i2c_1()
-            self.i2c = self.init.i2c_1
-            self.mutex = self.init.i2c_1_mutex
-
-        # Store in init before initializing hardware.
-        if "tca9548a" not in self.init.universal_instances:
-            self.init.universal_instances["tca9548a"] = []
-        self.init.universal_instances["tca9548a"].append(self)
-
-        print(f"TCA9548A {self.instance_number} initialized on I2C_{i2c_instance} ({hex(i2c_addr)})")
-
-        # Initialize displays if configured.
-        if display is not None:
-            self._init_displays(display)
-
-    def _init_displays(self, display_config):
-        # Initialize displays after I2C is ready.
-        for driver_name, driver_config in display_config.items():
-            if "class" not in driver_config:
-                continue
-
-            if driver_name not in self.init.display_instances:
-                self.init.display_instances[driver_name] = []
-            
-            display_instances = []
-            common_cfg = driver_config.get("common_cfg", {})
-            
-            for instance_cfg in driver_config.get("instances", []):
-                if not instance_cfg.get("enabled", True):
-                    continue
-                    
-                # Create config using compatible dictionary operations.
-                config = common_cfg.copy()
-                config.update(instance_cfg)
-                config.update({
-                    "i2c_instance": f"tca9548a_{self.instance_number}",
-                    "channel": int(instance_cfg["channel"])
-                })
-                config.pop("enabled", None)
-                
-                from ..display.ssd1306 import SSD1306
-                try:
-                    display = SSD1306(**config)
-                    display_instances.append(display)
-                except Exception as e:
-                    print(f"Failed to initialize display on channel {config["channel"]}: {e}")
-                finally:
-                    pass
-
-            # Store instances in the same format as init._initialize_driver_instance.
-            if display_instances:
-                # Append the list of instances directly (not nested).
-                self.init.display_instances[driver_name].extend(display_instances)
-                self.instances.extend(display_instances)
-
-    def select_channel(self, channel):
-        if channel < 0 or channel > 7:
-            raise ValueError("Channel must be 0-7")
-        self.i2c.writeto(self.i2c_addr, bytes([1 << channel]))
-
-    def disable_all(self):
-        self.i2c.writeto(self.i2c_addr, bytes([0]))

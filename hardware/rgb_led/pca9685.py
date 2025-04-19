@@ -14,11 +14,63 @@ from ..rgb_led.rgb_led import RGBLED, RGB
 from ...hardware.init import init
 
 
-class PCA9685:
+class PCA9685(RGBLED):
+    """
+    A class to control RGB LED devices using the PCA9685 external PWM board.
+    """
+
+    def __init__(self, config):
+        """Constructs all the necessary attributes for the PCA9685_RGBLED object."""
+        super().__init__()
+        self.init = init
+
+        self.i2c_instance = config.get("i2c_instance", 1)
+        self.i2c_addr = config.get("i2c_addr", 0x40)
+        self.freq = config.get("freq", 1000)
+        self.pins = config.get("pins", [])
+
+        if self.i2c_instance == 2:
+            self.init.init_i2c_2()
+            self.i2c = self.init.i2c_2
+            self.mutex = self.init.i2c_2_mutex
+        else:
+            self.init.init_i2c_1()
+            self.i2c = self.init.i2c_1
+            self.mutex = self.init.i2c_1_mutex
+
+        # Initialize the PCA9685 driver.
+        self.init.mutex_acquire(self.mutex, "pca9685_rgb_led:init")
+        self.driver = PCA9685_Driver(self.i2c, address=self.i2c_addr)
+        self.driver.freq(self.freq)
+        self.init.mutex_release(self.mutex, "pca9685_rgb_led:init")
+
+        # Generate a unique key for this instance.
+        instance_key = len(self.init.rgb_led_instances["pca9685"])
+
+        # Initialize the LEDs based on the pins configuration.
+        self.instances = []
+        for led_pins in self.pins:
+            red_pin, green_pin, blue_pin = led_pins
+            led = RGB_PCA9685(
+                driver=self.driver,
+                red_channel=red_pin,
+                green_channel=green_pin,
+                blue_channel=blue_pin,
+                mutex=self.mutex
+            )
+            self.instances.append(led)
+
+        # Print initialization details.
+        print(f"PCA9685 RGB LED driver {instance_key} initialized on I2C_{self.i2c_instance} at address: 0x{self.i2c_addr:02X}")
+        for i, led in enumerate(self.instances):
+            print(f"- LED {i + 1}: R={led.red_channel}, G={led.green_channel}, B={led.blue_channel}")
+
+
+class PCA9685_Driver:
     """
     A class providing low-level functions for communicating with the PCA9685.
     """
-    def __init__(self, i2c, address=0x40):
+    def __init__(self, i2c, address):
         self.i2c = i2c
         self.address = address
         self._write(0x00, 0x00)
@@ -54,65 +106,6 @@ class PCA9685:
         if invert:
             value = 4095 - value
         self.i2c.writeto_mem(self.address, 0x06 + 4 * index, ustruct.pack('<HH', 0, value))
-
-
-class PCA9685_RGBLED(RGBLED):
-    """
-    A class to control RGB LED devices using the PCA9685 external PWM board.
-    """
-
-    def __init__(self, i2c_instance, i2c_addr=0x40, freq=1000, pins=[]):
-        """
-        Constructs all the necessary attributes for the PCA9685_RGBLED object.
-
-        Parameters:
-        ----------
-        i2c_instance : int
-            The I2C instance to use.
-        i2c_addr : int, optional
-            The I2C address of the PCA9685. Default is 0x40.
-        pins : list, optional
-            A list of pin numbers to use for the LEDs.
-        """
-        super().__init__()
-        self.init = init
-
-        if i2c_instance == 2:
-            self.init.init_i2c_2()
-            self.i2c = self.init.i2c_2
-            self.mutex = self.init.i2c_2_mutex
-        else:
-            self.init.init_i2c_1()
-            self.i2c = self.init.i2c_1
-            self.mutex = self.init.i2c_1_mutex
-
-        # Initialize the PCA9685 driver.
-        self.init.mutex_acquire(self.mutex, "pca9685_rgb_led:init")
-        self.driver = PCA9685(self.i2c, address=i2c_addr)
-        self.driver.freq(freq)
-        self.init.mutex_release(self.mutex, "pca9685_rgb_led:init")
-
-        # Generate a unique key for this instance.
-        instance_key = len(self.init.rgb_led_instances["pca9685"])
-
-        # Initialize the LEDs based on the pins configuration.
-        self.instances = []
-        for led_pins in pins:
-            red_pin, green_pin, blue_pin = led_pins
-            led = RGB_PCA9685(
-                driver=self.driver,
-                red_channel=red_pin,
-                green_channel=green_pin,
-                blue_channel=blue_pin,
-                mutex=self.mutex
-            )
-            self.instances.append(led)
-
-        # Print initialization details.
-        print(f"PCA9685 RGB LED driver {instance_key} initialized on I2C_{i2c_instance} at address: 0x{i2c_addr:02X}")
-        for i, led in enumerate(self.instances):
-            print(f"- LED {i + 1}: R={led.red_channel}, G={led.green_channel}, B={led.blue_channel}")
-        print(f"- Asyncio polling: {self.init.RGB_LED_ASYNCIO_POLLING}")
 
 
 class RGB_PCA9685(RGB):

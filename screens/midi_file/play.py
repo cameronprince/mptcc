@@ -9,6 +9,7 @@ Provides the MIDI playback functionality.
 
 import _thread
 import time
+import gc
 import uasyncio as asyncio
 from ...hardware.init import init
 from ...hardware.output.tasks import start_output_tasks, stop_output_tasks
@@ -89,6 +90,9 @@ class MIDIFilePlay:
         self.display.clear()
         self.update_display()
 
+        # Default masters.
+        self.init.output.set_master(getattr(self.init, "MASTER_DEFAULT_POSITION", 50))
+
         # Start playback in a separate thread.
         _thread.start_new_thread(self.player, (self.file_path,))
 
@@ -96,7 +100,7 @@ class MIDIFilePlay:
         asyncio.create_task(self._update_display_task())
         asyncio.create_task(self._monitor_playback_end_task())
 
-        # Start any applicable output-related tasks, e.g. rgb_led, pot_polling.
+        # Start any applicable output-related tasks, e.g. pot_polling.
         start_output_tasks(lambda: self.active)
 
     def player(self, file_path):
@@ -124,7 +128,7 @@ class MIDIFilePlay:
                                 on_time = velocity_to_ontime(velocity)
                                 # Scale the on_time by the level control percentage.
                                 scaled_on_time = int(on_time * self.levels[output] / 100)
-                                self.init.output.set_output(output, True, frequency, scaled_on_time)
+                                self.init.output.set_output(output, True, frequency, scaled_on_time, None, None, True)
                         elif event.status == umidiparser.NOTE_OFF:
                             self.init.output.set_output(output, False)
                     else:
@@ -208,6 +212,9 @@ class MIDIFilePlay:
         # Turn off all outputs.
         self.init.output.set_all_outputs()
 
+        # Default masters to zero.
+        self.init.output.set_master(0)
+
         # Save levels if necessary.
         if self.save_levels or self.config.get("midi_file_save_levels_on_end"):
             self.save_levels = False
@@ -218,6 +225,8 @@ class MIDIFilePlay:
 
         # Deinitialize the SD card reader.
         self.init.sd_card_reader.deinit_sd()
+
+        gc.collect()
 
         # Return to the file listing.
         self.display.clear()
@@ -236,6 +245,9 @@ class MIDIFilePlay:
         # Signal that the levels need to be updated.
         self.levels_updated = True
 
+    def rotary_master(self, direction):
+        self.init.output.change_master(direction)
+
     # All switches act as stop buttons.
     def switch_1(self):
         self.save_levels = True
@@ -248,4 +260,7 @@ class MIDIFilePlay:
         self.active = False
 
     def switch_4(self):
+        self.active = False
+
+    def switch_master(self):
         self.active = False

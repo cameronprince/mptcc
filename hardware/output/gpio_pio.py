@@ -48,7 +48,7 @@ class Output_GPIO_PIO:
         if self.sm is not None:
             self.sm.active(0)  # Ensure the state machine is initially inactive.
 
-    def set_output(self, active=False, freq=None, on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
 

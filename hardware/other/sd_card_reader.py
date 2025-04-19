@@ -19,16 +19,17 @@ class SDCardReader(Hardware):
     A class to interact with the SD card reader using the PCA9685 PWM driver.
     """
 
-    def __init__(self, spi_instance, mount_point):
+    def __init__(self, config):
         """
         Constructs all the necessary attributes for the SDCardReader object.
         """
         super().__init__()
-        self.mount_point = mount_point
+        self.mount_point = config.get("mount_point", "/sd")
+        self.spi_instance = config.get("spi_instance", 1)
         self.init = init
 
         # Prepare the SPI bus.
-        if spi_instance == 2:
+        if self.spi_instance == 2:
             self.init.init_spi_2()
             self.spi = self.init.spi_2
             self.cs = self.init.PIN_SPI_2_CS
@@ -39,7 +40,7 @@ class SDCardReader(Hardware):
 
         self.init.sd_card_reader = self
 
-        print(f"SD card reader driver loaded on SPI{spi_instance}")
+        print(f"SD card reader driver loaded on SPI{self.spi_instance}")
 
     def init_sd(self):
         """

@@ -29,7 +29,7 @@ class Output_GPIO_PWM(Output):
         self.pin = pin
         self.pwm = PWM(Pin(pin)) if pin is not None else None
 
-    def set_output(self, active=False, freq=None, on_time=None):
+    def set_output(self, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
         """
         Sets the output based on the provided parameters.
 
@@ -57,7 +57,7 @@ class Output_GPIO_PWM(Output):
 
 
 class GPIO_PWM():
-    def __init__(self, pins):
+    def __init__(self, config):
         """
         Initialize the GPIO_PWM driver.
 
@@ -68,6 +68,7 @@ class GPIO_PWM():
         """
         super().__init__()
         self.init = init
+        pins = config.get("pins", [])
 
         # Initialize Output_GPIO_PWM instances for the provided pins.
         self.instances = [Output_GPIO_PWM(pin) for pin in pins]

@@ -4,7 +4,7 @@ by Cameron Prince
 teslauniverse.com
 
 lib/duppa.py
-Utility library for interfacing with hardware from DuPPa.net with batch updates.
+Utility library for interfacing with hardware from DuPPa.net.
 """
 
 import struct
@@ -26,12 +26,15 @@ class DuPPa:
 
     def reset(self):
         """
-        Reset the device.
+        Reset the device, supporting ISSI3746, IS31FL3745, and encoders.
         """
         if "ISSI3746_RESET_REG" in self.constants:
-            self.writeEncoder8(self.constants["ISSI3746_RESET_REG"], 0xAE)
+            self.writeEncoder8(self.constants["ISSI3746_RESET_REG"], 0xAE)  # ISSI3746 reset
+        elif "IS31FL3745_RESET_REG" in self.constants:
+            self.select_page(self.constants["IS31FL3745_PAGE2"])
+            self.writeEncoder8(self.constants["IS31FL3745_RESET_REG"], 0x00)  # IS31FL3745 reset
         elif "REG_GCONF" in self.constants:
-            self.writeEncoder8(self.constants["REG_GCONF"], self.constants["RESET"])
+            self.writeEncoder8(self.constants["REG_GCONF"], self.constants["RESET"])  # Encoder reset
         else:
             raise KeyError("No valid reset constant found in CONSTANTS dictionary.")
 
@@ -161,6 +164,20 @@ class DuPPa:
         """
         return self.i2c.readfrom_mem(self.address, reg, 1)[0]
 
+    def writeEncoder16(self, reg, value):
+        """
+        Write a 16-bit value to the specified register.
+        """
+        data = struct.pack('<H', value)  # Little-endian, 16-bit unsigned int
+        self.i2c.writeto_mem(self.address, reg, data)
+
+    def readEncoder16(self, reg):
+        """
+        Read a 16-bit value from the specified register.
+        """
+        data = self.i2c.readfrom_mem(self.address, reg, 2)
+        return int.from_bytes(data, 'little')
+
     def writeEncoder32(self, reg, value):
         """
         Write a 32-bit value to the specified register.
@@ -197,7 +214,7 @@ class DuPPa:
 
     def set_scaling_all(self, scal):
         """
-        Set the scaling for all LEDs.
+        Set the scaling for all LEDs (ISSI3746-specific, 72 channels).
         """
         self.select_bank(self.constants["ISSI3746_PAGE1"])
         for i in range(1, 73):
@@ -226,7 +243,45 @@ class DuPPa:
 
     def set_rgb_batch(self, buffer):
         """
-        Set the RGB color for all LEDs in a batch update.
+        Set the RGB color for all LEDs in a batch update (ISSI3746-specific).
         """
         self.select_bank(self.constants["ISSI3746_PAGE0"])
         self.i2c.writeto_mem(self.address, 0x01, buffer)
+
+    # New methods for IS31FL3745 support (RGBLEDRing)
+    def select_page(self, page):
+        """
+        Select the active page for IS31FL3745 LED controller.
+        """
+        self.writeEncoder8(self.constants["IS31FL3745_UNLOCK_REGISTER"], self.constants["IS31FL3745_UNLOCK_CODE"])
+        self.writeEncoder8(self.constants["IS31FL3745_PAGE_REGISTER"], page)
+
+    def set_scaling_all_is31fl3745(self, scal, num_channels):
+        """
+        Set scaling for all LEDs on IS31FL3745 (variable channel count).
+        """
+        self.select_page(self.constants["IS31FL3745_PAGE1"])
+        for i in range(num_channels):
+            self.writeEncoder8(i, scal)
+
+    def set_rgb_batch_is31fl3745(self, buffer):
+        """
+        Set the RGB color for all LEDs in a batch update on IS31FL3745.
+        """
+        self.select_page(self.constants["IS31FL3745_PAGE0"])
+        self.i2c.writeto_mem(self.address, 0x00, buffer)
+
+    def configuration_is31fl3745(self, conf):
+        """
+        Configure the IS31FL3745 LED controller.
+        """
+        self.select_page(self.constants["IS31FL3745_PAGE2"])
+        self.writeEncoder8(self.constants["IS31FL3745_CONFIG_REG"], conf)
+
+    def global_current_is31fl3745(self, curr):
+        """
+        Set the global current for the IS31FL3745 LED controller.
+        """
+        self.select_page(self.constants["IS31FL3745_PAGE2"])
+        self.writeEncoder8(self.constants["IS31FL3745_GLOBAL_CURRENT"], curr)
+    

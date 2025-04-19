@@ -29,7 +29,7 @@ class Output_GPIO_Timer:
         self.timer = Timer() if pin is not None else None
         self.running = False  # Flag to control timer execution.
 
-    def _set_output_timer(self, frequency, on_time):
+    def _set_output_timer(self, frequency, on_time, max_duty=None, max_on_time=None):
         """
         Configures a hardware timer to generate a PWM signal on the specified output.
 
