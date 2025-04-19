@@ -198,7 +198,7 @@ DRIVERS = {
                 {
                     "enabled": True,
                     "pin": 14,
-                    "length_ms": 2,
+                    "length_ms": 1,
                     "volume": 100,
                     "pwm_freq": 3000,
                 },
@@ -217,6 +217,5 @@ class Profile:
         init.load_drivers(CONFIG, DRIVERS);
         print(f"Profile ({name}) loading complete")
         init.memory_usage()
-
 
 # END

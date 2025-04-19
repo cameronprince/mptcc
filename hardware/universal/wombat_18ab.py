@@ -42,6 +42,7 @@ class Wombat_18AB:
         self.init = init
         self.instances = []
         self.init_complete = [False]
+        self.machine_name = "wombat_18ab"
 
         # Prepare the I2C bus.
         if self.i2c_instance == 2:
@@ -64,8 +65,10 @@ class Wombat_18AB:
         # Initialize switches if switch is provided.
         if self.switch is not None and self.switch.get("enabled", True):
             from SerialWombatDebouncedInput import SerialWombatDebouncedInput as swdi
-            if "wombat_18ab_switch" not in self.init.input_instances:
-                self.init.input_instances["wombat_18ab_switch"] = []
+            if "switch" not in self.init.input_instances:
+                self.init.input_instances["switch"] = {}
+            if self.machine_name not in self.init.input_instances["switch"]:
+                self.init.input_instances["switch"][self.machine_name] = []
             switch_instances = []
             switch_instance = Switch_Wombat_18AB(
                 self.driver,
@@ -75,7 +78,7 @@ class Wombat_18AB:
                 self.init_complete,
             )
             switch_instances.append(switch_instance)
-            self.init.input_instances["wombat_18ab_switch"].append(switch_instances)
+            self.init.input_instances["switch"][self.machine_name].append(Wombat_18AB_Switch(switch_instances))
             print(f"- Switches initialized (pull_up={self.switch.get("pull_up", False)})")
             for i, pin in enumerate(self.switch.get("pins")):
                 print(f"  - Switch {i}: Pin {pin}")
@@ -85,8 +88,10 @@ class Wombat_18AB:
         # Initialize encoders if encoder is provided.
         if self.encoder is not None and self.encoder.get("enabled", True):
             from SerialWombatQuadEnc import SerialWombatQuadEnc as swqe
-            if "wombat_18ab_encoder" not in self.init.input_instances:
-                self.init.input_instances["wombat_18ab_encoder"] = []
+            if "encoder" not in self.init.input_instances:
+                self.init.input_instances["encoder"] = {}
+            if self.machine_name not in self.init.input_instances["encoder"]:
+                self.init.input_instances["encoder"][self.machine_name] = []
             encoder_instances = []
             encoder_instance = Encoder_Wombat_18AB(
                 self.driver,
@@ -96,7 +101,7 @@ class Wombat_18AB:
                 self.init_complete,
             )
             encoder_instances.append(encoder_instance)
-            self.init.input_instances["wombat_18ab_encoder"].append(encoder_instances)
+            self.init.input_instances["encoder"][self.machine_name].append(Wombat_18AB_Encoder(encoder_instances))
             print(f"- Encoders initialized (pull_up={self.encoder.get("pull_up", False)})")
             for i, pin in enumerate(self.encoder.get("pins")):
                 pin, secondPin = pin
@@ -106,21 +111,21 @@ class Wombat_18AB:
 
         # Initialize outputs if output is provided.
         if self.output is not None and self.output.get("enabled", True):
-            if "wombat_18ab" not in self.init.output_instances:
-                self.init.output_instances["wombat_18ab"] = []
+            if self.machine_name not in self.init.output_instances:
+                self.init.output_instances[self.machine_name] = []
             output_instances = []
             for pin in self.output.get("pins"):
                 o = Output_Wombat_18AB(self.driver, swpwm, pin, self.mutex)
                 output_instances.append(o)
-            self.init.output_instances["wombat_18ab"].append(output_instances)
+            self.init.output_instances[self.machine_name].append(Wombat_18AB_Output(output_instances))
             print(f"- Outputs initialized:")
             for i, pin in enumerate(self.output.get("pins")):
                 print(f"  - Output {i}: Pin {pin}")
 
         # Initialize RGB LEDs if rgb_led is provided.
         if self.rgb_led is not None and self.rgb_led.get("enabled", True):
-            if "wombat_18ab" not in self.init.rgb_led_instances:
-                self.init.rgb_led_instances["wombat_18ab"] = []
+            if self.machine_name not in self.init.rgb_led_instances:
+                self.init.rgb_led_instances[self.machine_name] = []
             rgb_led_instances = []
             for led_pins in self.rgb_led.get("pins"):
                 red_pin, green_pin, blue_pin = led_pins
@@ -133,7 +138,7 @@ class Wombat_18AB:
                     mutex=self.mutex,
                 )
                 rgb_led_instances.append(led)
-            self.init.rgb_led_instances["wombat_18ab"].append(rgb_led_instances)
+            self.init.rgb_led_instances[self.machine_name].append(Wombat_18AB_RGB(rgb_instances))
             print(f"- RGB LEDs initialized:")
             for i, led_pins in enumerate(self.rgb_led.get("pins")):
                 red_pin, green_pin, blue_pin = led_pins
@@ -141,11 +146,14 @@ class Wombat_18AB:
 
         # Initialize Beep if beep is provided.
         if self.beep is not None and self.beep.get("enabled", True):
+            if self.machine_name not in self.init.other_instances:
+                self.init.other_instances[self.machine_name] = []
             self.init.beep = Beep_Wombat_18AB(
                 driver=self.driver,
                 beep=self.beep,
                 mutex=self.mutex,
             )
+            self.init.other_instances[self.machine_name].append(Wombat_18AB_Beep(beep_instance))
             print(f"- Beep tone confirmation enabled (Pin: {beep.get("pin")}, Length: {beep.get("length_ms")}ms, Volume: {beep.get("volume")}%, PWM frequency: {beep.get("pwm_freq")}Hz)")
 
         self.init_complete[0] = True
@@ -560,3 +568,28 @@ class Beep_Wombat_18AB():
             time.sleep_ms(self.length_ms)
             self.pwm.writeDutyCycle(0)
         self.init.mutex_release(self.mutex, f"{self.class_name}:on")
+
+
+class Wombat_18AB_Switch:
+    def __init__(self, switch_instances):
+        self.instances = switch_instances
+
+
+class Wombat_18AB_Encoder:
+    def __init__(self, encoder_instances):
+        self.instances = encoder_instances
+
+
+class Wombat_18AB_Output:
+    def __init__(self, output_instances):
+        self.instances = output_instances
+
+
+class Wombat_18AB_RGB:
+    def __init__(self, rgb_instances):
+        self.instances = rgb_instances
+
+
+class Wombat_18AB_Beep:
+    def __init__(self, beep_instance):
+        self.instances = [beep_instance]

@@ -91,7 +91,7 @@ class MIDIFilePlay:
         self.update_display()
 
         # Default masters.
-        self.init.output.set_master(self.init.MASTER_DEFAULT_POSITION)
+        self.init.output.set_master(getattr(self.init, "MASTER_DEFAULT_POSITION", 50))
 
         # Start playback in a separate thread.
         _thread.start_new_thread(self.player, (self.file_path,))

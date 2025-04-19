@@ -242,7 +242,7 @@ class OutputManager(HardwareManager):
     def __init__(self, init):
         super().__init__(init, "output")
         self.rgb_led_manager = init.rgb_led
-        self.master_level = self.init.MASTER_DEFAULT_POSITION
+        self.master_level = getattr(self.init, "MASTER_DEFAULT_POSITION", 50)
         self.master_led_count = self.rgb_led_manager.master_led_count()
 
     def set_master(self, level):

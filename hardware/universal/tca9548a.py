@@ -12,6 +12,7 @@ import time
 from machine import Pin, I2C
 from ...hardware.init import init
 
+
 class TCA9548A:
     def __init__(self, config):
         self.init = init
@@ -67,8 +68,6 @@ class TCA9548A:
                     "channel": int(instance_cfg["channel"])
                 })
                 config.pop("enabled", None)
-
-                print(f"instance_cfg: {config}")
 
                 from ..display.ssd1306 import SSD1306
                 try:

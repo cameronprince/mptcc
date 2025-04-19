@@ -28,7 +28,7 @@ from mptcc.hardware.init import init
 # The MPTCC configuration is stored in files in the hardware/profiles directory.
 # You can edit the default profile, or copy it to a new file in the profiles
 # directory and reference it here instead of default.
-PROFILE_NAME = "mptcc_5"
+PROFILE_NAME = "mptcc_3"
 profile = __import__(f"mptcc.hardware.profiles.{PROFILE_NAME}", None, None, (None,))
 profile.Profile(PROFILE_NAME, init)
 

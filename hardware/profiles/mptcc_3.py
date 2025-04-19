@@ -233,7 +233,7 @@ DRIVERS = {
                 {
                     "enabled": True,
                     "pin": 15,
-                    "length_ms": 5,
+                    "length_ms": 2,
                     "volume": 100,
                     "pwm_freq": 3000,
                 },

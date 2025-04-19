@@ -27,6 +27,7 @@ class MCP23017:
         self.host_interrupt_pin_pull_up = config.get("host_interrupt_pin_pull_up", False)
         self.encoder = config.get("encoder", None)
         self.switch = config.get("switch", None)
+        self.machine_name = "mcp23017"
 
         if self.encoder is None and self.switch is None:
             return
@@ -35,7 +36,7 @@ class MCP23017:
         self.class_name = self.__class__.__name__
         self.interrupt = None
         self.init_complete = [False]
-        self.instance_number = len(self.init.universal_instances.get("mcp23017", []))
+        self.instance_number = len(self.init.universal_instances.get(self.machine_name, []))
 
         # Prepare the I2C bus.
         if self.i2c_instance == 2:
@@ -55,9 +56,9 @@ class MCP23017:
         self._configure()
 
         # Store in init before initializing hardware.
-        if "mcp23017" not in self.init.universal_instances:
-            self.init.universal_instances["mcp23017"] = []
-        self.init.universal_instances["mcp23017"].append(self)
+        if self.machine_name not in self.init.universal_instances:
+            self.init.universal_instances[self.machine_name] = []
+        self.init.universal_instances[self.machine_name].append(self)
 
         print(f"MCP23017 {self.instance_number} initialized on I2C_{self.i2c_instance} ({hex(self.i2c_addr)})")
         print(f"- Host interrupt pin: {self.host_interrupt_pin} (pull_up={self.host_interrupt_pin_pull_up})")
@@ -149,35 +150,34 @@ class MCP23017:
         self.init.mutex_release(self.mutex, f"{self.class_name}:_configure")
 
     def _init_switches(self):
-        if "mcp23017_switch" not in self.init.input_instances:
-            self.init.input_instances["mcp23017_switch"] = []
-
+        if "switch" not in self.init.input_instances:
+            self.init.input_instances["switch"] = {}
+        if self.machine_name not in self.init.input_instances["switch"]:
+            self.init.input_instances["switch"][self.machine_name] = []
+        switch_instances = []
+        switch_instance = Switch_MCP23017(self.init, self.mcp, self.switch)
+        switch_instances.append(switch_instance)
+        self.init.input_instances["switch"][self.machine_name].append(MCP23017_Switch(switch_instances))
         port = self.switch.get("port", "B").upper()
-        self.init.input_instances["mcp23017_switch"].append([
-            Switch_MCP23017(self.init, self.mcp, self.switch)
-        ])
-
         print(f"- Switches initialized on port {port} (pull_up={self.switch.get('pull_up', False)})")
         for i, pin in enumerate(self.switch.get("pins", [])):
             print(f"  - Switch {i+1}: Pin {pin}")
 
     def _init_encoders(self):
         """Initialize encoder hardware and instances."""
-        if "mcp23017_encoder" not in self.init.input_instances:
-            self.init.input_instances["mcp23017_encoder"] = []
-        
-        encoder_instance = Encoder_MCP23017(
-            self.init,
-            self.mcp,
-            self.encoder,
-        )
-        self.init.input_instances["mcp23017_encoder"].append([encoder_instance])
-
+        if "encoder" not in self.init.input_instances:
+            self.init.input_instances["encoder"] = {}
+        if self.machine_name not in self.init.input_instances["encoder"]:
+            self.init.input_instances["encoder"][self.machine_name] = []
+        encoder_instances = []
+        encoder_instance = Encoder_MCP23017(self.init, self.mcp, self.encoder)
+        encoder_instances.append(encoder_instance)
+        self.init.input_instances["encoder"][self.machine_name].append(MCP23017_Encoder(encoder_instances))
         port = self.encoder.get("port", "A").upper()
         pull_up = self.encoder.get("pull_up", False)
-        
         print(f"- Encoders initialized on port {port} (pull_up={pull_up})")
-        
+        for i, (clk_pin, dt_pin) in enumerate(self.encoder.get("pins", [])):
+            print(f"  - Encoder {i}: CLK={clk_pin}, DT={dt_pin}")
         # Initialize state tracking for each encoder.
         self.prev_clk_states = [1] * len(self.encoder.get("pins", []))
 
@@ -209,55 +209,50 @@ class MCP23017:
             intf (int): Interrupt flags (INTF register).
             intcap (int): Captured pin states (INTCAP register).
         """
-        # Process switches
-        for switch_handlers in self.init.input_instances.get("mcp23017_switch", []):
-            for handler in switch_handlers:
-                for instance in handler.instances:
-                    pin = instance['pin']
-                    port = instance['port']
-                    index = instance['index']
-                    mask = (1 << pin) if port == "A" else (1 << (pin + 8))
-                    if intf & mask:
-                        state = (intcap & mask) == 0  # Active-low: 0 = pressed
-                        if state:  # Only on press
-                            handler.process_interrupt(index)
-
-        # Process encoders
-        for encoder_handlers in self.init.input_instances.get("mcp23017_encoder", []):
-            for handler in encoder_handlers:
-                for instance in handler.instances:
+        encoder_processed = False
+        state = False
+        
+        # Process encoders first
+        for handler in self.init.input_instances["encoder"].get(self.machine_name, []):
+            for encoder_instance in handler.instances:
+                for instance in encoder_instance.instances:
                     clk_pin = instance['clk_pin']
                     dt_pin = instance['dt_pin']
                     port = instance['port']
                     index = instance['index']
                     clk_mask = (1 << clk_pin) if port == "A" else (1 << (clk_pin + 8))
                     dt_mask = (1 << dt_pin) if port == "A" else (1 << (dt_pin + 8))
-                    if intf & clk_mask:
-                        clk_state = (intcap & clk_mask) != 0  # True if high (1), False if low (0)
-                        dt_state = (intcap & dt_mask) != 0    # True if high (1), False if low (0)
-                        prev_clk = self.prev_clk_states[index]
-                        direction = self._determine_direction(index, clk_state, dt_state, prev_clk)
-                        self.prev_clk_states[index] = 1 if clk_state else 0  # Update state
+                    if intf & (clk_mask | dt_mask):  # Check both CLK and DT
+                        clk_state = (intcap & clk_mask) != 0  # True if high
+                        dt_state = (intcap & dt_mask) != 0    # True if high
+                        direction = encoder_instance.determine_direction(index, clk_state, dt_state)
                         if direction:
-                            handler.process_interrupt(index, direction)
+                            encoder_instance.process_interrupt(index, direction)
+                            encoder_processed = True
+                            break  # Exit innermost loop after handling encoder interrupt
+                if encoder_processed:
+                    break  # Exit encoder_instance loop
+            if encoder_processed:
+                break  # Exit handler loop
 
-    def _determine_direction(self, encoder_idx, clk_state, dt_state, prev_clk):
-        """
-        Determine encoder rotation direction based on CLK and DT states.
-        
-        Args:
-            encoder_idx (int): Index of the encoder.
-            clk_state (bool): Current CLK state (True = high, False = low).
-            dt_state (bool): Current DT state (True = high, False = low).
-            prev_clk (int): Previous CLK state (1 = high, 0 = low).
-        
-        Returns:
-            int: 1 for CW, -1 for CCW, None if no direction detected.
-        """
-        direction = None
-        if prev_clk == 1 and clk_state == 0:  # Falling edge only.
-            direction = 1 if dt_state else -1  # CW = 1, CCW = -1.
-        return direction
+        # Process switches only if no encoder interrupt was handled
+        if not encoder_processed:
+            for handler in self.init.input_instances["switch"].get(self.machine_name, []):
+                for switch_instance in handler.instances:
+                    for instance in switch_instance.instances:
+                        pin = instance['pin']
+                        port = instance['port']
+                        index = instance['index']
+                        mask = (1 << pin) if port == "A" else (1 << (pin + 8))
+                        if intf & mask:
+                            state = (intcap & mask) == 0  # Active-low: 0 = pressed
+                            if state:  # Only on press
+                                switch_instance.process_interrupt(index)
+                                break  # Exit innermost loop after handling switch interrupt
+                    if state:  # Break outer loop if switch was processed
+                        break
+                if state:
+                    break
 
 
 class Encoder_MCP23017(Input):
@@ -268,7 +263,7 @@ class Encoder_MCP23017(Input):
         self.mcp = mcp
         self.encoder = encoder
         self.instances = []
-        self.states = []
+        self.prev_states = []
         
         port = encoder.get("port", "A").upper()
         for i, (clk_pin, dt_pin) in enumerate(encoder.get("pins", [])):
@@ -278,7 +273,29 @@ class Encoder_MCP23017(Input):
                 'port': port,
                 'index': i,
             })
-            self.states.append(0b00)
+            self.prev_states.append((1, 1))
+
+    def determine_direction(self, index, clk_state, dt_state):
+        """
+        Determine encoder rotation direction using half quadrature decoding.
+        
+        Args:
+            index (int): Index of the encoder.
+            clk_state (bool): Current CLK state (True = high, False = low).
+            dt_state (bool): Current DT state (True = high, False = low).
+        
+        Returns:
+            int: 1 for CW, -1 for CCW, None if no direction detected.
+        """
+        prev_clk, prev_dt = self.prev_states[index]
+        self.prev_states[index] = (clk_state, dt_state)
+        
+        # Half quadrature: process falling edge of CLK or DT
+        if prev_clk == 1 and clk_state == 0:  # CLK falling edge
+            return 1 if dt_state else -1  # CW if DT high, CCW if DT low
+        elif prev_dt == 1 and dt_state == 0:  # DT falling edge
+            return -1 if clk_state else 1  # CCW if CLK high, CW if CLK low
+        return None
 
     def process_interrupt(self, index, direction):
         """Wrapper for handling encoder interrupt."""
@@ -306,3 +323,13 @@ class Switch_MCP23017(Input):
     def process_interrupt(self, index):
         """Wrapper for handling switch interrupt."""
         super().switch_click(index + 1)
+
+
+class MCP23017_Switch:
+    def __init__(self, switch_instances):
+        self.instances = switch_instances
+
+
+class MCP23017_Encoder:
+    def __init__(self, encoder_instances):
+        self.instances = encoder_instances
