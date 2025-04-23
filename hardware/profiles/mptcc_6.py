@@ -8,6 +8,7 @@ Hardware profile for MPTCC 6.
 """
 
 CONFIG = {
+    "OPERATING_FREQ": 150000000, # RP2350 default 150MHz.
     "NUMBER_OF_COILS": 2,
     "PIN_I2C_1_SCL": 15,
     "PIN_I2C_1_SDA": 14,
@@ -66,8 +67,8 @@ DRIVERS = {
                     {
                         "enabled": True,
                         "pins": [
-                            [8, 9, None], # CLK, DT, SW
-                            [6, 7, None],
+                            [6, 7, None], # CLK, DT, SW
+                            [8, 9, None],
                         ],
                         "pull_up": False,
                     },
@@ -96,42 +97,72 @@ DRIVERS = {
                 },
             ],
         },
-        "pcf8574_relay": {
-            "class": "PCF8574_Relay",
+    },
+    "rgb_led": {
+        "gpio": {
+            "class": "GPIO_RGBLED",
+            "enabled": True,
+            "instances": [
+                {
+                    "pins": [
+                        [12, 10, None],
+                        [1, 0, None],
+                    ],
+                },
+            ],
+        },
+        "neopixel": {
+            "class": "GPIO_NeoPixel",
+            "common_cfg": {
+                "segments": 4,
+                "reverse": True,
+                "default_color": "#FFFFFF",
+                "threshold_brightness": 4,
+                "full_brightness": 80,
+            },
             "instances": [
                 {
                     "enabled": True,
-                    "i2c_instance": 1,
-                    "i2c_addr": 0x27,
-                    "pins": [0, 1],
-                    "threshold": 60,
+                    "pin": 11,
                 },
             ],
         },
     },
-    "rgb_led": {
-        "neopixel": {
-            "class": "NeoPixel",
-            "common_cfg": {
-                "segments": 2,
-                "reverse": True,
-                "default_color": "#FFFFFF",
-                "threshold_brightness": 16,
-                "full_brightness": 255,
-            },
+    "other": {
+        "sd_card_reader": {
+            "class": "SDCardReader",
             "instances": [
                 {
-                    "enabled": False,
-                    "pin": 11,
+                    "enabled": True,
+                    "spi_instance": 1,
+                    "mount_point": "/sd",
+                },
+            ],
+        },
+        "beep": {
+            "class": "GPIO_Beep",
+            "instances": [
+                {
+                    "enabled": True,
+                    "pin": 13,
+                    "length_ms": 25,
+                    "volume": 100,
+                    "pwm_freq": 3000,
                 },
             ],
         },
     },
 }
 
+
 class Profile:
     def __init__(self, name, init):
+        # Set the operating frequency.
+        from machine import freq
+        freq(CONFIG["OPERATING_FREQ"])
+        print(f"Operating frequency set to {(int(CONFIG["OPERATING_FREQ"] / 1000000))}MHz")
+        # Load all drivers.
         init.load_drivers(CONFIG, DRIVERS);
         print(f"Profile ({name}) loading complete")
-
+        init.memory_usage()
 # END

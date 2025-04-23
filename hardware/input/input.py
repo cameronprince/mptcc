@@ -17,7 +17,6 @@ class Input(Hardware):
     def __init__(self):
         super().__init__()
         self.init = init
-        self.init.integrated_switches = True
 
     def switch_click(self, switch):
         """

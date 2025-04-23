@@ -68,7 +68,7 @@ class RGB_NeoPixel(RGB):
         self.led_index = led_index
 
         self.reverse = config.get("reverse", False)
-        self.num_segments = config.get("num_segments", 0)
+        self.segments = config.get("segments", 0)
         self.default_color = hex_to_rgb(config.get("default_color", "#000000"))
         self.threshold_brightness = config.get("threshold_brightness", 0)
         self.full_brightness = config.get("full_brightness", 0)
@@ -98,7 +98,7 @@ class RGB_NeoPixel(RGB):
 
         # Calculate the actual LED index based on reverse mode.
         if self.reverse:
-            actual_index = self.num_segments - 1 - self.led_index
+            actual_index = self.segments - 1 - self.led_index
         else:
             actual_index = self.led_index
 

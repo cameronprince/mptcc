@@ -154,7 +154,7 @@ class I2CEncoder(Input):
                             direction = 1 if status & CONSTANTS["REG_RINC"] else -1
                             super().encoder_change(idx, direction)
                             break
-                        if status & CONSTANTS["REG_PUSHP"] and self.init.integrated_switches:
+                        if status & CONSTANTS["REG_PUSHP"]:
                             super().switch_click(idx + 1)
                             break
             await asyncio.sleep(0.05)

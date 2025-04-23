@@ -20,129 +20,150 @@ class MIDIFileAssignment:
         ----------
         midi_file : MIDIFile
             The parent MIDIFile instance.
-        output_selection : int or None
-            Output assignment selection for display purposes.
         """
         self.midi_file = midi_file
-        self.output_selection = None
         self.init = init
         self.display = self.init.display
+        self.cursor_position = 0  # Cursor offset within visible rows.
+        self.current_coil_index = 0  # Start index of visible coil list.
+        self.per_page = 2  # Number of coils displayed per page (matches display capacity).
+        self.coil_count = self.init.NUMBER_OF_COILS  # Total number of coils.
+        self.selected_coils = set()  # Set of coils assigned to the current track.
 
     def draw(self):
         """
-        Displays the track-to-output assignment page and sets the output value based on the map file.
+        Displays the track-to-coil assignment page with a scrollable list of coils.
         """
         self.midi_file.current_page = "assignment"
 
-        # Initialize output_selection.
-        self.output_selection = None
+        # Load current assignments for the selected track.
+        self.selected_coils = set()
         for i, track in enumerate(self.midi_file.outputs):
             if track == self.midi_file.selected_track:
-                self.output_selection = i + 1
-                break
+                self.selected_coils.add(i)
 
         self.display.clear()
-        self.display.header("Track Assignment")
+        self.display.header("Coil Assignment")
 
-        available_height = init.display.height - self.midi_file.header_height
+        # Calculate layout.
+        available_height = self.display.height - self.midi_file.header_height
         total_text_height = self.midi_file.font_height * 2
         total_spacing = available_height - total_text_height
         track_y = self.midi_file.header_height + total_spacing // 3
-        self.midi_file.output_y = track_y + self.midi_file.font_height + total_spacing // 3
+        self.list_y = track_y + self.midi_file.font_height + total_spacing // 3
 
-        # Use a generator expression to find the selected track.
+        # Display track name.
         track_generator = (track for track in self.midi_file.track_list if track["original_index"] == self.midi_file.selected_track)
-
-        # Use next to get the first matching track, or handle StopIteration if no match is found.
         try:
             selected_track_info = next(track_generator)
-        except StopIteration:
-            selected_track_info = None
-
-        if selected_track_info:
             full_track_name = selected_track_info["name"]
-        else:
+        except StopIteration:
             full_track_name = "Unknown Track"
 
-        # Handle scrolling for the track name if it's too long.
         text_width = len(full_track_name) * self.midi_file.font_width
         if text_width > self.display.width:
-            # Pass the track index as the unique identifier.
             start_scroll(self.display, full_track_name, track_y, self.midi_file.selected_track, background_color=0)
         else:
-            # If the text doesn't require scrolling, display it normally (inactive color).
-            self.display.fill_rect(0, track_y, self.display.width, self.midi_file.line_height, 0)  # Clear the line.
+            self.display.fill_rect(0, track_y, self.display.width, self.midi_file.line_height, 0)
             self.display.center_text(full_track_name, track_y)
 
-        self.update_output_value()
+        # Draw the coil list.
+        self.update_coil_list()
 
-    def update_output_value(self):
+    def update_coil_list(self):
         """
-        Updates the assignment values on the display without clearing the entire screen.
+        Updates the coil list display, showing checkboxes for each coil with consistent cursor style.
         """
-        self.display.fill_rect(0, self.midi_file.output_y, self.display.width, self.midi_file.line_height, 0)
+        # Clear the list area.
+        self.display.fill_rect(0, self.list_y, self.display.width, self.display.height - self.list_y, 0)
 
-        output_value = self.output_selection
-        output_text = "None" if output_value is None else str(output_value)
-        self.display.center_text(f"Output: {output_text}", self.midi_file.output_y)
+        # Determine the range of coils to display.
+        start_index = self.current_coil_index
+        end_index = min(self.coil_count, start_index + self.per_page)
+
+        # Display each coil with a checkbox.
+        for i in range(start_index, end_index):
+            coil_index = i
+            y_position = self.list_y + (i - start_index) * self.midi_file.line_height
+            checkbox = "[x]" if coil_index in self.selected_coils else "[ ]"
+            text = f"Coil {coil_index + 1:2d}: {checkbox}"  # Two-digit formatting.
+            is_active = (i == self.current_coil_index + self.cursor_position)
+            background = int(is_active)  # 1 for active (green), 0 for inactive (black).
+            v_padding = int((self.midi_file.line_height - self.midi_file.font_height) / 2)
+
+            # Draw the row.
+            self.display.fill_rect(0, y_position, self.display.width, self.midi_file.line_height, background)
+            self.display.text(text, 0, y_position + v_padding, not is_active)  # 0 (black) for active, 1 (green) for inactive.
+
+            # Handle scrolling for the active item.
+            if is_active:
+                text_width = len(text) * self.midi_file.font_width
+                if text_width > self.display.width:
+                    start_scroll(self.display, text, y_position, coil_index, background_color=background)
+                else:
+                    stop_scroll(self.display)
+                    # Redraw to ensure no scroll artifacts.
+                    self.display.fill_rect(0, y_position, self.display.width, self.midi_file.line_height, background)
+                    self.display.text(text, 0, y_position + v_padding, not is_active)
+
         self.display.show()
 
     def rotary_1(self, direction):
         """
-        Responds to the rotation of encoder 1 for cycling through output values.
+        Responds to the rotation of encoder 1 to scroll through the coil list.
 
         Parameters:
         ----------
         direction : int
             The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        # Calculate the new output index.
-        if self.output_selection is None:
-            new_output = -1
-        else:
-            new_output = self.output_selection - 1
+        new_position = self.current_coil_index + self.cursor_position + direction
 
-        new_output += direction
+        # Check if the new position is within valid bounds.
+        if 0 <= new_position < self.coil_count:
+            self.cursor_position += direction
+            # Adjust cursor and index to keep cursor within visible rows.
+            if self.cursor_position >= self.per_page:
+                self.current_coil_index += 1
+                self.cursor_position = self.per_page - 1
+            if self.cursor_position < 0:
+                self.current_coil_index -= 1
+                self.cursor_position = 0
+            if self.current_coil_index + self.per_page > self.coil_count:
+                self.current_coil_index = max(0, self.coil_count - self.per_page)
 
-        # Ensure new_output cycles within the range of -1 to (NUMBER_OF_COILS - 1).
-        if new_output > (self.init.NUMBER_OF_COILS - 1):
-            new_output = -1
-        if new_output < -1:
-            new_output = (self.init.NUMBER_OF_COILS - 1)
-
-        self.output_selection = new_output + 1 if new_output != -1 else None
-        self.update_output_value()
+            # Refresh the display.
+            self.update_coil_list()
 
     def switch_1(self):
         """
-        Responds to presses of encoder 1 to save the output assignment and go back.
+        Responds to presses of encoder 1 to toggle coil assignment and update the map file.
         """
-        if self.output_selection is not None:
-            output_index = self.output_selection - 1
+        coil_index = self.current_coil_index + self.cursor_position
+
+        # Toggle the coil's assignment.
+        if coil_index in self.selected_coils:
+            self.selected_coils.remove(coil_index)
+            self.midi_file.outputs[coil_index] = None
         else:
-            output_index = None
+            # Check if the coil is assigned to another track.
+            if self.midi_file.outputs[coil_index] is not None:
+                # Clear the coil from the other track.
+                self.midi_file.outputs[coil_index] = None
+            # Assign the coil to the current track.
+            self.selected_coils.add(coil_index)
+            self.midi_file.outputs[coil_index] = self.midi_file.selected_track
 
-        # Clear any existing assignment for the selected track.
-        for i, track in enumerate(self.midi_file.outputs):
-            if track == self.midi_file.selected_track and i != output_index:
-                self.midi_file.outputs[i] = None
-
-        # Assign the new output to the selected track.
-        if output_index is not None:
-            self.midi_file.outputs[output_index] = self.midi_file.selected_track
-
+        # Save the updated assignments to the map file.
         file_path = self.init.sd_card_reader.mount_point + "/" + self.midi_file.file_list[self.midi_file.selected_file]
-
-        # Save the updated output assignments to the map file.
         self.midi_file.save_map_file(file_path)
 
-        # Return to the track listing.
-        stop_scroll(self.display)
-        self.midi_file.handlers["tracks"].draw()
+        # Update the display.
+        self.update_coil_list()
 
     def switch_2(self):
         """
-        Responds to presses of encoder 2 to go back.
+        Responds to presses of encoder 2 to go back to the track listing.
         """
         stop_scroll(self.display)
         self.midi_file.handlers["tracks"].draw()

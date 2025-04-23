@@ -82,11 +82,11 @@ class MIDIFilePlay:
 
         self.init.sd_card_reader.init_sd()
 
-        # Initialize start_time before updating the display
+        # Initialize start_time before updating the display.
         self.start_time = time.ticks_us()
         self.last_display_update = time.ticks_ms()
 
-        # Update the display with the initial elapsed time (00:00)
+        # Update the display with the initial elapsed time (00:00).
         self.display.clear()
         self.update_display()
 
@@ -116,8 +116,10 @@ class MIDIFilePlay:
 
                 if event.status in (umidiparser.NOTE_ON, umidiparser.NOTE_OFF):
                     track_index = event.track
-                    if track_index in self.midi_file.outputs:
-                        output = self.midi_file.outputs.index(track_index)
+                    # Find all coils assigned to this track.
+                    assigned_coils = [i for i, assigned_track in enumerate(self.midi_file.outputs) if assigned_track == track_index]
+                    
+                    for output in assigned_coils:
                         if event.status == umidiparser.NOTE_ON:
                             note = event.note
                             velocity = event.velocity
@@ -131,8 +133,6 @@ class MIDIFilePlay:
                                 self.init.output.set_output(output, True, frequency, scaled_on_time, None, None, True)
                         elif event.status == umidiparser.NOTE_OFF:
                             self.init.output.set_output(output, False)
-                    else:
-                        pass
 
             self.active = False
         except Exception as e:
@@ -153,8 +153,8 @@ class MIDIFilePlay:
         self.seconds = self.elapsed_time % 60
 
         # Calculate the maximum number of columns that fit on the screen.
-        level_text_width = len("1:100%") * self.display.font_width  # Width of one level entry
-        max_columns = min(self.display.width // level_text_width, 4)  # Max 4 columns per row
+        level_text_width = len("1:100%") * self.display.font_width  # Width of one level entry.
+        max_columns = min(self.display.width // level_text_width, 4)  # Max 4 columns per row.
 
         # Calculate the number of rows needed to display all levels.
         num_rows = (self.init.NUMBER_OF_COILS + max_columns - 1) // max_columns
@@ -170,8 +170,8 @@ class MIDIFilePlay:
         self.display.text(f"Time: {self.minutes:02}:{self.seconds:02}", 0, 16, 1)
 
         # Update the levels in multiple columns, wrapping based on screen width.
-        y_start = 32  # Starting Y position for the first row of levels
-        y_increment = self.display.line_height  # Vertical spacing between rows
+        y_start = 32  # Starting Y position for the first row of levels.
+        y_increment = self.display.line_height  # Vertical spacing between rows.
 
         for i in range(0, self.init.NUMBER_OF_COILS, max_columns):
             row_levels = self.levels[i:i + max_columns]

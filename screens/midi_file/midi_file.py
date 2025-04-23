@@ -5,7 +5,6 @@ teslauniverse.com
 
 midi_file.py
 Provides shared attributes/methods and routes inputs to sub-screens for the MIDI file feature.
-The modules in the midi_file subdirectory provide the primary functionality.
 """
 
 import json
@@ -14,61 +13,10 @@ from ...hardware.init import init
 from ...lib.menu import Screen
 from ...lib.config import Config as config
 
+
 class MIDIFile(Screen):
-    """
-    A class to represent and handle MIDI file playback functionality for
-    the MicroPython Tesla Coil Controller (MPTCC).
-
-    Attributes:
-    -----------
-    file_list : list
-        List of MIDI files available on the SD card.
-    track_list : list
-        List of tracks from the selected MIDI file.
-    current_file_index : int
-        Index of the currently selected file.
-    current_track_index : int
-        Index of the currently selected track.
-    file_cursor_position : int
-        Cursor position for file selection.
-    track_cursor_position : int
-        Cursor position for track selection.
-    current_page : str
-        Current page being displayed.
-    selected_filename : str
-        Name of the selected file.
-    selected_track : int
-        Index of the selected track.
-    outputs : list
-        List of outputs for each track.
-    last_rotary_1_value : int
-        Last value of rotary encoder 1.
-    per_page : int
-        Number of items displayed per page.
-    output_y : int
-        Y position of the output text on the display.
-    line_height : int
-        Display line height.
-    font_width : int
-        Display font width.
-    font_height : int
-        Display font height.
-    header_height : int
-        Display header height.
-    handlers : dict
-        Dictionary of screen handlers.
-    """
     def __init__(self, name):
-        """
-        Constructs all the necessary attributes for the MIDIFile object.
-
-        Parameters:
-        ----------
-        name : str
-            The name of the screen.
-        """
         super().__init__(name)
-
         self.name = name
         self.init = init
         self.display = self.init.display
@@ -82,9 +30,8 @@ class MIDIFile(Screen):
         self.current_page = None
         self.selected_filename = None
         self.selected_track = None
-        self.outputs = [None] * self.init.NUMBER_OF_COILS  # Dynamically sized based on NUMBER_OF_COILS
+        self.outputs = [None] * self.init.NUMBER_OF_COILS
         self.last_rotary_1_value = 0
-        self.levels = [config.DEF_MIDI_FILE_OUTPUT_LEVEL] * self.init.NUMBER_OF_COILS  # Dynamically sized
         self.per_page = 4
         self.output_y = None
         self.line_height = 12
@@ -94,8 +41,8 @@ class MIDIFile(Screen):
 
         self.config = config.read_config()
         self.default_level = self.config.get("midi_file_output_level", config.DEF_MIDI_FILE_OUTPUT_LEVEL)
+        self.levels = [self.default_level] * self.init.NUMBER_OF_COILS
 
-        # Initialize handlers.
         from mptcc.screens.midi_file import (
             MIDIFileFiles,
             MIDIFileTracks,
@@ -110,20 +57,19 @@ class MIDIFile(Screen):
             "play": MIDIFilePlay(self),
         }
 
-        # Dynamically create rotary_X and switch_X methods based on NUMBER_OF_COILS.
-        for i in range(self.init.NUMBER_OF_COILS):
-            setattr(self, f"rotary_{i + 1}", self._create_rotary_method(i + 1))
-            setattr(self, f"switch_{i + 1}", self._create_switch_method(i + 1))
+        num_switches = max(6, self.init.NUMBER_OF_COILS)
+        for i in range(1, num_switches + 1):
+            setattr(self, f"switch_{i}", self._create_switch_method(i))
 
-        # Create rotary_master method if a master encoder exists.
+        num_rotaries = max(2, self.init.NUMBER_OF_COILS)
+        for i in range(1, num_rotaries + 1):
+            setattr(self, f"rotary_{i}", self._create_rotary_method(i))
+
         if self._has_master_encoder():
             setattr(self, "rotary_master", self._create_rotary_method("master"))
             setattr(self, "switch_master", self._create_switch_method("master"))
 
     def _has_master_encoder(self):
-        """
-        Check if any input instance has a master encoder.
-        """
         for driver_key, driver_instances in self.init.input_instances.items():
             for instance_list in driver_instances.values():
                 for instance in instance_list:
@@ -132,32 +78,16 @@ class MIDIFile(Screen):
         return False
 
     def _create_rotary_method(self, encoder_id):
-        """
-        Factory function to create a rotary method for a specific encoder id.
-        """
         def rotary_method(direction):
             self.rotary(encoder_id, direction)
         return rotary_method
 
     def _create_switch_method(self, switch_number):
-        """
-        Factory function to create a switch method for a specific switch number.
-        """
         def switch_method():
             self.switch(switch_number)
         return switch_method
 
     def rotary(self, encoder_id, direction):
-        """
-        Respond to rotation of a rotary encoder.
-
-        Parameters:
-        ----------
-        encoder_id : int or str
-            The number of the rotary encoder (1, 2, 3, or 4) or 'master' for the master encoder.
-        direction : int
-            The rotary encoder direction.
-        """
         handler = self.handlers.get(self.current_page)
         if handler:
             method_name = f"rotary_{encoder_id}"
@@ -165,63 +95,47 @@ class MIDIFile(Screen):
                 getattr(handler, method_name)(direction)
 
     def switch(self, switch_number):
-        """
-        Respond to presses of a switch.
-
-        Parameters:
-        ----------
-        switch_number : int
-            The number of the switch (1, 2, 3, or 4).
-        """
         handler = self.handlers.get(self.current_page)
         if handler and hasattr(handler, f"switch_{switch_number}"):
             getattr(handler, f"switch_{switch_number}")()
 
     def draw(self):
-        """
-        Calls the draw function of the sub-screen.
-        """
         self.handlers["files"].draw()
 
     def load_map_file(self, file_path):
         """
-        Load the output assignments and levels from the map file.
+        Load the output assignments and levels from the map file, ensuring compatibility.
         """
         map_path = file_path.replace('.mid', '.map').replace('.midi', '.map')
-
         try:
             self.init.sd_card_reader.init_sd()
             with open(map_path, 'r') as f:
                 map_data = json.load(f)
 
                 if isinstance(map_data, dict):
-                    mappings = map_data["mappings"]
-                    levels = map_data["levels"]
+                    mappings = map_data.get("mappings", [])
+                    levels = map_data.get("levels", [self.default_level] * self.init.NUMBER_OF_COILS)
                 else:
                     mappings = map_data
-                    levels = [self.default_level] * self.init.NUMBER_OF_COILS  # Default levels
+                    levels = [self.default_level] * self.init.NUMBER_OF_COILS
 
                 if not isinstance(mappings, list) or not isinstance(levels, list):
                     raise ValueError("Invalid map file format: mappings and levels must be lists")
 
-                # Ensure mappings and levels match the current NUMBER_OF_COILS
-                if len(mappings) < self.init.NUMBER_OF_COILS:
-                    mappings.extend([0] * (self.init.NUMBER_OF_COILS - len(mappings)))  # Pad with zeros
-                if len(levels) < self.init.NUMBER_OF_COILS:
-                    levels.extend([self.default_level] * (self.init.NUMBER_OF_COILS - len(levels)))  # Pad with default levels
-
-                # Truncate if the map file has more elements than NUMBER_OF_COILS
-                mappings = mappings[:self.init.NUMBER_OF_COILS]
-                levels = levels[:self.init.NUMBER_OF_COILS]
+                # Pad or truncate mappings and levels to match NUMBER_OF_COILS
+                mappings = (mappings + [0] * self.init.NUMBER_OF_COILS)[:self.init.NUMBER_OF_COILS]
+                levels = (levels + [self.default_level] * self.init.NUMBER_OF_COILS)[:self.init.NUMBER_OF_COILS]
 
                 # Assign mappings and levels
                 for i in range(self.init.NUMBER_OF_COILS):
-                    self.outputs[i] = mappings[i] - 1 if mappings[i] != 0 else None
+                    self.outputs[i] = mappings[i] if mappings[i] != 0 else None  # Changed: No -1
                     self.levels[i] = levels[i]
         except OSError:
             self.save_map_file(file_path, False)
         except Exception as e:
             print(f"Error loading map file: {e}")
+            self.outputs = [None] * self.init.NUMBER_OF_COILS
+            self.levels = [self.default_level] * self.init.NUMBER_OF_COILS
         finally:
             self.init.sd_card_reader.deinit_sd()
 
@@ -230,13 +144,12 @@ class MIDIFile(Screen):
         Save the output assignments and levels to the map file.
         """
         map_path = file_path.replace('.mid', '.map').replace('.midi', '.map')
-
         try:
             if initsd:
                 self.init.sd_card_reader.init_sd()
 
             map_data = {
-                "mappings": [(output + 1) if output is not None else 0 for output in self.outputs],
+                "mappings": [output if output is not None else 0 for output in self.outputs],  # Changed: No +1
                 "levels": self.levels
             }
 
