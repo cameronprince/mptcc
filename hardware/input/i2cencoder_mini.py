@@ -105,13 +105,16 @@ class I2CEncoderMini(Input):
                     try:
                         if encoder.updateStatus():
                             status = encoder.readStatusRaw()
+                    except Exception as e:
+                        print(f"I2CEncoderMini: Error updating status for encoder {idx}: {e}")
                     finally:
                         self.init.mutex_release(self.mutex, "i2cencoder_mini:process_interrupt")
-                    if status & (CONSTANTS["RINC"] | CONSTANTS["RDEC"]):
+                    
+                    if status is not None and status & (CONSTANTS["RINC"] | CONSTANTS["RDEC"]):
                         direction = 1 if status & CONSTANTS["RINC"] else -1
                         super().encoder_change(("master" if self.master else idx), direction)
                         break
-                    if status & CONSTANTS["PUSHP"] and self.init.integrated_switches:
+                    if status is not None and status & CONSTANTS["PUSHP"]:
                         super().switch_click(("master" if self.master else (idx + 1)))
                         break
             await asyncio.sleep(0.05)

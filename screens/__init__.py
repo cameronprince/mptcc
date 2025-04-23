@@ -16,6 +16,7 @@ from .configure.midi_file import MIDIFileConfig
 from .midi_input import MIDIInput
 from .battery_status import BatteryStatus
 from .configure.restore_defaults import RestoreDefaults
+from .configure.purge_map_files import PurgeMapFiles
 
 __all__ = [
     'ARSG',
@@ -26,5 +27,6 @@ __all__ = [
     'MIDIFileConfig',
     'MIDIInput',
     'BatteryStatus',
-    'RestoreDefaults'
+    'RestoreDefaults',
+    'PurgeMapFiles',
 ]

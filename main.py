@@ -28,7 +28,7 @@ from mptcc.hardware.init import init
 # The MPTCC configuration is stored in files in the hardware/profiles directory.
 # You can edit the default profile, or copy it to a new file in the profiles
 # directory and reference it here instead of default.
-PROFILE_NAME = "mptcc_4"
+PROFILE_NAME = "mptcc_2"
 profile = __import__(f"mptcc.hardware.profiles.{PROFILE_NAME}", None, None, (None,))
 profile.Profile(PROFILE_NAME, init)
 
@@ -48,6 +48,7 @@ init.menu.set_screen(MenuScreen("MicroPython TCC")
         .add(screens.MIDIFileConfig("MIDI File Config"))
         .add(screens.ARSGConfig("ARSG Config"))
         .add(screens.RestoreDefaults("Restore Defaults"))
+        .add(screens.PurgeMapFiles("Purge Map Files"))
     )
 )
 init.menu.draw()

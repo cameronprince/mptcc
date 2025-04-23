@@ -57,6 +57,15 @@ DRIVERS = {
             "class": "SSD1322",
             "instances": [
                 {
+                    "enabled": False,
+                    "spi_instance": 2,
+                },
+            ],
+        },
+        "ssh1122": {
+            "class": "SSH1122",
+            "instances": [
+                {
                     "enabled": True,
                     "spi_instance": 2,
                 },
@@ -154,7 +163,7 @@ DRIVERS = {
                 },
                 {
                     "enabled": True,
-                    "pin": 22,
+                    "pin": 0,
                 },
             ],
         },
@@ -175,7 +184,7 @@ DRIVERS = {
             "instances": [
                 {
                     "enabled": True,
-                    "pin": 0,
+                    "pin": 22,
                     "length_ms": 25,
                     "volume": 100,
                     "pwm_freq": 3000,
@@ -195,6 +204,5 @@ class Profile:
         init.load_drivers(CONFIG, DRIVERS);
         print(f"Profile ({name}) loading complete")
         init.memory_usage()
-
 
 # END
