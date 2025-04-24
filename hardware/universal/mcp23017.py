@@ -19,30 +19,27 @@ class MCP23017:
     """
     A class to provide hardware instances using the MCP23017 GPIO expander.
     """
-    def __init__(
-        self,
-        i2c_instance,
-        i2c_addr=0x20,
-        host_interrupt_pin=None,
-        host_interrupt_pin_pull_up=True,
-        encoder=None,
-        switch=None,
-    ):
-        if encoder is None and switch is None:
+    def __init__(self, config):
+
+        self.i2c_instance = config.get("i2c_instance", 1)
+        self.i2c_addr = config.get("i2c_addr", 0x20)
+        self.host_interrupt_pin = config.get("host_interrupt_pin", None)
+        self.host_interrupt_pin_pull_up = config.get("host_interrupt_pin_pull_up", False)
+        self.encoder = config.get("encoder", None)
+        self.switch = config.get("switch", None)
+        self.machine_name = "mcp23017"
+
+        if self.encoder is None and self.switch is None:
             return
 
-        self.encoder = encoder
-        self.switch = switch
         self.init = init
         self.class_name = self.__class__.__name__
-        self.interrupt = {}
+        self.interrupt = None
         self.init_complete = [False]
-        self.encoder_states = {}
-        self.switch_states = {}
-        self.instance_number = len(self.init.universal_instances.get("mcp23017", []))
+        self.instance_number = len(self.init.universal_instances.get(self.machine_name, []))
 
         # Prepare the I2C bus.
-        if i2c_instance == 2:
+        if self.i2c_instance == 2:
             self.init.init_i2c_2()
             self.i2c = self.init.i2c_2
             self.mutex = self.init.i2c_2_mutex
@@ -53,38 +50,39 @@ class MCP23017:
 
         # Initialize the MCP23017 driver.
         self.init.mutex_acquire(self.mutex, f"{self.class_name}:__init__")
-        self.mcp = MCP23017_Driver(self.i2c, i2c_addr)
+        self.mcp = MCP23017_Driver(self.i2c, self.i2c_addr)
         self.init.mutex_release(self.mutex, f"{self.class_name}:__init__")
 
         self._configure()
 
         # Store in init before initializing hardware.
-        if "mcp23017" not in self.init.universal_instances:
-            self.init.universal_instances["mcp23017"] = []
-        self.init.universal_instances["mcp23017"].append(self)
+        if self.machine_name not in self.init.universal_instances:
+            self.init.universal_instances[self.machine_name] = []
+        self.init.universal_instances[self.machine_name].append(self)
 
-        print(f"MCP23017 {self.instance_number} initialized on I2C_{i2c_instance} ({hex(i2c_addr)})")
-        print(f"- Host interrupt pin: {host_interrupt_pin} (pull_up={host_interrupt_pin_pull_up})")
+        print(f"MCP23017 {self.instance_number} initialized on I2C_{self.i2c_instance} ({hex(self.i2c_addr)})")
+        print(f"- Host interrupt pin: {self.host_interrupt_pin} (pull_up={self.host_interrupt_pin_pull_up})")
 
         # Configure interrupt pin.
         self.host_int = Pin(
-            host_interrupt_pin, 
+            self.host_interrupt_pin, 
             Pin.IN, 
-            Pin.PULL_UP if host_interrupt_pin_pull_up else None
+            Pin.PULL_UP if self.host_interrupt_pin_pull_up else None
         )
         self.host_int.irq(trigger=Pin.IRQ_FALLING, handler=self._interrupt)
 
         # Initialize switches if configured.
-        if switch is not None and switch.get("enabled", True):
+        if self.switch is not None and self.switch.get("enabled", True):
             self._init_switches()
 
         # Initialize encoders if configured.
-        if encoder is not None and encoder.get("enabled", True):
+        if self.encoder is not None and self.encoder.get("enabled", True):
             self._init_encoders()
 
-        self.init_complete[0] = True
         # Start the polling task.
         asyncio.create_task(self._poll())
+
+        self.init_complete[0] = True
 
     def _configure(self):
         # Prepare pin data.
@@ -98,21 +96,14 @@ class MCP23017:
         # Initialize 16-bit masks.
         port_mask = 0x0000
         pullup_mask = 0x0000
-        defval_mask = 0x0000
-        intcon_mask = 0x0000
 
         # Build masks for encoders.
         if encoder_pins:
             for clk_pin, dt_pin in encoder_pins:
                 if encoder_port == "A":
                     port_mask |= (1 << clk_pin) | (1 << dt_pin)
-                    # Set CLK high and DT low as default comparison values
-                    defval_mask |= (1 << clk_pin)
-                    intcon_mask |= (1 << clk_pin) | (1 << dt_pin)
                 else:
                     port_mask |= (1 << (clk_pin + 8)) | (1 << (dt_pin + 8))
-                    defval_mask |= (1 << (clk_pin + 8))
-                    intcon_mask |= (1 << (clk_pin + 8)) | (1 << (dt_pin + 8))
             
             if self.encoder.get("pull_up", False):
                 for clk_pin, dt_pin in encoder_pins:
@@ -140,7 +131,7 @@ class MCP23017:
 
         # Configure the IOCON register.
         self.mcp.config(
-            interrupt_polarity=0,    # (INTPOL) Active-high interrupt.
+            interrupt_polarity=0,    # (INTPOL) Active-low interrupt.
             interrupt_open_drain=0,  # (ODR) Push-pull output.
             sda_slew=0,              # (DISSLW) Disable slew rate control.
             sequential_operation=0,  # (SEQOP) Enable sequential operation.
@@ -151,146 +142,117 @@ class MCP23017:
         # 16-bit configuration.
         self.mcp.mode |= port_mask                         # IODIR
         self.mcp.pullup |= pullup_mask                     # GPPU
-        self.mcp.input_polarity |= port_mask               # IPOL
-        print(f"defval_mask: {defval_mask}")
-        print(f"intcon_mask: {intcon_mask}")
-        # self.mcp.default_value = defval_mask              # DEFVAL
-        # self.mcp.interrupt_compare_default = intcon_mask  # INTCON
-        self.mcp.interrupt_enable = port_mask             # GPINTEN
+        self.mcp.interrupt_enable = port_mask              # GPINTEN
 
-        _ = self.mcp.interrupt_flag         # Read INTF (porta|b.interrupt_flag)
-        _ = self.mcp.interrupt_captured     # Read INTCAP (porta|b.interrupt_captured)
+        _ = self.mcp.interrupt_flag         # Read INTF (porta|b.interrupt_flag).
+        _ = self.mcp.interrupt_captured     # Read INTCAP (porta|b.interrupt_captured).
 
         self.init.mutex_release(self.mutex, f"{self.class_name}:_configure")
 
     def _init_switches(self):
-        if "mcp23017_switch" not in self.init.input_instances:
-            self.init.input_instances["mcp23017_switch"] = []
-
+        if "switch" not in self.init.input_instances:
+            self.init.input_instances["switch"] = {}
+        if self.machine_name not in self.init.input_instances["switch"]:
+            self.init.input_instances["switch"][self.machine_name] = []
+        switch_instances = []
+        switch_instance = Switch_MCP23017(self.init, self.mcp, self.switch)
+        switch_instances.append(switch_instance)
+        self.init.input_instances["switch"][self.machine_name].append(MCP23017_Switch(switch_instances))
         port = self.switch.get("port", "B").upper()
-        self.init.input_instances["mcp23017_switch"].append([
-            Switch_MCP23017(self.init, self.mcp, self.switch)
-        ])
-
         print(f"- Switches initialized on port {port} (pull_up={self.switch.get('pull_up', False)})")
         for i, pin in enumerate(self.switch.get("pins", [])):
             print(f"  - Switch {i+1}: Pin {pin}")
 
     def _init_encoders(self):
         """Initialize encoder hardware and instances."""
-        if "mcp23017_encoder" not in self.init.input_instances:
-            self.init.input_instances["mcp23017_encoder"] = []
-        
-        encoder_instance = Encoder_MCP23017(
-            self.init,
-            self.mcp,
-            self.encoder,
-        )
-        self.init.input_instances["mcp23017_encoder"].append([encoder_instance])
-
+        if "encoder" not in self.init.input_instances:
+            self.init.input_instances["encoder"] = {}
+        if self.machine_name not in self.init.input_instances["encoder"]:
+            self.init.input_instances["encoder"][self.machine_name] = []
+        encoder_instances = []
+        encoder_instance = Encoder_MCP23017(self.init, self.mcp, self.encoder)
+        encoder_instances.append(encoder_instance)
+        self.init.input_instances["encoder"][self.machine_name].append(MCP23017_Encoder(encoder_instances))
         port = self.encoder.get("port", "A").upper()
         pull_up = self.encoder.get("pull_up", False)
-        
         print(f"- Encoders initialized on port {port} (pull_up={pull_up})")
-        
+        for i, (clk_pin, dt_pin) in enumerate(self.encoder.get("pins", [])):
+            print(f"  - Encoder {i}: CLK={clk_pin}, DT={dt_pin}")
         # Initialize state tracking for each encoder.
-        for i, (pin_1, pin_2) in enumerate(self.encoder.get("pins", [])):
-            self.encoder_states[i] = {
-                'state': 0,
-                'clk_pin': pin_1,
-                'dt_pin': pin_2,
-                'port': port
-            }
-            print(f"  - Encoder {i+1}: Pins {pin_1} and {pin_2}")
+        self.prev_clk_states = [1] * len(self.encoder.get("pins", []))
 
     def _interrupt(self, pin):
         if not self.init_complete[0]:
             return
-
-        # Check Port A first.
-        flagged_a = self.mcp.porta.interrupt_flag
-        if flagged_a != 0:
-            self.init.mutex_acquire(self.mutex, f"{self.class_name}:interrupt_captured:a")
-            captured_a = self.mcp.porta.interrupt_captured
-            self.init.mutex_release(self.mutex, f"{self.class_name}:interrupt_captured:a")
-            self.interrupt = [flagged_a, captured_a, "A"]
-        else:
-            # Only check Port B if Port A had no activity.
-            flagged_b = self.mcp.portb.interrupt_flag
-            if flagged_b != 0:
-                self.init.mutex_acquire(self.mutex, f"{self.class_name}:interrupt_captured:b")
-                captured_b = self.mcp.portb.interrupt_captured
-                self.init.mutex_release(self.mutex, f"{self.class_name}:interrupt_captured:b")
-                self.interrupt = [flagged_b, captured_b, "B"]
+        self.init.mutex_acquire(self.mutex, f"{self.class_name}:_interrupt")
+        intf = self.mcp.interrupt_flag
+        intcap = self.mcp.interrupt_captured
+        self.init.mutex_release(self.mutex, f"{self.class_name}:_interrupt")
+        self.interrupt = (intf, intcap)
 
     async def _poll(self):
         """
         Asyncio task to process MCP23017 interrupts.
         """
         while True:
-            if isinstance(self.interrupt, (tuple, list)) and len(self.interrupt) == 3:
-                print(self.interrupt)
-                flagged, captured, port = self.interrupt
+            if self.interrupt is not None:
+                intf, intcap = self.interrupt
+                self._process_interrupt(intf, intcap)
                 self.interrupt = None
-                self._process_interrupt(flagged, captured, port)
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
 
-    def _process_interrupt(self, flagged, captured, port):
-        if not hasattr(self.init, 'input_instances'):
-            return
+    def _process_interrupt(self, intf, intcap):
+        """
+        Process MCP23017 interrupts by delegating to switch and encoder instances.
+        
+        Args:
+            intf (int): Interrupt flags (INTF register).
+            intcap (int): Captured pin states (INTCAP register).
+        """
+        encoder_processed = False
+        state = False
+        
+        # Process encoders first
+        for handler in self.init.input_instances["encoder"].get(self.machine_name, []):
+            for encoder_instance in handler.instances:
+                for instance in encoder_instance.instances:
+                    clk_pin = instance['clk_pin']
+                    dt_pin = instance['dt_pin']
+                    port = instance['port']
+                    index = instance['index']
+                    clk_mask = (1 << clk_pin) if port == "A" else (1 << (clk_pin + 8))
+                    dt_mask = (1 << dt_pin) if port == "A" else (1 << (dt_pin + 8))
+                    if intf & (clk_mask | dt_mask):  # Check both CLK and DT
+                        clk_state = (intcap & clk_mask) != 0  # True if high
+                        dt_state = (intcap & dt_mask) != 0    # True if high
+                        direction = encoder_instance.determine_direction(index, clk_state, dt_state)
+                        if direction:
+                            encoder_instance.process_interrupt(index, direction)
+                            encoder_processed = True
+                            break  # Exit innermost loop after handling encoder interrupt
+                if encoder_processed:
+                    break  # Exit encoder_instance loop
+            if encoder_processed:
+                break  # Exit handler loop
 
-        print(f"_process_interrupt - flagged: {flagged}, captured: {captured}, port: {port}")
-
-        for handler in self.init.input_instances.get("mcp23017_switch", []):
-            print(f"checking for switch handler: {handler}")
-            for h in handler:
-                # First filter instances by port
-                matching_instances = [inst for inst in h.instances if inst['port'] == port]
-                if not matching_instances:
-                    print("port mismatch for all switch instances")
-                    continue
-                    
-                for inst in matching_instances:
-                    print(f"checking instances: {inst}")
-                    print("processing switch interrupt")
-                    if flagged & (1 << inst['pin']):
-                        current_state = (captured >> inst['pin']) & 1
-                        
-                        if inst['index'] not in self.switch_states:
-                            self.switch_states[inst['index']] = current_state
-                        
-                        if current_state == 0 and self.switch_states[inst['index']] == 1:
-                            h.process_interrupt(inst['index'])
-                        
-                        self.switch_states[inst['index']] = current_state
-                        return
-
-        for handler in self.init.input_instances.get("mcp23017_encoder", []):
-            print(f"checking for encoder handler: {handler}")
-            for h in handler:
-                # First filter instances by port
-                matching_instances = [inst for inst in h.instances if inst['port'] == port]
-                if not matching_instances:
-                    print("port mismatch for all encoder instances")
-                    continue
-                    
-                for inst in matching_instances:
-                    print(f"checking instances: {inst}")
-                    print("processing encoder interrupt")
-                    if flagged & ((1 << inst['clk_pin']) | (1 << inst['dt_pin'])):
-                        clk = (captured >> inst['clk_pin']) & 1
-                        dt = (captured >> inst['dt_pin']) & 1
-                        
-                        encoder_state = self.encoder_states[inst['index']]
-                        print(f"encoder_state: {encoder_state}")
-                        encoder_state['state'] = (encoder_state['state'] & 0x3f) << 2 | (clk << 1) | dt
-                        print(f"encoder_state['state']: {encoder_state['state']}")
-                        if encoder_state['state'] == 180:
-                            h.process_interrupt(inst['index'], 1)
-                            return
-                        elif encoder_state['state'] == 120:
-                            h.process_interrupt(inst['index'], -1)
-                            return
+        # Process switches only if no encoder interrupt was handled
+        if not encoder_processed:
+            for handler in self.init.input_instances["switch"].get(self.machine_name, []):
+                for switch_instance in handler.instances:
+                    for instance in switch_instance.instances:
+                        pin = instance['pin']
+                        port = instance['port']
+                        index = instance['index']
+                        mask = (1 << pin) if port == "A" else (1 << (pin + 8))
+                        if intf & mask:
+                            state = (intcap & mask) == 0  # Active-low: 0 = pressed
+                            if state:  # Only on press
+                                switch_instance.process_interrupt(index)
+                                break  # Exit innermost loop after handling switch interrupt
+                    if state:  # Break outer loop if switch was processed
+                        break
+                if state:
+                    break
 
 
 class Encoder_MCP23017(Input):
@@ -301,7 +263,7 @@ class Encoder_MCP23017(Input):
         self.mcp = mcp
         self.encoder = encoder
         self.instances = []
-        self.states = []
+        self.prev_states = []
         
         port = encoder.get("port", "A").upper()
         for i, (clk_pin, dt_pin) in enumerate(encoder.get("pins", [])):
@@ -311,11 +273,34 @@ class Encoder_MCP23017(Input):
                 'port': port,
                 'index': i,
             })
-            self.states.append(0b00)
+            self.prev_states.append((1, 1))
+
+    def determine_direction(self, index, clk_state, dt_state):
+        """
+        Determine encoder rotation direction using half quadrature decoding.
+        
+        Args:
+            index (int): Index of the encoder.
+            clk_state (bool): Current CLK state (True = high, False = low).
+            dt_state (bool): Current DT state (True = high, False = low).
+        
+        Returns:
+            int: 1 for CW, -1 for CCW, None if no direction detected.
+        """
+        prev_clk, prev_dt = self.prev_states[index]
+        self.prev_states[index] = (clk_state, dt_state)
+        
+        # Half quadrature: process falling edge of CLK or DT
+        if prev_clk == 1 and clk_state == 0:  # CLK falling edge
+            return 1 if dt_state else -1  # CW if DT high, CCW if DT low
+        elif prev_dt == 1 and dt_state == 0:  # DT falling edge
+            return -1 if clk_state else 1  # CCW if CLK high, CW if CLK low
+        return None
 
     def process_interrupt(self, index, direction):
         """Wrapper for handling encoder interrupt."""
-        super().encoder_change(index, direction)
+        if direction is not None:
+            super().encoder_change(index, direction)
 
 
 class Switch_MCP23017(Input):
@@ -338,3 +323,13 @@ class Switch_MCP23017(Input):
     def process_interrupt(self, index):
         """Wrapper for handling switch interrupt."""
         super().switch_click(index + 1)
+
+
+class MCP23017_Switch:
+    def __init__(self, switch_instances):
+        self.instances = switch_instances
+
+
+class MCP23017_Encoder:
+    def __init__(self, encoder_instances):
+        self.instances = encoder_instances

@@ -14,7 +14,7 @@ LED0_OFF_L = 0x08
 LED0_OFF_H = 0x09
 
 # Initialize I2C bus
-i2c = I2C(1, scl=Pin(19), sda=Pin(18), freq=400000)
+i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 
 # Function to write a byte to a register
 def write_register(register, value):

@@ -7,6 +7,7 @@ screens/midi_file/tracks.py
 Provides the MIDI track listing screen.
 """
 
+import gc
 from ...hardware.init import init
 from ...hardware.display.tasks import start_scroll, stop_scroll
 import umidiparser
@@ -91,39 +92,34 @@ class MIDIFileTracks:
         """
         self.midi_file.track_list = []
 
-        file_path = self.init.SD_CARD_READER_MOUNT_POINT + "/" + self.midi_file.file_list[self.midi_file.selected_file]
-
-        # We're unable to share sd_init actions due to try/catch on load_map which
-        # needed for "No tracks mapped" error during playback.
+        file_path = self.init.sd_card_reader.mount_point + "/" + self.midi_file.file_list[self.midi_file.selected_file]
         self.midi_file.load_map_file(file_path)
-
-        # Initialize the SD card reader so we can read the MIDI file.
         self.init.sd_card_reader.init_sd()
 
-        # Track counter for default names.
         track_counter = 1
+        gc.collect()
+        try:
+            for index, track in enumerate(umidiparser.MidiFile(file_path, buffer_size=0).tracks):
+                has_note_on = False
+                track_name = None
 
-        for index, track in enumerate(umidiparser.MidiFile(file_path, buffer_size=0).tracks):
-            has_note_on = False
-            track_name = None
+                for event in track:
+                    if event.is_meta() and event.status == umidiparser.TRACK_NAME:
+                        track_name = event.name
+                    elif not event.is_meta() and event.status == umidiparser.NOTE_ON:
+                        has_note_on = True
+                        break
 
-            # First pass: Check for NOTE_ON events and track name.
-            for event in track:
-                if event.is_meta() and event.status == umidiparser.TRACK_NAME:
-                    track_name = event.name
-                elif not event.is_meta() and event.status == umidiparser.NOTE_ON:
-                    has_note_on = True
-                    break  # Exit the loop early once a NOTE_ON event is found.
-
-            # Only add tracks with NOTE_ON events.
-            if has_note_on:
-                # Assign a default name if the track has no name.
-                if not track_name:
-                    track_name = f"Track {track_counter}"
-                    track_counter += 1  # Increment the track counter.
-                self.midi_file.track_list.append({"name": track_name, "original_index": index})
+                if has_note_on:
+                    if not track_name:
+                        track_name = f"Track {track_counter}"
+                        track_counter += 1
+                    self.midi_file.track_list.append({"name": track_name, "original_index": index})
+        except Exception as e:
+            print(f"Error obtaining track list: {e}")
 
         self.init.sd_card_reader.deinit_sd()
+        gc.collect()
 
     def rotary_1(self, direction):
         """

@@ -3,37 +3,29 @@ MicroPython Tesla Coil Controller (MPTCC)
 by Cameron Prince
 teslauniverse.com
 
-screens/configure/restore_defaults.py
-Provides the screen for restoring default settings.
+screens/configure/purge_map_files.py
+Provides the screen for purging map files.
 """
 
-import os
-from mptcc.hardware.init import init
-from mptcc.lib.menu import Screen
-import mptcc.lib.config as config
+import uos
+from ...hardware.init import init
+from ...lib.menu import Screen
 
 
-class RestoreDefaults(Screen):
+class PurgeMapFiles(Screen):
     """
-    A class to represent and handle the screen for restoring default settings
+    A class to represent and handle the screen for purging map files
     in the MicroPython Tesla Coil Controller (MPTCC).
-
-    Attributes:
-    -----------
-    name : str
-        The name of the restore defaults screen.
-    selection : str
-        The current selection ("Yes" or "No").
     """
 
     def __init__(self, name):
         """
-        Constructs all the necessary attributes for the RestoreDefaults object.
+        Constructs all the necessary attributes for the PurgeMapFiles object.
 
         Parameters:
         ----------
         name : str
-            The name of the restore defaults screen.
+            The name of the purge map files screen.
         """
         super().__init__(name)
         self.name = name
@@ -44,7 +36,7 @@ class RestoreDefaults(Screen):
 
     def draw(self):
         """
-        Displays the restore defaults screen with options.
+        Displays the purge map files screen with options.
         """
         self.init.display.clear()
         self.init.display.header(self.name)
@@ -54,8 +46,8 @@ class RestoreDefaults(Screen):
         padding = 2
         vertical_spacing = 10
 
-        restore_defaults_text = "Restore now?"
-        restore_defaults_x = (screen_width - len(restore_defaults_text) * self.font_width) // 2
+        purge_map_files_text = "Purge now?"
+        purge_map_files_x = (screen_width - len(purge_map_files_text) * self.font_width) // 2
 
         yes_text = "Yes"
         no_text = "No"
@@ -63,7 +55,7 @@ class RestoreDefaults(Screen):
         yes_no_x = (screen_width - len(yes_no_text) * self.font_width) // 2
 
         # Display the centered options.
-        self.init.display.text(restore_defaults_text, restore_defaults_x, 20, 1)
+        self.init.display.text(purge_map_files_text, purge_map_files_x, 20, 1)
 
         # Highlight the current selection.
         yes_background = int(self.selection == "Yes")
@@ -84,19 +76,47 @@ class RestoreDefaults(Screen):
 
         self.init.display.show()
 
-    def restore_defaults(self):
+    def purge_map_files(self):
         """
-        Performs the default restoration which consists of removing the config file.
+        Deletes all .map files in the SD card mount point.
         """
-        try:
-            os.remove(init.CONFIG_PATH)
-        except OSError:
-            pass
-        self.init.display.clear()
-        # Display the success message for two seconds and return to the main menu.
-        self.init.display.alert_screen("Defaults restored")
+        mount_point = self.init.sd_card_reader.mount_point
+        deleted_count = 0
 
-        # Return to the main menu.
+        try:
+            # Initialize SD card.
+            self.init.sd_card_reader.init_sd()
+
+            # List all files in the mount point and filter for .map files.
+            for file_info in uos.listdir(mount_point):
+                file_name = file_info[0] if isinstance(file_info, tuple) else file_info
+                if file_name.lower().endswith('.map') and not file_name.startswith('._'):
+                    try:
+                        file_path = f"{mount_point}/{file_name}"
+                        uos.remove(file_path)
+                        deleted_count += 1
+                    except OSError as e:
+                        print(f"Error deleting {file_path}: {e}")
+
+            # Display success or no-files message.
+            if deleted_count > 0:
+                self.init.display.alert_screen(f"Purged {deleted_count} map files")
+            else:
+                self.init.display.alert_screen("No map files found")
+
+        except OSError as e:
+            print(f"Error accessing SD card: {e}")
+            self.init.display.alert_screen("SD card error")
+        except Exception as e:
+            print(f"Unexpected error during purge: {e}")
+            self.init.display.alert_screen("Purge failed")
+        finally:
+            # Clean up SD card.
+            self.init.sd_card_reader.deinit_sd()
+
+        # Return to the main menu after a brief delay.
+        import time
+        time.sleep(2)  # Display message for 2 seconds.
         self.init.menu.reset()
         self.init.menu.draw()
 
@@ -109,18 +129,16 @@ class RestoreDefaults(Screen):
         direction : int
             The direction of rotation (1 for clockwise, -1 for counterclockwise).
         """
-        # Toggle the selection between "Yes" and "No".
         self.selection = "Yes" if self.selection == "No" else "No"
-
         self.draw()
 
     def switch_1(self):
         """
-        Responds to switch 1 presses to perform the restore action if "Yes" is selected,
+        Responds to switch 1 presses to perform the purge action if "Yes" is selected,
         or return to the configuration menu if "No" is selected.
         """
         if self.selection == "Yes":
-            self.restore_defaults()
+            self.purge_map_files()
         else:
             self.switch_2()
 

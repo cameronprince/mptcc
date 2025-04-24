@@ -8,6 +8,7 @@ Provides the manager classes for controlling the hardware.
 """
 
 import time
+from ..lib.utils import status_color, scale_rgb
 
 
 class HardwareManager:
@@ -241,11 +242,23 @@ class DisplayManager(HardwareManager):
 class OutputManager(HardwareManager):
     def __init__(self, init):
         super().__init__(init, "output")
-        self.rgb_led_manager = RGBLEDManager(init)
+        self.rgb_led_manager = init.rgb_led
+        self.master_level = getattr(self.init, "MASTER_DEFAULT_POSITION", 50)
+        self.master_led_count = self.rgb_led_manager.master_led_count()
 
-    def set_output(self, index, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None):
+    def set_master(self, level):
+        self.master_level = level
+        self.rgb_led_manager.set_master(level)
+
+    def change_master(self, direction):
+        increment = 100 / self.master_led_count if self.master_led_count > 0 else 10
+        new_level = max(0, min(100, self.master_level + direction * increment))
+        self.master_level = new_level
+        self.rgb_led_manager.set_master(new_level)
+
+    def set_output(self, index, active=False, freq=None, on_time=None, max_duty=None, max_on_time=None, master=False):
         """
-        Sets the specified output across all registered output drivers.
+        Sets the specified output across all registered output drivers, scaling on_time by master_level.
 
         Parameters:
         ----------
@@ -261,16 +274,16 @@ class OutputManager(HardwareManager):
             The maximum duty cycle allowed.
         max_on_time : int, optional
             The maximum on time allowed in microseconds.
+        master : bool, optional
+            Whether a master should be active. Defaults to False.
         """
+        if active and master and on_time is not None:
+            on_time = int(on_time * (self.master_level / 100))  # Scale by master_level
+
         for driver_key, driver_instances in self.instances.items():
-            # Iterate over each group of Output_GPIO_PWM objects.
-            for output_group in driver_instances:
-                # Check if the index is within the range of this group.
-                if index < len(output_group):
-                    # Call set_output on the specific Output_GPIO_PWM object.
-                    output_group[index].set_output(active, freq, on_time)
-                else:
-                    print(f"Warning: Output index {index} is out of range for {driver_key}.")
+            for instance in driver_instances:
+                if hasattr(instance, "instances") and index < len(instance.instances):
+                    instance.instances[index].set_output(active, freq, on_time, max_duty, max_on_time)
 
         # Control the RGB LED for this output.
         if active:
@@ -301,72 +314,131 @@ class OutputManager(HardwareManager):
 
 class RGBLEDManager(HardwareManager):
     def __init__(self, init):
-        super().__init__(init, "rgb_led")
+        self.init = init
+        super().__init__(self.init, "rgb_led")
+        self._polling = self._polling_check()
+        self._master_led_count = self._master_led_count()
+
+    def _polling_check(self):
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances"):
+                    for led_instance in instance.instances:
+                        if hasattr(led_instance, "asyncio_polling"):
+                            return True
+        return False
+
+    def needs_polling(self):
+        return self._polling
+
+    def master_led_count(self):
+        return self._master_led_count
+
+    def _master_led_count(self):
+        max_leds = 0
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances"):
+                    for led_instance in instance.instances:
+                        if hasattr(led_instance, "master") and led_instance.master:
+                            num_leds = getattr(led_instance, "num_leds", 0)
+                            max_leds = max(max_leds, num_leds)
+        return max_leds
+
+    def set_master(self, level):
+        """
+        Sets the level for all RGB LED instances marked as master.
+
+        Parameters:
+        ----------
+        level : float or int
+            The percentage level (0 to 100) to set for master LEDs.
+        """
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances"):
+                    for led_instance in instance.instances:
+                        if hasattr(led_instance, "master") and led_instance.master:
+                            led_instance.set_level(level)
+
+    def set_color(self, index, r, g, b):
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances") and index < len(instance.instances):
+                    led_instance = instance.instances[index]
+                    if hasattr(led_instance, "asyncio_polling") and led_instance.asyncio_polling:
+                        led_instance.set_color(r, g, b)
 
     def enable_led(self, index, freq, on_time, max_duty=None, max_on_time=None):
         """
         Enables the specified LED on all RGB LED drivers.
-        """
-        for driver_key, driver_instances in self.instances.items():
-            # print(f"Debug: driver_key = {driver_key}")  # Debug: Print driver key
-            # print(f"Debug: driver_instances = {driver_instances}")  # Debug: Print driver instances
-            for led_group in driver_instances:
-                if index < len(led_group):
-                    led_instance = led_group[index]
-                    # print(f"Debug: Processing LED instance {led_instance} at index {index}")  # Debug: Print LED instance
-                    if hasattr(led_instance, "set_status"):
-                        # print(f"Debug: Calling set_status on {led_instance}")  # Debug: Print method call
-                        led_instance.set_status(index, freq, on_time, max_duty, max_on_time)
-                    else:
-                        # print(f"Warning: LED instance {driver_key} does not have a set_status method.")
-                        pass
-                else:
-                    # print(f"Warning: LED index {index} is out of range for {driver_key}.")
-                    pass
 
-    def disable_led(self, index):
+        Parameters:
+        ----------
+        index : int
+            The index of the LED to enable.
+        freq : int
+            The frequency of the output signal in Hz.
+        on_time : int
+            The on time of the output signal in microseconds.
+        max_duty : int, optional
+            The maximum duty cycle allowed.
+        max_on_time : int, optional
+            The maximum on time allowed in microseconds.
+        """
+        if index >= self.init.NUMBER_OF_COILS:
+            raise ValueError(f"LED index {index} exceeds NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS})")
+
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances") and index < len(instance.instances):
+                    led_instance = instance.instances[index]
+                    if hasattr(led_instance, "master") and led_instance.master:
+                        continue
+                    if hasattr(led_instance, "asyncio_polling") and led_instance.asyncio_polling:
+                        color = status_color(freq, on_time, max_duty, max_on_time)
+                        if hasattr(led_instance, 'full_brightness') and led_instance.full_brightness != 255:
+                            color = scale_rgb(*color, led_instance.full_brightness)
+                        self.init.rgb_led_color[index] = color
+                    else:
+                        led_instance.set_status(index, freq, on_time, max_duty, max_on_time)
+
+    def disable_led(self, index, force=False):
         """
         Disables the specified LED on all RGB LED drivers.
-        """
-        for driver_key, driver_instances in self.instances.items():
-            for led_group in driver_instances:
-                if index < len(led_group):
-                    led_instance = led_group[index]
-                    # print(f"Debug: Processing LED instance {led_instance} at index {index}")  # Debug: Print LED instance
-                    if hasattr(led_instance, "off"):
-                        # print(f"Debug: Calling off on {led_instance}")  # Debug: Print method call
-                        led_instance.off(index)
-                    else:
-                        # print(f"Warning: LED instance {driver_key} does not have an off method.")
-                        pass
-                else:
-                    # print(f"Warning: LED index {index} is out of range for {driver_key}.")
-                    pass
 
-    def set_color(self, index, r, g, b, asyncio=False):
+        Parameters:
+        ----------
+        index : int
+            The index of the LED to disable.
+        force : bool, optional
+            Force hardware update (override asyncio polling). Defaults to False.
         """
-        Sets the color of the specified LED on all RGB LED drivers.
-        """
-        # print("set_color")
-        for driver_key, driver_instances in self.instances.items():
-            for led_group in driver_instances:
-                if index < len(led_group):
-                    led_instance = led_group[index]
-                    # print(f"Debug: Processing LED instance {led_instance} at index {index}")  # Debug: Print LED instance
-                    if hasattr(led_instance, "set_color") and not asyncio or (asyncio and hasattr(led_instance, "mutex")):
-                        # print(f"Debug: Calling set_color on {led_instance}")  # Debug: Print method call
-                        led_instance.set_color(r, g, b)
-                    else:
-                        # print(f"Warning: LED instance {driver_key} does not have a set_color method.")
-                        pass
-                else:
-                    # print(f"Warning: LED index {index} is out of range for {driver_key}.")
-                    pass
+        if index >= self.init.NUMBER_OF_COILS:
+            raise ValueError(f"LED index {index} exceeds NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS})")
 
-    def disable_all_leds(self):
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances") and index < len(instance.instances):
+                    led_instance = instance.instances[index]
+                    if hasattr(led_instance, "master") and led_instance.master:
+                        continue
+                    if hasattr(led_instance, "asyncio_polling"):
+                        if force:
+                            led_instance.off()
+                        else:
+                            self.init.rgb_led_color[index] = (0, 0, 0)     
+                    else:
+                        led_instance.off()
+
+    def disable_all_leds(self, force=False):
         """
         Disables all RGB LEDs across all registered drivers.
+
+        Parameters:
+        ----------
+        force : bool, optional
+            Force hardware update (override asyncio polling). Defaults to False.
         """
-        # print("disable_all_leds")
         for index in range(self.init.NUMBER_OF_COILS):
-            self.set_color(index, 0, 0, 0)
+            self.disable_led(index, force)

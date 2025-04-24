@@ -8,16 +8,14 @@ Hardware profile for MPTCC 1.
 """
 
 CONFIG = {
+    "OPERATING_FREQ": 150000000, # RP2350 default 150MHz.
     "NUMBER_OF_COILS": 4,
-    "RGB_LED_ASYNCIO_POLLING": False,
     "PIN_I2C_1_SCL": 17,
     "PIN_I2C_1_SDA": 16,
     "I2C_1_INTERFACE": 0,
     "I2C_1_FREQ": 400000,
     "I2C_1_TIMEOUT": 50000,
     "CONFIG_PATH": "/mptcc/config.json",
-    "SD_CARD_READER_SPI_INSTANCE": 1,
-    "SD_CARD_READER_MOUNT_POINT": "/sd",
     "PIN_BATT_STATUS_ADC": 28,
     "VOLTAGE_DROP_FACTOR": 848.5,
     "PIN_MIDI_INPUT": 13,
@@ -95,11 +93,25 @@ DRIVERS = {
         },
     },
     "output": {
+        "analog_meter": {
+            "class": "Analog_Meter",
+            "enabled": True,
+            "common_cfg": {
+                "sensitivity": 0.5,
+                "pwm_freq": 1000,
+            },
+            "instances": [
+                {
+                    "enabled": True,
+                    "pins": [1, 8, 6, 7],
+                },
+            ],
+        },
         "gpio_pwm": {
             "class": "GPIO_PWM",
             "instances": [
                 {
-                    "enabled": True,
+                    "enabled": False,
                     "pins": [1, 8, 7, 6],
                 },
             ],
@@ -151,8 +163,8 @@ DRIVERS = {
                 "segments": 4,
                 "reverse": True,
                 "default_color": "#FFFFFF",
-                "threshold_brightness": 16,
-                "full_brightness": 255,
+                "threshold_brightness": 4,
+                "full_brightness": 80,
             },
             "instances": [
                 {
@@ -165,6 +177,7 @@ DRIVERS = {
     "universal": {
         "wombat_18ab": {
             "class": "Wombat_18AB",
+            "enabled": True,
             "instances": [
                 {
                     "enabled": True,
@@ -184,7 +197,7 @@ DRIVERS = {
                             [11, 12],
                             [14, 15],
                             [17, 18],
-                            [5, 6],
+                            [6, 5],
                         ],
                         "pull_up": False,
                         "pulse_on_change_pin": 0,
@@ -193,15 +206,14 @@ DRIVERS = {
                     },
                     "beep": {
                         "enabled": False,
-                        "class": "Beep_Wombat_18AB",
-                        "instances": [
-                            {
-                                "enabled": True,
-                                "pin": 13,
-                                "length_ms": 50,
-                            },
-                        ],
-
+                        "pin": 7,
+                        "length_ms": 5,
+                        "volume": 10,
+                        "pwm_freq": 3000,
+                    },
+                    "output": {
+                        "enabled": True,
+                        "pins": [9, 2, 10, 7],
                     },
                 },
             ],
@@ -224,7 +236,9 @@ DRIVERS = {
                 {
                     "enabled": True,
                     "pin": 13,
-                    "length_ms": 50,
+                    "length_ms": 5,
+                    "volume": 5,
+                    "pwm_freq": 3000,
                 },
             ],
         },
@@ -233,7 +247,13 @@ DRIVERS = {
 
 class Profile:
     def __init__(self, name, init):
+        # Set the operating frequency.
+        from machine import freq
+        freq(CONFIG["OPERATING_FREQ"])
+        print(f"Operating frequency set to {(int(CONFIG["OPERATING_FREQ"] / 1000000))}MHz")
+        # Load all drivers.
         init.load_drivers(CONFIG, DRIVERS);
         print(f"Profile ({name}) loading complete")
+        init.memory_usage()
 
 # END

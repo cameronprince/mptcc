@@ -240,3 +240,47 @@ def hex_to_rgb(hex_color):
     """
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    """
+    Convert an RGB tuple to a hex color code.
+
+    Parameters:
+    ----------
+    rgb : tuple
+        The RGB color as a tuple (R, G, B), each 0-255.
+    as_string : bool, optional
+        If True, return "#RRGGBB" string; if False, return 0xRRGGBB integer.
+        Default is True to reverse hex_to_rgb.
+
+    Returns:
+    -------
+    str or int
+        Hex color code as "#RRGGBB" (if as_string=True) or 0xRRGGBB integer.
+    """
+    r, g, b = rgb
+    color = (r << 16) | (g << 8) | b
+    return color
+
+def scale_rgb(r, g, b, brightness):
+    """
+    Scale RGB values by a brightness factor.
+
+    Parameters:
+    ----------
+    r : int
+        Red value (0-255).
+    g : int
+        Green value (0-255).
+    b : int
+        Blue value (0-255).
+    brightness : int or None
+        Brightness scaling factor (0-255). If None, returns original values.
+
+    Returns:
+    -------
+    tuple
+        Scaled RGB values as a tuple (red, green, blue).
+    """
+    return ((r, g, b) if brightness is None else
+            (r * brightness // 255, g * brightness // 255, b * brightness // 255))

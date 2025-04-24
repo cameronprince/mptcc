@@ -1,40 +1,42 @@
-from machine import Pin
+from machine import Pin, freq
 from neopixel import NeoPixel
 from time import sleep
+import network
 
-# Define the number of NeoPixel segments and the GPIO pin
+# Disable Wi-Fi to reduce interference
+wlan = network.WLAN(network.STA_IF)
+wlan.active(False)
+
+# Set consistent clock speed
+freq(125000000)
+
 NUM_SEGMENTS = 4
-PIN = 11
+PIN = 28
 
-# Initialize the NeoPixel object
-np = NeoPixel(Pin(PIN), NUM_SEGMENTS)
+# Initialize with explicit output pin
+pin = Pin(PIN, Pin.OUT)
+np = NeoPixel(pin, NUM_SEGMENTS)
 
-# Define some colors (R, G, B)
 COLORS = [
-    (255, 0, 0),    # Red
-    (0, 255, 0),    # Green
-    (0, 0, 255),    # Blue
-    (255, 255, 0),  # Yellow
-    (0, 255, 255),  # Cyan
-    (255, 0, 255),  # Magenta
-    (255, 165, 0),  # Orange
-    (255, 255, 255) # White
+    (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0),
+    (0, 255, 255), (255, 0, 255), (255, 165, 0), (255, 255, 255)
 ]
 
-def cycle_colors():
-    for color in COLORS:
-        for i in range(NUM_SEGMENTS):
-            np[i] = color  # Set the current segment to the current color
-            np.write()     # Update the NeoPixel strip
-            sleep(0.5)     # Wait for half a second
-            np[i] = (0, 0, 0)  # Turn off the current segment
-            np.write()     # Update the NeoPixel strip
+# Clear the strip first
+for i in range(NUM_SEGMENTS):
+    np[i] = (0, 0, 0)
+np.write()
 
-try:
-    while True:
-        cycle_colors()
-except KeyboardInterrupt:
-    # Turn off all LEDs when the script is interrupted
+# Test with a single color first
+np[0] = (255, 0, 0)  # Red on first LED
+np.write()
+sleep(2)
+
+# Then cycle colors
+for color in COLORS:
     for i in range(NUM_SEGMENTS):
+        np[i] = color
+        np.write()
+        sleep(0.5)
         np[i] = (0, 0, 0)
-    np.write()
+        np.write()

@@ -8,16 +8,14 @@ Hardware profile for MPTCC 4.
 """
 
 CONFIG = {
+    "OPERATING_FREQ": 150000000, # RP2350 default 150MHz.
     "NUMBER_OF_COILS": 4,
-    "RGB_LED_ASYNCIO_POLLING": False,
     "PIN_I2C_1_SCL": 17,
     "PIN_I2C_1_SDA": 16,
     "I2C_1_INTERFACE": 0,
     "I2C_1_FREQ": 400000,
     "I2C_1_TIMEOUT": 50000,
     "CONFIG_PATH": "/mptcc/config.json",
-    "SD_CARD_READER_SPI_INSTANCE": 1,
-    "SD_CARD_READER_MOUNT_POINT": "/sd",
     "PIN_BATT_STATUS_ADC": 28,
     "VOLTAGE_DROP_FACTOR": 848.5,
     "PIN_MIDI_INPUT": 1,
@@ -91,6 +89,7 @@ DRIVERS = {
                         "default_color": "#FFFF00",
                         "threshold_brightness": 32,
                         "full_brightness": 255,
+                        "asyncio_polling": True,
                     },
                 ],
             },
@@ -98,11 +97,11 @@ DRIVERS = {
         "switch": {
             "switch_gpio": {
                 "class": "Switch_GPIO",
-                "enabled": False,
+                "enabled": True,
                 "instances": [
                     {
-                        "enabled": False,
-                        "pins": [15, 14, 9, 8, 7, 6],
+                        "enabled": True,
+                        "pins": [9, 8, 7, 6, 19, 20],
                         "pull_up": True,
                     },
                 ],
@@ -124,41 +123,51 @@ DRIVERS = {
     "rgb_led": {
         "neopixel": {
             "class": "GPIO_NeoPixel",
-            "enabled": True,
             "common_cfg": {
                 "segments": 4,
                 "reverse": True,
                 "default_color": "#FFFF00",
-                "threshold_brightness": 16,
-                "full_brightness": 255,
+                "threshold_brightness": 4,
+                "full_brightness": 20,
             },
             "instances": [
+                {"enabled": True, "pin": 21},
+                {"enabled": True, "pin": 22},
+            ],
+        },
+        "neopixel_matrix": {
+            "class": "GPIO_NeoPixel_Matrix",
+            "enabled": True,
+            "instances": [
                 {
-                    "enabled": True,
-                    "pin": 21,
-                },
-                {
-                    "enabled": True,
-                    "pin": 22,
-                },
-                {
-                    "enabled": True,
                     "pin": 15,
-                    "segments": 64,
                     "rotation": 0,
                     "reverse": False,    # The first LED becomes the last LED when True.
                     "invert": True,
                     "mode": "vu_meter",
                     "matrix": "8x8",
+                    "default_color": "vu_meter",
+                    "threshold_brightness": 4,
+                    "full_brightness": 20,
+                    "vu_meter_sensitivity": 1,
+                    "vu_meter_colors": [
+                        [0, 255, 0],    # LED 1: Pure green
+                        [64, 255, 0],   # LED 2: Very greenish
+                        [128, 255, 0],  # LED 3: Green-yellow
+                        [191, 255, 0],  # LED 4: Nearly yellow
+                        [255, 255, 0],  # LED 5: Yellow
+                        [255, 170, 0],  # LED 6: Orange
+                        [255, 85, 0],   # LED 7: Reddish-orange
+                        [255, 0, 0]     # LED 8: Red
+                    ],
                 },
             ],
         },
         "pca9685": {
-            "class": "PCA9685_RGBLED",
-            "enabled": False,
+            "class": "PCA9685",
+            "enabled": True,
             "instances": [
                 {
-                    "enabled": False,
                     "i2c_instance": 1,
                     "i2c_addr": 0x40,
                     "freq": 1000,
@@ -172,11 +181,41 @@ DRIVERS = {
             ],
         },
     },
+    "other": {
+        "sd_card_reader": {
+            "class": "SDCardReader",
+            "instances": [
+                {
+                    "enabled": True,
+                    "spi_instance": 1,
+                    "mount_point": "/sd",
+                },
+            ],
+        },
+        "beep": {
+            "class": "GPIO_Beep",
+            "instances": [
+                {
+                    "enabled": True,
+                    "pin": 14,
+                    "length_ms": 1,
+                    "volume": 100,
+                    "pwm_freq": 3000,
+                },
+            ],
+        },
+    },
 }
 
 class Profile:
     def __init__(self, name, init):
+        # Set the operating frequency.
+        from machine import freq
+        freq(CONFIG["OPERATING_FREQ"])
+        print(f"Operating frequency set to {(int(CONFIG["OPERATING_FREQ"] / 1000000))}MHz")
+        # Load all drivers.
         init.load_drivers(CONFIG, DRIVERS);
         print(f"Profile ({name}) loading complete")
+        init.memory_usage()
 
 # END
