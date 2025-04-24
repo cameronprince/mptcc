@@ -58,6 +58,7 @@ class I2CEncoder(Input):
         self.type = config.get("type", None)
         self.default_color = config.get("default_color", "#000000")
         self.threshold_brightness = config.get("threshold_brightness", 0)
+        self.asyncio_polling = config.get("asyncio_polling", False)
 
         self.instances = []
         self.init_complete = False
@@ -99,6 +100,8 @@ class I2CEncoder(Input):
             print(f"- {i}: I2C address 0x{addr:02X}")
         if self.type == "rgb":
             print(f"- RGB LEDs initialized (default color: {config.get("default_color")})")
+            if self.asyncio_polling:
+                print(f"- Asyncio polling: True")
 
     def init_encoder(self, encoder):
         self.init.mutex_acquire(self.mutex, "i2cencoder:init_encoder")
@@ -175,6 +178,7 @@ class RGB_I2CEncoder(RGB):
         self.default_color = hex_to_rgb(config.get("default_color", "#000000"))
         self.threshold_brightness = config.get("threshold_brightness", 0)
         self.full_brightness = config.get("full_brightness", 255)
+        self.asyncio_polling = config.get("asyncio_polling", False)
 
     def set_color(self, r, g, b):
         if r == 0 and g == 0 and b == 0:

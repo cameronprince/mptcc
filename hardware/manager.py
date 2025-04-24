@@ -8,6 +8,7 @@ Provides the manager classes for controlling the hardware.
 """
 
 import time
+from ..lib.utils import status_color, scale_rgb
 
 
 class HardwareManager:
@@ -315,7 +316,20 @@ class RGBLEDManager(HardwareManager):
     def __init__(self, init):
         self.init = init
         super().__init__(self.init, "rgb_led")
+        self._polling = self._polling_check()
         self._master_led_count = self._master_led_count()
+
+    def _polling_check(self):
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances"):
+                    for led_instance in instance.instances:
+                        if hasattr(led_instance, "asyncio_polling"):
+                            return True
+        return False
+
+    def needs_polling(self):
+        return self._polling
 
     def master_led_count(self):
         return self._master_led_count
@@ -347,6 +361,14 @@ class RGBLEDManager(HardwareManager):
                         if hasattr(led_instance, "master") and led_instance.master:
                             led_instance.set_level(level)
 
+    def set_color(self, index, r, g, b):
+        for driver_key, driver_instances in self.instances.items():
+            for instance in driver_instances:
+                if hasattr(instance, "instances") and index < len(instance.instances):
+                    led_instance = instance.instances[index]
+                    if hasattr(led_instance, "asyncio_polling") and led_instance.asyncio_polling:
+                        led_instance.set_color(r, g, b)
+
     def enable_led(self, index, freq, on_time, max_duty=None, max_on_time=None):
         """
         Enables the specified LED on all RGB LED drivers.
@@ -373,9 +395,15 @@ class RGBLEDManager(HardwareManager):
                     led_instance = instance.instances[index]
                     if hasattr(led_instance, "master") and led_instance.master:
                         continue
-                    led_instance.set_status(index, freq, on_time, max_duty, max_on_time)
+                    if hasattr(led_instance, "asyncio_polling") and led_instance.asyncio_polling:
+                        color = status_color(freq, on_time, max_duty, max_on_time)
+                        if hasattr(led_instance, 'full_brightness') and led_instance.full_brightness != 255:
+                            color = scale_rgb(*color, led_instance.full_brightness)
+                        self.init.rgb_led_color[index] = color
+                    else:
+                        led_instance.set_status(index, freq, on_time, max_duty, max_on_time)
 
-    def disable_led(self, index):
+    def disable_led(self, index, force=False):
         """
         Disables the specified LED on all RGB LED drivers.
 
@@ -383,6 +411,8 @@ class RGBLEDManager(HardwareManager):
         ----------
         index : int
             The index of the LED to disable.
+        force : bool, optional
+            Force hardware update (override asyncio polling). Defaults to False.
         """
         if index >= self.init.NUMBER_OF_COILS:
             raise ValueError(f"LED index {index} exceeds NUMBER_OF_COILS ({self.init.NUMBER_OF_COILS})")
@@ -393,11 +423,22 @@ class RGBLEDManager(HardwareManager):
                     led_instance = instance.instances[index]
                     if hasattr(led_instance, "master") and led_instance.master:
                         continue
-                    led_instance.off()
+                    if hasattr(led_instance, "asyncio_polling"):
+                        if force:
+                            led_instance.off()
+                        else:
+                            self.init.rgb_led_color[index] = (0, 0, 0)     
+                    else:
+                        led_instance.off()
 
-    def disable_all_leds(self):
+    def disable_all_leds(self, force=False):
         """
         Disables all RGB LEDs across all registered drivers.
+
+        Parameters:
+        ----------
+        force : bool, optional
+            Force hardware update (override asyncio polling). Defaults to False.
         """
         for index in range(self.init.NUMBER_OF_COILS):
-            self.disable_led(index)
+            self.disable_led(index, force)
